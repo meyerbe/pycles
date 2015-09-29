@@ -166,6 +166,9 @@ def SaturatedBubble():
     namelist['fields_io']['frequency'] = 100.0
     namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
 
+    namelist['restart'] = {}
+    namelist['restart']['frequency'] = 600.0
+
     namelist['meta'] = {}
     namelist['meta']['casename'] = 'SaturatedBubble'
     namelist['meta']['simname'] = 'SaturatedBubble'
@@ -236,6 +239,9 @@ def StableBubble():
     namelist['fields_io']['fields_dir'] = 'fields'
     namelist['fields_io']['frequency'] = 100.0
     namelist['fields_io']['diagnostic_fields'] = ['temperature','buoyancy_frequency']
+
+    namelist['restart'] = {}
+    namelist['restart']['frequency'] = 600.0
 
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'StableBubble'
@@ -308,6 +314,9 @@ def Bomex():
     namelist['fields_io']['frequency'] = 1800.0
     namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
 
+    namelist['restart'] = {}
+    namelist['restart']['frequency'] = 600.0
+
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Bomex'
     namelist['meta']['casename'] = 'Bomex'
@@ -379,6 +388,9 @@ def Gabls():
     namelist['fields_io']['frequency'] = 3600.0
     namelist['fields_io']['diagnostic_fields'] = ['temperature','buoyancy_frequency','viscosity']
 
+    namelist['restart'] = {}
+    namelist['restart']['frequency'] = 600.0
+
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Gabls'
     namelist['meta']['casename'] = 'Gabls'
@@ -448,6 +460,9 @@ def DYCOMS_RF01():
     namelist['fields_io']['fields_dir'] = 'fields'
     namelist['fields_io']['frequency'] = 3600.0
     namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
+
+    namelist['restart'] = {}
+    namelist['restart']['frequency'] = 600.0
 
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'DYCOMS_RF01'
