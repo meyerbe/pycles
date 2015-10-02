@@ -171,12 +171,26 @@ cdef class PressureFFTParallel:
         #Do fft in x direction
         x_pencil = self.X_Pencil.forward_double(&Gr.dims, Pa, &DV.values[div_shift])
         x_pencil_fft = fft(x_pencil,axis=1)
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(x_pencil_fft)))))
+        Pa.root_print('x_pencil_fft: ' + str(tmp))
+
         self.X_Pencil.reverse_complex(&Gr.dims, Pa, x_pencil_fft, &div_fft[0] )
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(div_fft)))))
+        Pa.root_print('X reverse complex: ' + str(tmp))
 
         #Do fft in y direction
         y_pencil = self.Y_Pencil.forward_complex(&Gr.dims, Pa, &div_fft[0])
         y_pencil_fft = fft(y_pencil,axis=1)
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(y_pencil_fft)))))
+        Pa.root_print('y_pencil_fft: ' + str(tmp))
+
         self.Y_Pencil.reverse_complex(&Gr.dims, Pa, y_pencil_fft, &div_fft[0])
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(div_fft)))))
+        Pa.root_print('Y reverse complex: ' + str(tmp))
 
         #Transpose in z
         z_pencil = self.Z_Pencil.forward_complex(&Gr.dims, Pa, &div_fft[0])
@@ -202,15 +216,31 @@ cdef class PressureFFTParallel:
         #Inverse transpose in z
         self.Z_Pencil.reverse_complex(&Gr.dims, Pa, z_pencil, &div_fft[0])
 
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(div_fft)))))
+        Pa.root_print('Z reverse complex: ' + str(tmp))
+
         #Do ifft in y direction
         y_pencil = self.Y_Pencil.forward_complex(&Gr.dims, Pa, &div_fft[0])
         y_pencil_fft = ifft(y_pencil,axis=1)
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(y_pencil_fft)))))
+        Pa.root_print('y_pencil_ifft: ' + str(tmp))
+
         self.Y_Pencil.reverse_complex(&Gr.dims, Pa, y_pencil_fft, &div_fft[0])
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(div_fft)))))
+        Pa.root_print('Y reverse complex 2 : ' + str(tmp))
 
         #Do ifft in x direction
         x_pencil_complex = self.X_Pencil.forward_complex(&Gr.dims, Pa, &div_fft[0])
         x_pencil_ifft =ifft(x_pencil_complex,axis=1)
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(x_pencil_ifft)))))
+        Pa.root_print('x_pencil_ifft: ' + str(tmp))
+
         self.X_Pencil.reverse_complex(&Gr.dims, Pa, x_pencil_ifft, &pres[0] )
+
+        tmp = Pa.domain_scalar_sum(np.sum(np.sum((np.abs(pres)))))
+        Pa.root_print('X reverse complex 2: ' + str(tmp))
 
         count = 0
         with nogil:
