@@ -5,6 +5,7 @@
 #include "entropies.h"
 
 #include "scalar_advection_ql.h"        // contains modules to compute QL fluxes
+#include "scalar_advection_aql.h"        // contains modules to compute 'approximate QL' fluxes
 #include "cc_statistics.h"              // contains horizontal averaging function
 
 
@@ -730,7 +731,7 @@ void compute_advective_fluxes_a(struct DimStruct *dims, double* restrict rho0, d
             break;
 
 
-
+        // quasi-linear (QL) modifications of the cases 2, 4 and 5
         case 102:
             second_order_a_ql(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
@@ -741,18 +742,23 @@ void compute_advective_fluxes_a(struct DimStruct *dims, double* restrict rho0, d
             weno_fifth_order_a_ql(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
 
+        // fluxes calculated as composed by individual fluxes (full and QL)
         case 204:
             fourth_order_a_decomp(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
         case 205:
             weno_fifth_order_a_decomp(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
-
         case 304:
             fourth_order_a_decomp_ql(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
         case 305:
             weno_fifth_order_a_decomp_ql(dims, rho0, rho0_half, velocity, scalar, flux, d);
+            break;
+
+        // "approximate quasi-linear" (AQL) modifications of the case 4
+        case 404:
+            fourth_order_a_aql_C(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
 
 

@@ -9,7 +9,7 @@
 
 // (C): d=2 (vertical flux) --> normal flux; d!=2 (horizontal flux) --> QL flux
 void fourth_order_a_aql_C(struct DimStruct *dims, double* restrict rho0, double* restrict rho0_half, double* restrict velocity, const double* restrict scalar, double* restrict flux, int d){
-    if (d==1){printf("4th order QL Scalar Transport\n");}
+    if (d==1){printf("4th order AQL Scalar Transport: adding vertical transport\n");}
 
     double *eddy_flux = (double *)malloc(sizeof(double)*dims->nlg[0] * dims->nlg[1] * dims->nlg[2]);
     double *mean_eddy_flux = (double *)malloc(sizeof(double) * dims->nlg[2]);
