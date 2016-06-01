@@ -10,6 +10,7 @@
 
 #include "momentum_advection_central_ql.h"
 #include "momentum_advection_central_ws_ql.h"
+#include "momentum_advection_central_ws_aql.h"
 #include "momentum_advection_weno_ql.h"
 #include<stdio.h>
 
@@ -18,7 +19,6 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
                                 double* restrict alpha0, double* restrict alpha0_half,
                                 double* restrict vel_advected, double* restrict vel_advecting,
                                 double* restrict tendency, ssize_t d_advected, ssize_t d_advecting, int scheme){
-
 
     switch(scheme){
         case 2:
@@ -94,7 +94,7 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
                 tendency, d_advected, d_advecting);
             break;
 
-        // the following schemes are quasi-linear modifications of the cases 2 and 4
+        // quasi-linear (QL) modifications of the cases 2, 4 and 5
         case 102:
             second_order_m_ql(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
                 tendency, d_advected, d_advecting);
@@ -112,8 +112,7 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
                 tendency, d_advected, d_advecting);
             break;
 
-
-
+        // fluxes calculated as composed by individual fluxes (full and QL)
         case 205:
             weno_fifth_order_m_decomp(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
                 tendency, d_advected, d_advecting);
@@ -130,6 +129,13 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
             fourth_order_ws_m_decomp_ql(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
                 tendency, d_advected, d_advecting);
             break;
+
+        // "approximate quasi-linear" (AQL) modifications of the case 4
+        case 414:
+            fourth_order_ws_m_aql_A(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
+                tendency, d_advected, d_advecting);
+            break;
+
 
         default:
             // Default to second order scheme.
