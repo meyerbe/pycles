@@ -131,8 +131,12 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
             break;
 
         // "approximate quasi-linear" (AQL) modifications of the case 4
-        case 414:
+        case 4140:
             fourth_order_ws_m_aql_A(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
+                tendency, d_advected, d_advecting);
+            break;
+        case 4141:
+            fourth_order_ws_m_aql_B(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
                 tendency, d_advected, d_advecting);
             break;
 
