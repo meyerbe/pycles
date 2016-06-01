@@ -758,8 +758,9 @@ void compute_advective_fluxes_a(struct DimStruct *dims, double* restrict rho0, d
 
 
         default:
+            printf("Scalar Advection scheme: no scheme indicated, using 4th order central");
             // Make WENO5 default case. The central schemes may not be necessarily stable, however WENO5 should be.
-            weno_fifth_order_a(dims, rho0, rho0_half, velocity, scalar, flux, d);
+            fourth_order_a(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
     };
 };
