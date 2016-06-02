@@ -757,8 +757,11 @@ void compute_advective_fluxes_a(struct DimStruct *dims, double* restrict rho0, d
             break;
 
         // "approximate quasi-linear" (AQL) modifications of the case 4
-        case 404:
+        case 4040:
             fourth_order_a_aql_C(dims, rho0, rho0_half, velocity, scalar, flux, d);
+            break;
+        case 4041:
+            fourth_order_a_aql_E(dims, rho0, rho0_half, velocity, scalar, flux, d);
             break;
 
 
