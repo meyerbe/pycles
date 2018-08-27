@@ -160,48 +160,6 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         double [:,:] k_max_arr = np.zeros((3,Gr.dims.ng[0]))
         Py_ssize_t k_max = 0
 
-    ''' (a) temperature-anomaly '''
-    # cdef:
-    #     double t = RS.Tg            # temperature auxiliary
-    #     double dT = 10.0            # temperature anomaly
-    # temp = np.zeros(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-    # for i in xrange(Gr.dims.nlg[0]):        # x_half has dimension Gr.dims.ng[0]
-    #     ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-    #     x = Gr.x_half[i + Gr.dims.indx_lo[0]]
-    #
-    #     if np.abs(x - xc) <= xstar:
-    #         z_max = zstar * (np.cos( (x-xc) / (xstar-xc) * np.pi/2)**2)
-    #         k_max = np.int(z_max / Gr.dims.dx[2])
-    #         # print('x', x, x-xc, xstar, z_max, k_max)
-    #         k_max_arr[0,i] = k_max
-    #         k_max_arr[1,i] = (1.-marg)*k_max
-    #     else:
-    #         k_max = 0
-    #
-    #     for j in xrange(Gr.dims.nlg[1]):
-    #         jshift = j * Gr.dims.nlg[2]
-    #         for k in xrange(Gr.dims.nlg[2]):
-    #             ijk = ishift + jshift + k
-    #             PV.values[u_varshift + ijk] = 0.0
-    #             PV.values[v_varshift + ijk] = 0.0
-    #             PV.values[w_varshift + ijk] = 0.0
-    #             if k_max > 0:
-    #                 if k <= (1.-marg)*k_max:
-    #                     t = RS.Tg - dT
-    #                 elif k <= k_max:
-    #                     t = RS.Tg - dT*np.sin( (k-k_max) / (marg*k_max) )**2
-    #             else:
-    #                 t = RS.Tg
-    #             # if np.abs(x - xc) > xstar and k<5:
-    #             #     print('k=',k, t, RS.Tg)
-    #
-    #             temp[i,j,k] = t
-    #             # print('temp', t, 's', Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0))
-    #             PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
-    #
-    # var_name = 'temperature'
-    # plot_s_profile(var_name, temp[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    # plot_imshow(var_name, temp[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
 
 
 
@@ -281,20 +239,20 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
     ''' plotting '''
     var_name = 'theta'
-    plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
 
-    plot_k_profile(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2], imin, imax, ic, marg_i)
+    plot_k_profile(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2], imin, imax, ic, marg_i, 'double_2D')
 
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     var_name = 'qt'
     if 'qt' in PV_.name_index.keys():
         var_shift = PV_.get_varshift(Gr, var_name)
         var1 = PV_.get_variable_array(var_name, Gr)
-        plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+        plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     else:
         Pa.root_print(var_name + ' not in PV')
     del var1
@@ -309,6 +267,50 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         print('No nan in s')
     # __
     print('')
+
+
+
+    ''' Initialize passive tracer phi '''
+    try:
+        use_tracers = namelist['tracers']['use_tracers']
+    except:
+        use_tracers = False
+
+    try:
+        phi_number = namelist['tracers']['number']
+    except:
+        kmax_tracer = 10
+
+    try:
+        kmax_tracer = namelist['tracers']['kmax']
+    except:
+        kmax_tracer = 10
+
+    try:
+        kmin_tracer = namelist['tracers']['kmin']
+    except:
+        kmin_tracer = 0
+
+    cdef:
+        Py_ssize_t kmin = kmin_tracer + Gr.dims.gw
+        Py_ssize_t kmax = kmax_tracer + Gr.dims.gw
+        Py_ssize_t dk = 50
+
+    if use_tracers == 'passive':
+        Pa.root_print('initializing passive tracer phi, smooth profile, kmax: ' + str(kmax_tracer) + ', dk: ' + str(dk))
+        var_shift = PV.get_varshift(Gr, 'phi')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    if k > kmin and k <= kmax:
+                        PV.values[var_shift + ijk] = 1.0
+                    elif k > kmax and k < (kmax + dk):
+                        PV.values[var_shift + ijk] = 0.5*( 1+np.cos((k-kmax)/np.double(dk)*np.pi) )
+                    else:
+                        PV.values[var_shift + ijk] = 0.0
     return
 
 
@@ -386,33 +388,8 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t imax2 = imax1 + isep
         # k_max_arr[0,:] = k_max[i], k_max_arr[1,:] = k_max[i +- i_marg]
         # (k_max[0,:] more narrow than k_max_arr[1,:])
-        # int [:,:] k_max_arr = np.zeros((3,Gr.dims.ng[0]), dtype=np.int)
         double [:,:] k_max_arr = np.zeros((2,Gr.dims.ng[0]), dtype=np.double)
-        # Py_ssize_t k_max = 0
         double k_max = 0
-
-
-    print('zstar', zstar, 'kstar', kstar, 'dz', Gr.dims.dx[2])
-
-
-
-    # k-margin
-    # (a) in terms of x[i]
-    # for i in xrange(Gr.dims.nlg[0]):
-    #     x = Gr.x_half[i + Gr.dims.indx_lo[0]]
-    #     if np.abs(x-xc1) <= xstar:
-    #         # z_max = zstar * (np.cos( (x-xc1) / xstar*np.pi/2 ) )**2
-    #         # k_max = np.int(np.round(z_max / Gr.dims.dx[2]))
-    #         # k_max_arr[0,i] = k_max
-    #         k_max_arr[0, i] = np.int(np.round(kstar * np.cos((x - xc1) / xstar * np.pi / 2) ** 2))
-    #     # elif np.abs(x-xc2) <= xstar:
-    #     #     z_max = zstar * (np.cos( (x-xc2) / xstar*np.pi/2 )**2 )
-    #     #     k_max = np.int(z_max / Gr.dims.dx[2])
-    #     #     k_max_arr[0,i] = k_max
-    #     # else:
-    #     #     k_max = 0
-    #     if (x-xc1) > xstar and imax1 == 0:
-    #         imax1 = i-1
 
 
     # (b) in terms of i
@@ -432,38 +409,8 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 k_max = kstar * (np.cos( np.double(i-ic1) / istar * np.pi / 2 ) )**2
                 k_max_arr[0,i] = np.int(np.round(k_max))
 
-            # if (i-ic1) >= (istar+marg_i) and imax1 == Gr.dims.ng[0]-1:
-            #     imax1 = i
-
-
     from Init_plot import plot_k_marg
     plot_k_marg(kstar, marg_i, istar, ic1, imin1, imax1)
-
-
-
-    # # # x-margin
-    # # i = -1
-    # # while (i<Gr.dims.nlg[0]):
-    # #     i += 1
-    # #     ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-    # #     x = Gr.x_half[i + Gr.dims.indx_lo[0]]
-    # #     if (xc1-x) <= xstar and imin1 == 0:
-    # #         imin1 = i - marg_i
-    # #         i = i + np.int(xstar / Gr.dims.dx[0]) - 1   # jump to center of first anomaly
-    # #     if (x-xc1) > xstar:
-    # #         imax1 = i + marg_i
-    # #         i = Gr.dims.nlg[0]      # end while loop
-    #
-    # imin2 = ic2 - (ic1-imin1)
-    # imax2 = ic2 + (imax1-ic1)
-
-    # set k_max_arr for margin, if not yet set above
-    # # # for i in xrange(imin1, ic1-marg_i):
-    # # #     k_max_arr[1,i] = k_max_arr[0, i+marg_i]
-    # # # for i in xrange(ic1-marg_i, ic1+marg_i):
-    # # #     k_max_arr[1,i] = k_max_arr[0, ic1]
-    # # # for i in xrange(ic1+marg_i, imax1+1):
-    # # #     k_max_arr[1,i] = k_max_arr[0, i-marg_i]
 
 
     ''' theta-anomaly'''
@@ -935,7 +882,6 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print('')
 
 
-
     i = ic1
     j = jc1
     ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
@@ -946,11 +892,6 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             k_max_arr[0, 2 * ic1 - i, j] = k_max_arr[0, i, j]
             k_max_arr[0, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[0, i, j]
             k_max_arr[0, i, 2 * jc1 - j] = k_max_arr[0, i, j]
-
-            # ir_arr[i, j] = ir
-            # ir_arr[2 * ic1 - i, j] = ir_arr[i, j]
-            # ir_arr[2 * ic1 - i, 2 * jc1 - j] = ir_arr[i, j]
-            # ir_arr[i, 2 * jc1 - j] = ir_arr[i, j]
 
             j += 1
             ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
@@ -968,11 +909,6 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             k_max_arr[1, 2 * ic1 - i, j] = k_max_arr[1, i, j]
             k_max_arr[1, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[1, i, j]
             k_max_arr[1, i, 2 * jc1 - j] = k_max_arr[1, i, j]
-
-            # ir_arr_marg[i, j] = ir
-            # ir_arr_marg[2 * ic1 - i, j] = ir_arr_marg[i, j]
-            # ir_arr_marg[2 * ic1 - i, 2 * jc1 - j] = ir_arr_marg[i, j]
-            # ir_arr_marg[i, 2 * jc1 - j] = ir_arr_marg[i, j]
 
             j += 1
             ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
@@ -1030,6 +966,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     cdef:
         PrognosticVariables.PrognosticVariables PV_ = PV
+        Py_ssize_t var_shift
 
     var_name = 'theta'
     from Init_plot import plot_imshow_alongy
