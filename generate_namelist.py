@@ -180,7 +180,7 @@ def ColdPoolDry_2D(number):
     namelist['grid']['dz'] = 100.0
 
     namelist['init'] = {}
-    namelist['init']['dTh'] = 10.0      # temperature anomaly
+    namelist['init']['dTh'] = 3.0      # temperature anomaly
     namelist['init']['shape'] = 1       # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0      # initial height of temperature anomaly
 
@@ -194,7 +194,7 @@ def ColdPoolDry_2D(number):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 1500.0
+    namelist['time_stepping']['t_max'] = 3000.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
@@ -255,6 +255,13 @@ def ColdPoolDry_2D(number):
     namelist['visualization'] = {}
     namelist['visualization']['frequency'] = 20.0
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = 'passive'
+    # 1: same tracer in whole domain; 2: different tracer in initial anomaly vs. environment
+    namelist['tracers']['number'] = 1
+    namelist['tracers']['kmin'] = 0
+    namelist['tracers']['kmax'] = 100
+
     return namelist
 
 
@@ -274,7 +281,7 @@ def ColdPoolDry_3D(number):
     namelist['grid']['dz'] = 100.0
 
     namelist['init'] = {}
-    namelist['init']['dTh'] = 10.0      # temperature anomaly
+    namelist['init']['dTh'] = 3.0      # temperature anomaly
     namelist['init']['shape'] = 1       # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0      # initial height of temperature anomaly
 
@@ -288,7 +295,7 @@ def ColdPoolDry_3D(number):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 1500.0
+    namelist['time_stepping']['t_max'] = 3000.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
@@ -351,6 +358,13 @@ def ColdPoolDry_3D(number):
 
     namelist['visualization'] = {}
     namelist['visualization']['frequency'] = 20.0
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = 'passive'
+    # 1: same tracer in whole domain; 2: different tracer in initial anomaly vs. environment
+    namelist['tracers']['number'] = 1
+    namelist['tracers']['kmin'] = 0
+    namelist['tracers']['kmax'] = 10
 
     return namelist
 

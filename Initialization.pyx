@@ -271,46 +271,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
 
     ''' Initialize passive tracer phi '''
-    try:
-        use_tracers = namelist['tracers']['use_tracers']
-    except:
-        use_tracers = False
-
-    try:
-        phi_number = namelist['tracers']['number']
-    except:
-        kmax_tracer = 10
-
-    try:
-        kmax_tracer = namelist['tracers']['kmax']
-    except:
-        kmax_tracer = 10
-
-    try:
-        kmin_tracer = namelist['tracers']['kmin']
-    except:
-        kmin_tracer = 0
-
-    cdef:
-        Py_ssize_t kmin = kmin_tracer + Gr.dims.gw
-        Py_ssize_t kmax = kmax_tracer + Gr.dims.gw
-        Py_ssize_t dk = 50
-
-    if use_tracers == 'passive':
-        Pa.root_print('initializing passive tracer phi, smooth profile, kmax: ' + str(kmax_tracer) + ', dk: ' + str(dk))
-        var_shift = PV.get_varshift(Gr, 'phi')
-        for i in xrange(Gr.dims.nlg[0]):
-            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-            for j in xrange(Gr.dims.nlg[1]):
-                jshift = j * Gr.dims.nlg[2]
-                for k in xrange(Gr.dims.nlg[2]):
-                    ijk = ishift + jshift + k
-                    if k > kmin and k <= kmax:
-                        PV.values[var_shift + ijk] = 1.0
-                    elif k > kmax and k < (kmax + dk):
-                        PV.values[var_shift + ijk] = 0.5*( 1+np.cos((k-kmax)/np.double(dk)*np.pi) )
-                    else:
-                        PV.values[var_shift + ijk] = 0.0
+    init_tracer(namelist, Gr, PV, Pa)
     return
 
 
@@ -355,7 +316,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ij, ijk
 
 
-    ''' !!! '''
+    ''' Grid '''
     # Gr.dims.n[i] = namelist['grid']['ni'] (e.g. n[0] = 'nx')      --> global number of pts per direction
     # Gr.dims.nl[i] = Gr.dims.n[i] // mpi_dims[i]                   --> local number of pts (per processor)
 
@@ -409,8 +370,8 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 k_max = kstar * (np.cos( np.double(i-ic1) / istar * np.pi / 2 ) )**2
                 k_max_arr[0,i] = np.int(np.round(k_max))
 
-    from Init_plot import plot_k_marg
-    plot_k_marg(kstar, marg_i, istar, ic1, imin1, imax1)
+    # from Init_plot import plot_k_marg
+    # plot_k_marg(kstar, marg_i, istar, ic1, imin1, imax1)
 
 
     ''' theta-anomaly'''
@@ -447,22 +408,25 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     ''' plotting '''
     var_name = 'theta'
-    plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    plot_var_profile(var_name, theta[:,:,:], j0, imin1, imax1, imin2, imax2, marg_i)
+    plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    plot_var_profile(var_name, theta[:,:,:], j0, imin1, imax1, imin2, imax2, marg_i, 'double_2D')
 
     plot_k_profiles_double(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2],
-                           imin1, imin2, imax1, imax2, ic1, ic2, xstar, marg_i)
+                           imin1, imin2, imax1, imax2, ic1, ic2, xstar, marg_i, 'double_2D')
 
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     # var_name = 'qt'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
     # plot_s_profile(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     del var1
+
+    ''' Initialize passive tracer phi '''
+    init_tracer(namelist, Gr, PV, Pa)
 
     return
 
@@ -3008,3 +2972,52 @@ def interp_pchip(z_out, z_in, v_in, pchip_type=True):
         return p(z_out)
     else:
         return np.interp(z_out, z_in, v_in)
+
+def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
+                ParallelMPI.ParallelMPI Pa):
+    ''' Initialize passive tracer phi '''
+    try:
+        use_tracers = namelist['tracers']['use_tracers']
+    except:
+        use_tracers = False
+
+    try:
+        phi_number = namelist['tracers']['number']
+    except:
+        kmax_tracer = 10
+
+    try:
+        kmax_tracer = namelist['tracers']['kmax']
+    except:
+        kmax_tracer = 10
+
+    try:
+        kmin_tracer = namelist['tracers']['kmin']
+    except:
+        kmin_tracer = 0
+
+    cdef:
+        Py_ssize_t i, j, k
+        Py_ssize_t ishift, jshift, ijk
+        Py_ssize_t var_shift
+        Py_ssize_t kmin = kmin_tracer + Gr.dims.gw
+        Py_ssize_t kmax = kmax_tracer + Gr.dims.gw
+        Py_ssize_t dk = 50
+
+    if use_tracers == 'passive':
+        Pa.root_print('initializing passive tracer phi, smooth profile, kmax: ' + str(kmax_tracer) + ', dk: ' + str(dk))
+        var_shift = PV.get_varshift(Gr, 'phi')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    if k > kmin and k <= kmax:
+                        PV.values[var_shift + ijk] = 1.0
+                    elif k > kmax and k < (kmax + dk):
+                        PV.values[var_shift + ijk] = 0.5*( 1+np.cos((k-kmax)/np.double(dk)*np.pi) )
+                    else:
+                        PV.values[var_shift + ijk] = 0.0
+
+    return
