@@ -813,7 +813,8 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # parameters
     cdef:
-        double rstar = 5000.0  # half of the width of initial cold-pools [m]
+        # double rstar = 5000.0  # half of the width of initial cold-pools [m]
+        double rstar = 1000.0  # half of the width of initial cold-pools [m]
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
