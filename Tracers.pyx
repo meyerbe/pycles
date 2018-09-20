@@ -33,6 +33,8 @@ def TracersFactory(namelist):
         return UpdraftTracers(namelist)
     elif use_tracers == 'passive':
         return PassiveTracers(namelist)
+    elif use_tracers == 'coldpool':
+        return ColdPoolTracers(namelist)
     else:
         return TracersNone()
 
@@ -323,5 +325,67 @@ cdef class PassiveTracers:
     cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
         NS.write_ts('phi_sum', self.sum, Pa)
+
+        return
+
+
+
+
+
+# __
+cdef class ColdPoolTracers:
+    def __init__(self, namelist):
+        # self.case_name = namelist['meat']['case_name']
+
+        self.tracer_dict = {}
+        self.tracer_dict['N'] = namelist['tracers']['number']
+        # self.N = namelist['tracers']['number']
+
+        # namelist['tracers'] = {}
+        # namelist['tracers']['use_tracers'] = 'passive'
+        # # 1: same tracer in whole domain; 2: different tracer in initial anomaly vs. environment
+        # namelist['tracers']['number'] = 1
+        # namelist['tracers']['kmin'] = 0
+        # namelist['tracers']['kmax'] = 10
+        #
+        return
+
+    cpdef initialize(self, Grid.Grid Gr,  PrognosticVariables.PrognosticVariables PV, NetCDFIO_Stats NS,
+                     ParallelMPI.ParallelMPI Pa):
+        Pa.root_print('Cold Pool Tracers')
+        N = self.tracer_dict['N']
+
+        self.tracer_dict['tracers'] = {}
+        name = 'phi_srf'
+        self.tracer_dict['tracers'][name] = {}
+        PV.add_variable(name, '-', 'surface', 'tracer diagnostics' , "sym", "scalar", Pa)
+        name = 'phi_env'
+        self.tracer_dict['tracers'][name] = {}
+        PV.add_variable(name, '-', 'environment', 'tracer diagnostics' , "sym", "scalar", Pa)
+        for nv in range(N):
+            name = 'phi'+str(np.int(nv+1))
+            self.tracer_dict['tracers'][nv] = {}
+            PV.add_variable(name, '-', name, 'tracer diagnostics' , "sym", "scalar", Pa)
+
+        # for n in range(N):
+        #     name = 'phi'+str(np.int(n))
+        #     PV.add_variable(name, '-', name, 'passive tracer', "sym", "scalar", Pa)
+        #     # NS.add_ts('phi_sum', Gr, Pa)
+        return
+
+
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,ParallelMPI.ParallelMPI Pa):
+
+        return
+
+
+    cpdef update_cleanup(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,ParallelMPI.ParallelMPI Pa):
+
+        return
+
+
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
         return

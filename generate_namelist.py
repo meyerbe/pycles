@@ -183,6 +183,7 @@ def ColdPoolDry_2D(number):
     namelist['init']['dTh'] = 3.0      # temperature anomaly
     namelist['init']['shape'] = 1       # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0      # initial height of temperature anomaly
+    namelist['init']['r'] = 1000.0      # initial radius of temperature anomaly
 
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
@@ -281,9 +282,10 @@ def ColdPoolDry_3D(number):
     namelist['grid']['dz'] = 100.0
 
     namelist['init'] = {}
-    namelist['init']['dTh'] = 3.0      # temperature anomaly
+    namelist['init']['dTh'] = 2.0       # temperature anomaly
     namelist['init']['shape'] = 1       # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0      # initial height of temperature anomaly
+    namelist['init']['r'] = 1000.0      # initial radius of temperature anomaly
 
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
