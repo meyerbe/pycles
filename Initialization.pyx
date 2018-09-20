@@ -254,7 +254,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     ''' plotting '''
     var_name = 'theta'
     plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
-    plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    # plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
 
     plot_k_profile(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2], imin, imax, ic, marg_i, 'double_2D')
 
@@ -588,7 +588,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' plotting '''
     var_name = 'theta'
     plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
 
     plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
@@ -781,7 +781,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
     var_name = 'theta'
     plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
 
     # plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
@@ -962,14 +962,14 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t var_shift
 
     var_name = 'theta'
-    from Init_plot import plot_imshow_alongy
+    # from Init_plot import plot_imshow_alongy
     # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
 
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
     del var1
 
     # from Init_plot import plot_imshow
