@@ -840,11 +840,12 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         Py_ssize_t marg_i = 10  # width of margin
 
-        Py_ssize_t d = np.int(np.round(Gr.dims.n[1]/2))
+        Py_ssize_t d = np.int(np.round(10*irstar))
+        # Py_ssize_t d = np.int(np.round(Gr.dims.n[1]/2))
         Py_ssize_t dhalf = np.int(np.round(Gr.dims.n[1]/4))
         Py_ssize_t a = np.int(np.round(d*np.sin(60.0/360.0*2*np.pi)))    # sin(60 degree) = np.sqrt(3)/2
 
-        Py_ssize_t ic1 = np.int(np.round(a/2)) + Gr.dims.gw
+        Py_ssize_t ic1 = 10 + np.int(np.round(a/2)) + Gr.dims.gw
         Py_ssize_t ic2 = ic1
         Py_ssize_t ic3 = ic1 + np.int(np.round(a))
         Py_ssize_t jc1 = np.int(dhalf + Gr.dims.gw) #np.int(np.round(d/2) + Gr.dims.gw)
@@ -855,6 +856,10 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double k_max = 0
+
+    Pa.root_print('initial settings: r='+str(rstar)+', ir='+str(irstar)+', z='+str(zstar)+', k='+str(kstar))i
+    Pa.root_print('margin of Th-anomaly: di='+str(marg_i))
+    Pa.root_print('distance btw cps: d='+str(d*Gr.dims.n[0])+', id='+str(d))
 
     # ic_arr[0] = ic1
     # ic_arr[1] = ic2
