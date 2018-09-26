@@ -857,7 +857,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double k_max = 0
 
-    Pa.root_print('initial settings: r='+str(rstar)+', ir='+str(irstar)+', z='+str(zstar)+', k='+str(kstar))i
+    Pa.root_print('initial settings: r='+str(rstar)+', ir='+str(irstar)+', z='+str(zstar)+', k='+str(kstar))
     Pa.root_print('margin of Th-anomaly: di='+str(marg_i))
     Pa.root_print('distance btw cps: d='+str(d*Gr.dims.n[0])+', id='+str(d))
 
