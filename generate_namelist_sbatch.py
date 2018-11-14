@@ -52,7 +52,10 @@ def main():
         print('(REMEMBER: not all cases in generate_namelist_sbatch.py')
         exit()
 
-    write_file(namelist)
+    if case_name[0:11] == 'ColdPoolDry':
+        write_file_CP(namelist, zstar, rstar, dTh)
+    else:
+        write_file(namelist)
 
 
 
@@ -372,8 +375,35 @@ def Bomex():
 
 
 
-def write_file(namelist):
+def write_file_CP(namelist,  zstar, rstar, dTh):
     print('writing namelist file: '+namelist['meta']['simname'])
+    try:
+        type(namelist['meta']['simname'])
+    except:
+        print('Casename not specified in namelist dictionary!')
+        print('FatalError')
+        exit()
+
+    # namelist['meta']['uuid'] = str(uuid.uuid4())
+    # fh = open(namelist['meta']['simname'] + '_' + uuid_[-5:] + '.in', 'w')
+
+    # uuid_ = str(uuid.uuid4())
+    # namelist['meta']['uuid'] = uuid_
+    # fh = open(namelist['meta']['simname'] + '_' + uuid_[-5:] + '.in', 'w')
+
+    id = 'z'+str(np.int(zstar))+'_r'+str(np.int(rstar)) + '_dTh'+str(np.int(dTh))
+    namelist['meta']['uuid'] = id
+    fh = open(namelist['meta']['simname'] + '_' + id + '.in', 'w')
+    #pprint.pprint(namelist)
+    json.dump(namelist, fh, sort_keys=True, indent=4)
+    fh.close()
+
+    return
+
+
+
+def write_file(namelist):
+
     try:
         type(namelist['meta']['simname'])
     except:
@@ -384,7 +414,7 @@ def write_file(namelist):
     namelist['meta']['uuid'] = str(uuid.uuid4())
 
     fh = open(namelist['meta']['simname'] + '.in', 'w')
-    #pprint.pprint(namelist)
+    pprint.pprint(namelist)
     json.dump(namelist, fh, sort_keys=True, indent=4)
     fh.close()
 
