@@ -252,16 +252,16 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
 
     ''' plotting '''
-    var_name = 'theta'
-    plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    #var_name = 'theta'
+    #plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     # plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
 
-    plot_k_profile(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2], imin, imax, ic, marg_i, 'double_2D')
+    #plot_k_profile(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2], imin, imax, ic, marg_i, 'double_2D')
 
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    #plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     var_name = 'qt'
     if 'qt' in PV_.name_index.keys():
         var_shift = PV_.get_varshift(Gr, var_name)
@@ -587,7 +587,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     ''' plotting '''
     var_name = 'theta'
-    plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
     # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
 
@@ -597,7 +597,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
     # var_name = 'qt'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
@@ -659,8 +659,8 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        Py_ssize_t marg_i = 10  # width of margin
-        Py_ssize_t isep = 4*irstar
+        Py_ssize_t marg_i = 8  # width of margin
+        Py_ssize_t isep = 7*irstar
         Py_ssize_t jsep = 0
         Py_ssize_t ic1 = np.int(Gr.dims.ng[0] / 3)
         Py_ssize_t jc1 = np.int(Gr.dims.ng[1] / 2)
@@ -780,7 +780,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' plotting '''
     j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
     var_name = 'theta'
-    plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    #plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
     # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
 
@@ -790,7 +790,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    #plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
     del var1
 
     ''' Initialize passive tracer phi '''
@@ -1277,12 +1277,12 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
             u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
     # --
-    plt.figure(figsize=(12,6))
-    plt.subplot(1,2,1)
-    plt.plot(thetal,Gr.zl_half)
-    plt.subplot(1,2,2)
-    plt.plot(thetal[Gr.dims.gw:30],Gr.zl_half[Gr.dims.gw:30])
-    plt.show()
+    #plt.figure(figsize=(12,6))
+    #plt.subplot(1,2,1)
+    #plt.plot(thetal,Gr.zl_half)
+    #plt.subplot(1,2,2)
+    #plt.plot(thetal[Gr.dims.gw:30],Gr.zl_half[Gr.dims.gw:30])
+    #plt.show()
     # --
 
     #Set velocities for Galilean transformation
