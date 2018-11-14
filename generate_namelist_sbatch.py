@@ -36,15 +36,15 @@ def main():
             dTh = 2.0
 
     if case_name == 'ColdPoolDry_2D':
-        namelist = ColdPoolDry_2D('single')
+        namelist = ColdPoolDry_2D('single', zstar, rstar, dTh)
     elif case_name == 'ColdPoolDry_double_2D':
-        namelist = ColdPoolDry_2D('double')
+        namelist = ColdPoolDry_2D('double', zstar, rstar, dTh)
     elif case_name == 'ColdPoolDry_single_3D':
-        namelist = ColdPoolDry_3D('single')
+        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh)
     elif case_name == 'ColdPoolDry_double_3D':
-        namelist = ColdPoolDry_3D('double')
+        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh)
     elif case_name == 'ColdPoolDry_triple_3D':
-        namelist = ColdPoolDry_3D('triple')
+        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh)
     elif case_name == 'Bomex':
         namelist = Bomex()
     else:
@@ -57,7 +57,7 @@ def main():
 
 
 
-def ColdPoolDry_2D(number,  zstar, rstar, dTh):
+def ColdPoolDry_2D(number, zstar, rstar, dTh):
 
     namelist = {}
 
