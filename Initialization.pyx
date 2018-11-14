@@ -258,18 +258,18 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
     #plot_k_profile(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2], imin, imax, ic, marg_i, 'double_2D')
 
-    var_name = 's'
-    var_shift = PV_.get_varshift(Gr, var_name)
-    var1 = PV_.get_variable_array(var_name, Gr)
+    # var_name = 's'
+    # var_shift = PV_.get_varshift(Gr, var_name)
+    # var1 = PV_.get_variable_array(var_name, Gr)
     #plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
-    var_name = 'qt'
-    if 'qt' in PV_.name_index.keys():
-        var_shift = PV_.get_varshift(Gr, var_name)
-        var1 = PV_.get_variable_array(var_name, Gr)
-        plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
-    else:
-        Pa.root_print(var_name + ' not in PV')
-    del var1
+    # var_name = 'qt'
+    # if 'qt' in PV_.name_index.keys():
+    #     var_shift = PV_.get_varshift(Gr, var_name)
+    #     var1 = PV_.get_variable_array(var_name, Gr)
+    #     plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    # else:
+    #     Pa.root_print(var_name + ' not in PV')
+    # del var1
 
     # __
     istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
@@ -423,7 +423,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     ''' plotting '''
     var_name = 'theta'
-    plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    # plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     plot_var_profile(var_name, theta[:,:,:], j0, imin1, imax1, imin2, imax2, marg_i, 'double_2D')
 
@@ -433,7 +433,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     var_name = 's'
     var_shift = PV_.get_varshift(Gr, var_name)
     var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    # plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     # var_name = 'qt'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
@@ -585,24 +585,24 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[w_varshift + ijk] = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k], 0.0)
 
-    ''' plotting '''
-    var_name = 'theta'
-    plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
-    # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
-
-    plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
-                      ic, jc)
-
-    var_name = 's'
-    var_shift = PV_.get_varshift(Gr, var_name)
-    var1 = PV_.get_variable_array(var_name, Gr)
-    plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
-    # var_name = 'qt'
+    # ''' plotting '''
+    # var_name = 'theta'
+    # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
+    # # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
+    #
+    # plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
+    #                   ic, jc)
+    #
+    # var_name = 's'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
-    # plot_s_profile(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    del var1
+    # plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
+    # # var_name = 'qt'
+    # # var_shift = PV_.get_varshift(Gr, var_name)
+    # # var1 = PV_.get_variable_array(var_name, Gr)
+    # # plot_s_profile(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # del var1
 
     ''' Initialize passive tracer phi '''
     init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
@@ -777,21 +777,21 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
 
-    ''' plotting '''
-    j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
-    var_name = 'theta'
-    #plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
-    # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
-
-    # plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
-    #                   ic, jc)
-
-    var_name = 's'
-    var_shift = PV_.get_varshift(Gr, var_name)
-    var1 = PV_.get_variable_array(var_name, Gr)
-    #plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
-    del var1
+    # ''' plotting '''
+    # j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
+    # var_name = 'theta'
+    # #plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
+    # # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
+    #
+    # # plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
+    # #                   ic, jc)
+    #
+    # var_name = 's'
+    # var_shift = PV_.get_varshift(Gr, var_name)
+    # var1 = PV_.get_variable_array(var_name, Gr)
+    # #plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
+    # del var1
 
     ''' Initialize passive tracer phi '''
     init_tracer(namelist, Gr, PV, Pa, k_max_arr, ic_arr, jc_arr)
