@@ -31,7 +31,7 @@ def main():
         namelist = StableBubble()
     elif case_name == 'SaturatedBubble':
         namelist = SaturatedBubble()
-    elif case_name == 'ColdPoolDry_2D':
+    elif case_name == 'ColdPoolDry_single_2D':
         namelist = ColdPoolDry_2D('single')
     elif case_name == 'ColdPoolDry_double_2D':
         namelist = ColdPoolDry_2D('double')
@@ -247,8 +247,8 @@ def ColdPoolDry_2D(number):
 
     namelist['meta'] = {}
     if number == 'single':
-        namelist['meta']['casename'] = 'ColdPoolDry_2D'
-        namelist['meta']['simname'] = 'ColdPoolDry_2D'
+        namelist['meta']['casename'] = 'ColdPoolDry_single_2D'
+        namelist['meta']['simname'] = 'ColdPoolDry_single_2D'
     elif number == 'double':
         namelist['meta']['casename'] = 'ColdPoolDry_double_2D'
         namelist['meta']['simname'] = 'ColdPoolDry_double_2D'

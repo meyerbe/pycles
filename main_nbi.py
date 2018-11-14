@@ -12,7 +12,7 @@ def main():
     print('file_namelist', args.namelist)
 
     #file_namelist = open(args.namelist).read()
-    file_namelist = open('ColdPoolDry_2D.in').read()
+    file_namelist = open('ColdPoolDry_single_2D.in').read()
     namelist = json.loads(file_namelist)
     del file_namelist
 
