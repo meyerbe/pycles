@@ -30,7 +30,7 @@ do
   zstar=${z_params[$count_geom]}
   rstar=${r_params[$count_geom]}
   echo "parameters:",$zstar $rstar
-  python generate_namelist.py ColdPoolDry_single_3D --zstar $zstar --rstar $zstar --dTh $dTh
+  python generate_namelist_sbatch.py ColdPoolDry_single_3D --zstar $zstar --rstar $zstar --dTh $dTh
 
   sbatch SLURM_script_bm.sh ColdPoolDry_single_3D.in
 
