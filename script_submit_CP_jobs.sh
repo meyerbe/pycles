@@ -10,7 +10,7 @@
 
 # (try with multiple cores)
 
-dTh = 2
+dTh=2
 
 th_params=( 2 3 )
 z_params=( 500 1000 )
