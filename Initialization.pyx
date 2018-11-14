@@ -36,7 +36,7 @@ def InitializationFactory(namelist):
         elif casename == 'ColdPoolDry_double_2D':
             print('calling Initialization double ColdPoolDry 2D')
             return InitColdPoolDry_double_2D
-        elif casename == 'ColdPoolDry_3D':
+        elif casename == 'ColdPoolDry_single_3D':
             print('calling Initialization single ColdPoolDry 3D')
             return InitColdPoolDry_single_3D
         elif casename == 'ColdPoolDry_double_3D':
