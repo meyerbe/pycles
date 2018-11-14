@@ -35,7 +35,7 @@ def main():
         else:
             dTh = 2.0
 
-    if case_name == 'ColdPoolDry_2D':
+    if case_name == 'ColdPoolDry_single_2D':
         namelist = ColdPoolDry_2D('single', zstar, rstar, dTh)
     elif case_name == 'ColdPoolDry_double_2D':
         namelist = ColdPoolDry_2D('double', zstar, rstar, dTh)
@@ -142,8 +142,8 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
 
     namelist['meta'] = {}
     if number == 'single':
-        namelist['meta']['casename'] = 'ColdPoolDry_2D'
-        namelist['meta']['simname'] = 'ColdPoolDry_2D'
+        namelist['meta']['casename'] = 'ColdPoolDry_single_2D'
+        namelist['meta']['simname'] = 'ColdPoolDry_single_2D'
     elif number == 'double':
         namelist['meta']['casename'] = 'ColdPoolDry_double_2D'
         namelist['meta']['simname'] = 'ColdPoolDry_double_2D'
