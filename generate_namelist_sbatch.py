@@ -247,8 +247,8 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
 
     namelist['meta'] = {}
     if number == 'single':
-        namelist['meta']['casename'] = 'ColdPoolDry_3D'
-        namelist['meta']['simname'] = 'ColdPoolDry_3D'
+        namelist['meta']['casename'] = 'ColdPoolDry_single_3D'
+        namelist['meta']['simname'] = 'ColdPoolDry_single_3D'
     elif number == 'double':
         namelist['meta']['casename'] = 'ColdPoolDry_double_3D'
         namelist['meta']['simname'] = 'ColdPoolDry_double_3D'
@@ -373,7 +373,7 @@ def Bomex():
 
 
 def write_file(namelist):
-
+    print('writing namelist file: '+namelist['meta']['simname'])
     try:
         type(namelist['meta']['simname'])
     except:
@@ -384,7 +384,7 @@ def write_file(namelist):
     namelist['meta']['uuid'] = str(uuid.uuid4())
 
     fh = open(namelist['meta']['simname'] + '.in', 'w')
-    pprint.pprint(namelist)
+    #pprint.pprint(namelist)
     json.dump(namelist, fh, sort_keys=True, indent=4)
     fh.close()
 

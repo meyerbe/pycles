@@ -29,17 +29,19 @@ do
   # 'echo $z_params' will output only the first element.
   zstar=${z_params[$count_geom]}
   rstar=${r_params[$count_geom]}
-  echo "parameters:",$zstar $rstar
+  echo "parameters:" $zstar $rstar
   python generate_namelist_sbatch.py ColdPoolDry_single_3D --zstar $zstar --rstar $zstar --dTh $dTh
+  
+  echo "generated namelist file"
 
   sbatch SLURM_script_bm.sh ColdPoolDry_single_3D.in
 
   ((count_geom++))
 done
 
-for i in ${th_params[@]}; do
-  echo $i
-done
+#for i in ${th_params[@]}; do
+#  echo $i
+#done
 
 echo "finished bash script"
 
