@@ -471,6 +471,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     RS.u0 = 0.0
     RS.v0 = 0.0
     RS.initialize(Gr, Th, NS, Pa)
+    Pa.root_print('finished RS.initialize')
 
     #Get the variable number for each of the velocity components
     cdef:
@@ -507,7 +508,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double k_max = 0
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
-
+    ''' compute k_max '''
     i = ic
     j = jc
     ir = np.int(np.round(np.sqrt((i-ic)**2 + (j-jc)**2)))
@@ -530,6 +531,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         i += 1
         ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
 
+    Pa.root_print('Initialization: finished k_max[0] computation')
+
+
     i = ic
     j = jc
     ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
@@ -551,6 +555,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         j = jc
         i += 1
         ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+    Pa.root_print('Initialization: finished k_max[1] computation')
 
     ''' theta-anomaly'''
     # from thermodynamic_functions cimport theta_c
@@ -573,6 +578,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                         # th = th_g - dTh
                         th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
                     theta[i, j, k] = th
+    Pa.root_print('Initialization: theta anomaly')
 
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
@@ -584,6 +590,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k], 0.0)
+    Pa.root_print('Initialization: finished PV initialization')
 
     # ''' plotting '''
     # var_name = 'theta'
@@ -3015,6 +3022,8 @@ def interp_pchip(z_out, z_in, v_in, pchip_type=True):
 
 def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                 ParallelMPI.ParallelMPI Pa, k_max_arr, ic_arr, jc_arr):
+    Pa.root_print('init_tracer')
+
     ''' Initialize passive tracer phi '''
     try:
         use_tracers = namelist['tracers']['use_tracers']
