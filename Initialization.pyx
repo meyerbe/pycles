@@ -592,9 +592,10 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double theta_pert_
 
-    for i in xrange(ic + irstar + 10):
-        for j in xrange(jc + irstar + 10):
-        #for j in xrange(Gr.dims.nlg[1]):
+    # for i in xrange(ic + irstar + 10):
+    for i in xrange(Gr.dims.nlg[0]):
+        # for j in xrange(jc + irstar + 10):
+        for j in xrange(Gr.dims.nlg[1]):
             if k_max_arr[1, i, j] > 0:
                 for k in xrange(Gr.dims.nlg[2]):
                     th = th_g
