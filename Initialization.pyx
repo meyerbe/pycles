@@ -482,6 +482,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
         Py_ssize_t ijk
+        double dx = Gr.dims.dx[0]
+        double dy = Gr.dims.dx[1]
+        double dz = Gr.dims.dx[2]
 
     # parameters
     cdef:
@@ -498,12 +501,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+        Py_ssize_t marg = 10*Gr.dims.dx[0]  # width of margin
         Py_ssize_t marg_i = 10  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
-        double xc = Gr.x_half[ic]       # center of cold-pool
         Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
+        double xc = Gr.x_half[ic]       # center of cold-pool
         double yc = Gr.y_half[jc]       # center of cold-pool
         Py_ssize_t ir
+        double r
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double k_max = 0
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
@@ -511,10 +516,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' compute k_max '''
     i = ic
     j = jc
-    ir = np.int(np.round(np.sqrt((i-ic)**2 + (j-jc)**2)))
-    while (ir <= irstar):
-        while (ir <= irstar):
-            k_max = kstar * (np.cos( np.double(ir)/irstar * np.pi / 2 ) ) ** 2
+    # ir = np.int(np.round(np.sqrt((i-ic)**2 + (j-jc)**2)))
+    r = np.sqrt((i*dx-ic)**2 + (j*dy-jc)**2)
+    # while (ir <= irstar):
+    while (r <= rstar):
+        # while (ir <= irstar):
+        while (r <= rstar):
+            # k_max = kstar * (np.cos( np.double(ir)/irstar * np.pi / 2 ) ) ** 2
+            k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
             k_max_arr[0,i,j] = np.int(np.round(k_max))
             k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
             k_max_arr[0,2*ic-i,2*jc-j] = k_max_arr[0,i,j]
@@ -526,20 +535,24 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # ir_arr[i,2*jc-j] = ir_arr[i,j]
 
             j += 1
-            ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+            # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+            r = np.sqrt((i*dx-ic)**2 + (j*dy-jc)**2)
         j = jc
         i += 1
-        ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+        # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+        r = np.sqrt((i*dx-ic)**2 + (j*dy-jc)**2)
 
     Pa.root_print('Initialization: finished k_max[0] computation')
 
 
     i = ic
     j = jc
-    ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+    # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+    r = np.sqrt((i*dx-ic)**2 + (j*dy-jc)**2)
     while (ir <= irstar + marg_i):
         while (ir <= irstar + marg_i):
-            k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
+            # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
+            k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
             k_max_arr[1, i, j] = np.int(np.round(k_max))
             k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
             k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
@@ -551,10 +564,13 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # ir_arr_marg[i, 2 * jc - j] = ir_arr_marg[i, j]
 
             j += 1
-            ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+            # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+            r = np.sqrt((i*dx-ic)**2 + (j*dy-jc)**2)
         j = jc
         i += 1
-        ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+        # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+        r = np.sqrt((i*dx-ic)**2 + (j*dy-jc)**2)
+
     Pa.root_print('Initialization: finished k_max[1] computation')
 
     ''' theta-anomaly'''
@@ -565,6 +581,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double th_g = 300.0  # value from Soares Surface
         # ''' ??? correct dimensions with nlg? '''
         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+        # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+        double theta_pert_
 
     for i in xrange(ic + irstar + 10):
         for j in xrange(jc + irstar + 10):
@@ -578,7 +597,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                         # th = th_g - dTh
                         th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
                     theta[i, j, k] = th
-    Pa.root_print('Initialization: theta anomaly')
+    Pa.root_print('Initialization: finished theta anomaly')
 
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
@@ -589,7 +608,13 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k], 0.0)
+                # --- adding noise ---
+                if k <= kstar + 2:
+                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+                else:
+                    theta_pert_ = 0.0
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
+                # PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k], 0.0)
     Pa.root_print('Initialization: finished PV initialization')
 
     # ''' plotting '''
@@ -666,7 +691,8 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        Py_ssize_t marg_i = 8  # width of margin
+        Py_ssize_t marg = 5*Gr.dims.dx[0]  # width of margin
+        Py_ssize_t marg_i = 5  # width of margin
         Py_ssize_t isep = 7*irstar
         Py_ssize_t jsep = 0
         Py_ssize_t ic1 = np.int(Gr.dims.ng[0] / 3)
@@ -682,15 +708,20 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ir
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double k_max = 0
+        double r
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
 
     i = ic1
     j = jc1
-    ir = np.int(np.round(np.sqrt((i-ic1)**2 + (j-jc1)**2)))
-    while (ir <= irstar):
-        while (ir <= irstar):
-            k_max = kstar * (np.cos( np.double(ir)/irstar * np.pi / 2 ) ) ** 2
+    # ir = np.int(np.round(np.sqrt((i-ic1)**2 + (j-jc1)**2)))
+    r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
+    # while (ir <= irstar):
+    while (r <= rstar):
+        # while (ir <= irstar):
+        while (r <= rstar):
+            # k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
+            k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
             k_max_arr[0,i,j] = np.int(np.round(k_max))
             k_max_arr[0,2*ic1-i,j] = k_max_arr[0,i,j]
             k_max_arr[0,2*ic1-i,2*jc1-j] = k_max_arr[0,i,j]
@@ -702,17 +733,23 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # ir_arr[i,2*jc-j] = ir_arr[i,j]
 
             j += 1
-            ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
         j = jc1
         i += 1
-        ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
 
     i = ic1
     j = jc1
-    ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-    while (ir <= irstar + marg_i):
-        while (ir <= irstar + marg_i):
-            k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
+    # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+    r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
+    # while (ir <= irstar + marg_i):
+    while (r <= rstar + marg):
+        # while (ir <= irstar + marg_i):
+        while (ir <= irstar + marg):
+            # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
+            k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg) * np.pi / 2)) ** 2
             k_max_arr[1, i, j] = np.int(np.round(k_max))
             k_max_arr[1, 2 * ic1 - i, j] = k_max_arr[1, i, j]
             k_max_arr[1, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[1, i, j]
@@ -724,10 +761,12 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # ir_arr_marg[i, 2 * jc - j] = ir_arr_marg[i, j]
 
             j += 1
-            ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
         j = jc1
         i += 1
-        ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
 
     ''' theta-anomaly'''
     # Noise
@@ -845,6 +884,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+        Py_ssize_t marg = 10*Gr.dims.dx[0]  # width of margin
         Py_ssize_t marg_i = 10  # width of margin
 
         Py_ssize_t d = np.int(np.round(10*irstar))
@@ -865,6 +905,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double k_max = 0
+        double r
 
     Pa.root_print('initial settings: r='+str(rstar)+', ir='+str(irstar)+', z='+str(zstar)+', k='+str(kstar))
     Pa.root_print('margin of Th-anomaly: di='+str(marg_i))
@@ -888,40 +929,52 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print('cp3: [' + str(ic3) + ', ' + str(jc3) + ']')
     print('')
 
-
+    ''' compute k_max '''
     i = ic1
     j = jc1
-    ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-    while (ir <= irstar):
-        while (ir <= irstar):
-            k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
+    # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+    r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
+    # while (ir <= irstar):
+    while (r <= rstar):
+        # while (ir <= irstar):
+        while (r <= rstar):
+            # k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
+            k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
             k_max_arr[0, i, j] = np.int(np.round(k_max))
             k_max_arr[0, 2 * ic1 - i, j] = k_max_arr[0, i, j]
             k_max_arr[0, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[0, i, j]
             k_max_arr[0, i, 2 * jc1 - j] = k_max_arr[0, i, j]
 
             j += 1
-            ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
         j = jc1
         i += 1
-        ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
 
     i = ic1
     j = jc1
-    ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-    while (ir <= irstar + marg_i):
-        while (ir <= irstar + marg_i):
-            k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
+    # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+    r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
+    # while (ir <= irstar + marg_i):
+    while (r <= rstar + marg):
+        # while (ir <= irstar + marg_i):
+        while (ir <= irstar + marg):
+            # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
+            k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg) * np.pi / 2)) ** 2
             k_max_arr[1, i, j] = np.int(np.round(k_max))
             k_max_arr[1, 2 * ic1 - i, j] = k_max_arr[1, i, j]
             k_max_arr[1, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[1, i, j]
             k_max_arr[1, i, 2 * jc1 - j] = k_max_arr[1, i, j]
 
             j += 1
-            ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+            r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
         j = jc1
         i += 1
-        ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
+        r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
 
     ''' theta-anomaly'''
     # Noise
@@ -969,22 +1022,22 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
 
-    '''plotting'''
-    from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
-    cdef:
-        PrognosticVariables.PrognosticVariables PV_ = PV
-        Py_ssize_t var_shift
-
-    var_name = 'theta'
-    # from Init_plot import plot_imshow_alongy
-    # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-
-    var_name = 's'
-    var_shift = PV_.get_varshift(Gr, var_name)
-    var1 = PV_.get_variable_array(var_name, Gr)
-    # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-    del var1
+    # '''plotting'''
+    # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
+    # cdef:
+    #     PrognosticVariables.PrognosticVariables PV_ = PV
+    #     Py_ssize_t var_shift
+    #
+    # var_name = 'theta'
+    # # from Init_plot import plot_imshow_alongy
+    # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    #
+    # var_name = 's'
+    # var_shift = PV_.get_varshift(Gr, var_name)
+    # var1 = PV_.get_variable_array(var_name, Gr)
+    # # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # del var1
 
     # from Init_plot import plot_imshow
     # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
@@ -1200,6 +1253,8 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
                     ijk = ishift + jshift + k
                     PV.values[e_varshift + ijk] = 0.0
     return
+
+
 
 def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
