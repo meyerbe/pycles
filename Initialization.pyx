@@ -953,7 +953,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         j = jc1
         i += 1
         # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-ic)**2 + (Gr.y_half[j]-jc)**2)
+        r = np.sqrt((Gr.x_half[i]-ic1)**2 + (Gr.y_half[j]-jc1)**2)
 
     i = ic1
     j = jc1
@@ -962,7 +962,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # while (ir <= irstar + marg_i):
     while (r <= rstar + marg):
         # while (ir <= irstar + marg_i):
-        while (ir <= irstar + marg):
+        while (r <= rstar + marg):
             # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
             k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg) * np.pi / 2)) ** 2
             k_max_arr[1, i, j] = np.int(np.round(k_max))
