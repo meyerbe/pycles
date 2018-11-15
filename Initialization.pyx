@@ -351,7 +351,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         int kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         Py_ssize_t istar = np.int(xstar/Gr.dims.dx[0])
         # double marg = 0.25
-        int marg = 10*Gr.dims.dx[0]                         # width of margin
+        double marg = 10*Gr.dims.dx[0]                         # width of margin
         int marg_i = 10                                     # width of margin
         Py_ssize_t isep = 4*istar
         Py_ssize_t ic1 = np.int(Gr.dims.n[0]/3)
@@ -371,7 +371,8 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # (b) in terms of i
     for i in range(Gr.dims.nlg[0]):
-        if np.abs(i-ic1) <= (istar + marg_i):
+        if np.abs(Gr.x_half[i]-xc1) <= (xstar + marg):
+        # if np.abs(i-ic1) <= (istar + marg_i):
             # !! important to take cos of a double number; if i is an integer, it's like np.int(cos(i))
             # cos(i/(istar+marg_i))**2 >> wider cos-function
             # k_max = kstar * (np.cos(np.double(i - ic1) / (istar+marg_i) * np.pi / 2)) ** 2
@@ -381,7 +382,8 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # if imin1 == 0:
             #     imin1 = i
 
-            if np.abs(i-ic1) <= istar:
+            # if np.abs(i-ic1) <= istar:
+            if np.abs(Gr.x_half[i]-xc1) <= xstar:
                 # if imin1 == 0:
                 #     imin1 = i
                 # k_max = kstar * (np.cos( np.double(i-ic1) / istar * np.pi / 2 ) )**2
