@@ -517,7 +517,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
     print('xc, min, max, '+str(xc) + ', ' + str(Gr.dims.indx_lo[0])+ ', ' + str(Gr.x_half.shape))
-    print('xc, min, max, '+str(xc) + ', ' + str(Gr.x_half[Gr.dims.indx_lo[0]] - xc))
+    print(str(Gr.x_half[Gr.dims.indx_lo[0]] - xc))
     print('yc, min, max, '+str(yc) + ', ' + str(Gr.dims.indx_lo[1])+ ', ' + str(Gr.y_half.shape))
 
     ''' compute k_max '''
@@ -541,13 +541,15 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
             if (r <= (rstar + marg) ):
                 print('smaller than rstar + marg')
+                print('r/(rstar + marg): ' + str(r/(rstar / marg)))
+                print('r/rstar: ' + str(r/rstar))
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
                 k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
                 k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
                 k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
                 if (r <= rstar):
-                    print('smaller than rstar')
+                    print('Smaller than rstar')
                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
                     k_max_arr[0,i,j] = np.int(np.round(k_max))
                     k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
