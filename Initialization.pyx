@@ -502,7 +502,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         # Py_ssize_t marg_i = 10  # width of margin
-        Py_ssize_t marg_i = 2  # width of margin
+        Py_ssize_t marg_i = 5  # width of margin
         double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
         Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
@@ -662,8 +662,8 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        double marg = 5*Gr.dims.dx[0]  # width of margin
         Py_ssize_t marg_i = 5  # width of margin
+        double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t isep = 7*irstar
         Py_ssize_t jsep = 0
         Py_ssize_t ic1 = np.int(Gr.dims.ng[0] / 3)
