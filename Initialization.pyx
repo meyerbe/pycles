@@ -515,8 +515,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
 
     ''' compute k_max '''
-    i = ic
-    j = jc
     for i in xrange(Gr.dims.nlg[0]):
         for j in xrange(Gr.dims.nlg[1]):
             ij = i * istride_2d + j
@@ -680,61 +678,25 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
 
-    i = ic1
-    j = jc1
-    # ir = np.int(np.round(np.sqrt((i-ic1)**2 + (j-jc1)**2)))
-    r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-    # while (ir <= irstar):
-    while (r <= rstar):
-        # while (ir <= irstar):
-        while (r <= rstar):
-            # k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
-            k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-            k_max_arr[0,i,j] = np.int(np.round(k_max))
-            k_max_arr[0,2*ic1-i,j] = k_max_arr[0,i,j]
-            k_max_arr[0,2*ic1-i,2*jc1-j] = k_max_arr[0,i,j]
-            k_max_arr[0,i,2*jc1-j] = k_max_arr[0,i,j]
+    ''' compute k_max '''
+    for i in xrange(Gr.dims.nlg[0]):
+        for j in xrange(Gr.dims.nlg[1]):
+            ij = i * istride_2d + j
+            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            if (r <= rstar + marg):
+                k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                k_max_arr[1, i, j] = np.int(np.round(k_max))
+                k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
+                k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
+                k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
+                if (r <= rstar):
+                    k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
+                    k_max_arr[0,i,j] = np.int(np.round(k_max))
+                    k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
+                    k_max_arr[0,2*ic-i,2*jc-j] = k_max_arr[0,i,j]
+                    k_max_arr[0,i,2*jc-j] = k_max_arr[0,i,j]
 
-            # ir_arr[i,j] = ir
-            # ir_arr[2*ic-i,j] = ir_arr[i,j]
-            # ir_arr[2*ic-i,2*jc-j] = ir_arr[i,j]
-            # ir_arr[i,2*jc-j] = ir_arr[i,j]
-
-            j += 1
-            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-            r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-        j = jc1
-        i += 1
-        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-
-    i = ic1
-    j = jc1
-    # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-    r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-    # while (ir <= irstar + marg_i):
-    while (r <= rstar + marg):
-        # while (ir <= irstar + marg_i):
-        while (r <= rstar + marg):
-            # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
-            k_max = (kstar + marg_i) * (np.cos( r/(rstar + marg) * np.pi / 2)) ** 2
-            k_max_arr[1, i, j] = np.int(np.round(k_max))
-            k_max_arr[1, 2 * ic1 - i, j] = k_max_arr[1, i, j]
-            k_max_arr[1, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[1, i, j]
-            k_max_arr[1, i, 2 * jc1 - j] = k_max_arr[1, i, j]
-
-            # ir_arr_marg[i, j] = ir
-            # ir_arr_marg[2 * ic - i, j] = ir_arr_marg[i, j]
-            # ir_arr_marg[2 * ic - i, 2 * jc - j] = ir_arr_marg[i, j]
-            # ir_arr_marg[i, 2 * jc - j] = ir_arr_marg[i, j]
-
-            j += 1
-            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-            r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-        j = jc1
-        i += 1
-        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
+    Pa.root_print('Initialization: finished k_max[0:1] computation')
 
     ''' theta-anomaly'''
     # Noise
@@ -900,51 +862,24 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print('')
 
     ''' compute k_max '''
-    i = ic1
-    j = jc1
-    # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-    r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-    # while (ir <= irstar):
-    while (r <= rstar):
-        # while (ir <= irstar):
-        while (r <= rstar):
-            # k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
-            k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-            k_max_arr[0, i, j] = np.int(np.round(k_max))
-            k_max_arr[0, 2 * ic1 - i, j] = k_max_arr[0, i, j]
-            k_max_arr[0, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[0, i, j]
-            k_max_arr[0, i, 2 * jc1 - j] = k_max_arr[0, i, j]
+    for i in xrange(Gr.dims.nlg[0]):
+        for j in xrange(Gr.dims.nlg[1]):
+            ij = i * istride_2d + j
+            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            if (r <= rstar + marg):
+                k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                k_max_arr[1, i, j] = np.int(np.round(k_max))
+                k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
+                k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
+                k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
+                if (r <= rstar):
+                    k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
+                    k_max_arr[0,i,j] = np.int(np.round(k_max))
+                    k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
+                    k_max_arr[0,2*ic-i,2*jc-j] = k_max_arr[0,i,j]
+                    k_max_arr[0,i,2*jc-j] = k_max_arr[0,i,j]
 
-            j += 1
-            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-            r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-        j = jc1
-        i += 1
-        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-
-    i = ic1
-    j = jc1
-    # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-    r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-    # while (ir <= irstar + marg_i):
-    while (r <= rstar + marg):
-        # while (ir <= irstar + marg_i):
-        while (r <= rstar + marg):
-            # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
-            k_max = (kstar + marg_i) * (np.cos( r/(rstar + marg) * np.pi / 2)) ** 2
-            k_max_arr[1, i, j] = np.int(np.round(k_max))
-            k_max_arr[1, 2 * ic1 - i, j] = k_max_arr[1, i, j]
-            k_max_arr[1, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[1, i, j]
-            k_max_arr[1, i, 2 * jc1 - j] = k_max_arr[1, i, j]
-
-            j += 1
-            # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-            r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
-        j = jc1
-        i += 1
-        # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
+    Pa.root_print('Initialization: finished k_max[0:1] computation')
 
     ''' theta-anomaly'''
     # Noise
