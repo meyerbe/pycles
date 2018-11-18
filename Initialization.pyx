@@ -478,18 +478,13 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     RS.initialize(Gr, Th, NS, Pa)
     Pa.root_print('finished RS.initialize')
 
-    #Get the variable number for each of the velocity components
+
     cdef:
-        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
-        Py_ssize_t ijk
+        Py_ssize_t ijk, ij
+        Py_ssize_t istride_2d = Gr.dims.nlg[1]
         double dx = Gr.dims.dx[0]
-        double dy = Gr.dims.dx[1]
-        double dz = Gr.dims.dx[2]
 
     # parameters
     cdef:
@@ -518,67 +513,28 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double k_max = 0
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
+
     ''' compute k_max '''
     i = ic
     j = jc
-    # ir = np.int(np.round(np.sqrt((i-ic)**2 + (j-jc)**2)))
-    r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-    # while (ir <= irstar):
-    while (r <= rstar):
-        # while (ir <= irstar):
-        while (r <= rstar):
-            # k_max = kstar * (np.cos( np.double(ir)/irstar * np.pi / 2 ) ) ** 2
-            k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-            k_max_arr[0,i,j] = np.int(np.round(k_max))
-            k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
-            k_max_arr[0,2*ic-i,2*jc-j] = k_max_arr[0,i,j]
-            k_max_arr[0,i,2*jc-j] = k_max_arr[0,i,j]
-
-            # ir_arr[i,j] = ir
-            # ir_arr[2*ic-i,j] = ir_arr[i,j]
-            # ir_arr[2*ic-i,2*jc-j] = ir_arr[i,j]
-            # ir_arr[i,2*jc-j] = ir_arr[i,j]
-
-            j += 1
-            # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
+    for i in xrange(Gr.dims.nlg[0]):
+        for j in xrange(Gr.dims.nlg[1]):
+            ij = i * istride_2d + j
             r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-        j = jc
-        i += 1
-        # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            if (r <= rstar + marg):
+                k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                k_max_arr[1, i, j] = np.int(np.round(k_max))
+                k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
+                k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
+                k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
+                if (r <= rstar):
+                    k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
+                    k_max_arr[0,i,j] = np.int(np.round(k_max))
+                    k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
+                    k_max_arr[0,2*ic-i,2*jc-j] = k_max_arr[0,i,j]
+                    k_max_arr[0,i,2*jc-j] = k_max_arr[0,i,j]
 
-    Pa.root_print('Initialization: finished k_max[0] computation')
-
-
-    i = ic
-    j = jc
-    # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
-    r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-    # while (ir <= irstar):
-    while (r <= rstar):
-        # while (ir <= irstar):
-        while (r <= rstar):
-            # k_max = (kstar + marg_i) * (np.cos(np.double(ir) / (irstar + marg_i) * np.pi / 2)) ** 2
-            k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-            k_max_arr[1, i, j] = np.int(np.round(k_max))
-            k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
-            k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
-            k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
-
-            # ir_arr_marg[i, j] = ir
-            # ir_arr_marg[2 * ic - i, j] = ir_arr_marg[i, j]
-            # ir_arr_marg[2 * ic - i, 2 * jc - j] = ir_arr_marg[i, j]
-            # ir_arr_marg[i, 2 * jc - j] = ir_arr_marg[i, j]
-
-            j += 1
-            # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
-            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-        j = jc
-        i += 1
-        # ir = np.int(np.round(np.sqrt((i - ic) ** 2 + (j - jc) ** 2)))
-        r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-
-    Pa.root_print('Initialization: finished k_max[1] computation')
+    Pa.root_print('Initialization: finished k_max[0:1] computation')
 
     ''' theta-anomaly'''
     # from thermodynamic_functions cimport theta_c
@@ -592,9 +548,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double theta_pert_
 
-    # for i in xrange(ic + irstar + 10):
     for i in xrange(Gr.dims.nlg[0]):
-        # for j in xrange(jc + irstar + 10):
         for j in xrange(Gr.dims.nlg[1]):
             if k_max_arr[1, i, j] > 0:
                 for k in xrange(Gr.dims.nlg[2]):
@@ -602,10 +556,16 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     if k <= k_max_arr[0, i, j]:
                         th = th_g - dTh
                     elif k <= k_max_arr[1, i, j]:
-                        # th = th_g - dTh
                         th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
                     theta[i, j, k] = th
     Pa.root_print('Initialization: finished theta anomaly')
+
+    #Get the variable number for each of the velocity components
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
 
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
