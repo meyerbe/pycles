@@ -515,7 +515,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double k_max = 0
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
-    Pa.root_print('xc, min, max, '+str(xc) + ', ' + str(Gr.x_half[Gr.dims.incx_lo[0]]))
+    Pa.root_print('xc, min, max, '+str(xc) + ', ' + str(Gr.x_half[Gr.dims.index_lo[0]]))
     Pa.root_print('yc, min, max')
 
     ''' compute k_max '''
