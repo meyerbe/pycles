@@ -147,7 +147,7 @@ class Simulation3d:
             SetInitialConditions = InitializationFactory(namelist)
             SetInitialConditions(namelist,self.Gr, self.PV, self.Ref, self.Th, self.StatsIO, self.Pa, self.LH)
             del SetInitialConditions
-
+        self.Pa.root_print('continuiing Simulation')
         self.Pr.initialize(namelist, self.Gr, self.Ref, self.DV, self.Pa)
         self.DV.initialize(self.Gr, self.StatsIO, self.Pa)
         self.Fo.initialize(self.Gr, self.Ref, self.Th, self.StatsIO, self.Pa)
