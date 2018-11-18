@@ -523,6 +523,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' compute k_max '''
     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
+            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            Pa.root_print('r_2: '+str(r) +', '+str(rstar))
+
             # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
             r = Gr.x_half[i + Gr.dims.indx_lo[0]]
             r = Gr.y_half[j + Gr.dims.indx_lo[1]]
@@ -534,8 +537,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            Pa.root_print('r: '+str(r) +', '+str(rstar))
-            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            Pa.root_print('r_1: '+str(r) +', '+str(rstar))
+
             if (r <= (rstar + marg) ):
                 print('smaller than rstar + marg')
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
