@@ -505,7 +505,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t marg_i = 5  # width of margin
         double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
-        Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
+        # Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
+        Py_ssize_t jc = np.int(Gr.dims.ng[1] / 4)
         double xc = Gr.x_half[ic]       # center of cold-pool
         double yc = Gr.y_half[jc]       # center of cold-pool
         Py_ssize_t ir
