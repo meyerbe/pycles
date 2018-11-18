@@ -553,7 +553,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     for i in xrange(Gr.dims.nlg[0]):
         for j in xrange(Gr.dims.nlg[1]):
-            print('ij', i, j, Gr.dims.nlg[0], Gr.dims.nlg[1], k_max_arr[:,i,j])
+            print('ij', i, j, Gr.dims.nlg[0], Gr.dims.nlg[1], k_max_arr[0,i,j], k_max_arr[1,i,j])
             if k_max_arr[1, i, j] > 0:
                 for k in xrange(Gr.dims.nlg[2]):
                     th = th_g
