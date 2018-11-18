@@ -677,7 +677,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' compute k_max '''
     for i in xrange(Gr.dims.nlg[0]):
         for j in xrange(Gr.dims.nlg[1]):
-            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
             if (r <= rstar + marg):
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 ) ) ** 2
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
@@ -867,7 +867,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' compute k_max '''
     for i in xrange(Gr.dims.nlg[0]):
         for j in xrange(Gr.dims.nlg[1]):
-            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)
             if (r <= rstar + marg):
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 ) ) ** 2
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
