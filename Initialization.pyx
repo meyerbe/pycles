@@ -485,7 +485,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ijk
         Py_ssize_t istride_2d = Gr.dims.nlg[1]
         double dx = Gr.dims.dx[0]
-        double gw = Gr.dims.gw
+        Py_ssize_t gw = Gr.dims.gw
 
     # parameters
     cdef:
