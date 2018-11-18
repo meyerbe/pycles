@@ -525,6 +525,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
             r = Gr.x_half[i + Gr.dims.indx_lo[0]]
             r = Gr.y_half[j + Gr.dims.indx_lo[1]]
+            r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
+            r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
             r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
             Pa.root_print('r'+str(r))
             if (r <= rstar + marg):
