@@ -730,10 +730,10 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         while (r <= rstar):
             # k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
             k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-            k_max_arr[0,i,j] = np.int(np.round(k_max))
-            k_max_arr[0,2*ic1-i,j] = k_max_arr[0,i,j]
-            k_max_arr[0,2*ic1-i,2*jc1-j] = k_max_arr[0,i,j]
-            k_max_arr[0,i,2*jc1-j] = k_max_arr[0,i,j]
+            k_max_arr[0, i, j] = np.int(np.round(k_max))
+            k_max_arr[0, 2*ic1-i, j] = k_max_arr[0, i, j]
+            k_max_arr[0, 2*ic1-i, 2*jc1-j] = k_max_arr[0, i, j]
+            k_max_arr[0, i, 2*jc1-j] = k_max_arr[0, i, j]
 
             # ir_arr[i,j] = ir
             # ir_arr[2*ic-i,j] = ir_arr[i,j]
@@ -951,9 +951,9 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # k_max = kstar * (np.cos(np.double(ir) / irstar * np.pi / 2)) ** 2
             k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
             k_max_arr[0, i, j] = np.int(np.round(k_max))
-            k_max_arr[0, 2 * ic1 - i, j] = k_max_arr[0, i, j]
-            k_max_arr[0, 2 * ic1 - i, 2 * jc1 - j] = k_max_arr[0, i, j]
-            k_max_arr[0, i, 2 * jc1 - j] = k_max_arr[0, i, j]
+            k_max_arr[0, 2*ic1-i, j] = k_max_arr[0, i, j]
+            k_max_arr[0, 2*ic1-i, 2 * jc1 - j] = k_max_arr[0, i, j]
+            k_max_arr[0, i, 2*jc1-j] = k_max_arr[0, i, j]
 
             j += 1
             # ir = np.int(np.round(np.sqrt((i - ic1) ** 2 + (j - jc1) ** 2)))
