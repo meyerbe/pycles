@@ -501,8 +501,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        double marg = 10*Gr.dims.dx[0]  # width of margin
-        Py_ssize_t marg_i = 10  # width of margin
+        # Py_ssize_t marg_i = 10  # width of margin
+        Py_ssize_t marg_i = 2  # width of margin
+        double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
         Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
         double xc = Gr.x_half[ic]       # center of cold-pool
@@ -532,6 +533,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     k_max_arr[0,i,2*jc-j] = k_max_arr[0,i,j]
 
     Pa.root_print('Initialization: finished k_max[0:1] computation')
+    Pa.root_print(k_max_arr.shape, Gr.dims.nlg[0], Gr.dims.nlg[1])
 
     ''' theta-anomaly'''
     # from thermodynamic_functions cimport theta_c
@@ -540,13 +542,17 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double dTh = namelist['init']['dTh']
         double th_g = 300.0  # value from Soares Surface
         # ''' ??? correct dimensions with nlg? '''
-        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double theta_pert_
 
+    Pa.root_print('Initialization')
+    Pa.root_print(theta.shape)
+
     for i in xrange(Gr.dims.nlg[0]):
         for j in xrange(Gr.dims.nlg[1]):
+            print('ij', i, j, Gr.dims.nlg[0], Gr.dims.nlg[1], k_max_arr[:,i,j])
             if k_max_arr[1, i, j] > 0:
                 for k in xrange(Gr.dims.nlg[2]):
                     th = th_g
@@ -563,6 +569,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+
+    Pa.root_print('Initialization')
 
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
