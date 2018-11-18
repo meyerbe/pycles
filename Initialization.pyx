@@ -519,9 +519,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('yc, min, max')
 
     ''' compute k_max '''
-    for i in xrange(Gr.dims.nlg[0]):
-        for j in xrange(Gr.dims.nlg[1]):
-            # r = 0.0
+    for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
+        for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
             r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
             if (r <= rstar + marg):
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
