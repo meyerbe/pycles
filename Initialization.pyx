@@ -508,6 +508,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
         # Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
         Py_ssize_t jc = np.int(Gr.dims.ng[1] / 4)
+        Py_ssize_t ic_ = np.int(Gr.dims.ng[0] / 2) - Gr.dims.indx_lo[0]     # for MPI run
+        Py_ssize_t jc_ = np.int(Gr.dims.ng[1] / 4) - Gr.dims.indx_lo[1]     # for MPI run
         double xc = Gr.x_half[ic]       # center of cold-pool
         double yc = Gr.y_half[jc]       # center of cold-pool
         Py_ssize_t ir
@@ -527,14 +529,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             Pa.root_print('r_2: '+str(r) +', '+str(rstar))
 
             # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
-            r = Gr.x_half[i + Gr.dims.indx_lo[0]]
-            r = Gr.y_half[j + Gr.dims.indx_lo[1]]
-            r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
-            r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
-            r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
-            r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
-            r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
+            # r = Gr.y_half[j + Gr.dims.indx_lo[1]]
+            # r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
+            # r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
+            # r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
+            # r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
+            # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
+            # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             Pa.root_print('r_1: '+str(r) +', '+str(rstar))
@@ -545,16 +547,22 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 print('r/rstar: ' + str(r/rstar))
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
-                k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
-                k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
-                k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
+                k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
+                k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
+                k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
+                # k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
+                # k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
+                # k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
                 if (r <= rstar):
                     print('Smaller than rstar')
                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-                    k_max_arr[0,i,j] = np.int(np.round(k_max))
-                    k_max_arr[0,2*ic-i,j] = k_max_arr[0,i,j]
-                    k_max_arr[0,2*ic-i,2*jc-j] = k_max_arr[0,i,j]
-                    k_max_arr[0,i,2*jc-j] = k_max_arr[0,i,j]
+                    k_max_arr[0, i, j] = np.int(np.round(k_max))
+                    k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
+                    k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
+                    k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
+                    # k_max_arr[0, 2*ic-i, j] = k_max_arr[0,i,j]
+                    # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
+                    # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
 
     Pa.root_print('Initialization: finished k_max[0:1] computation')
     Pa.root_print(k_max_arr.shape)
