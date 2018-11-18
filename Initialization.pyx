@@ -523,6 +523,10 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print('yc, min, max, '+str(yc) + ', ' + str(Gr.dims.indx_lo[1])+ ', ' + str(Gr.y_half.shape))
 
     ''' compute k_max '''
+    aux_i_max = -9999.0
+    aux_i_min = 9999.0
+    aux_j_max = -9999.0
+    aux_j_min = 9999.0
     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
             r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
@@ -556,6 +560,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 if (r <= rstar):
                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
                     print('Smaller than rstar: '+ str(k_max))
+                    if i<aux_i_min:
+                        aux_i_min = i
+                    elif i>aux_i_max:
+                        aux_i_max = i
+                    if j<aux_j_min:
+                        aux_j_min = j
+                    elif i>aux_j_max:
+                        aux_j_max = j
                     k_max_arr[0, i, j] = np.int(np.round(k_max))
                     k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
                     k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
@@ -565,6 +577,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
 
     Pa.root_print('Initialization: finished k_max[0:1] computation')
+    Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
     Pa.root_print(k_max_arr.shape)
     Pa.root_print(str(np.amax(k_max_arr[0,:,:]))+', '+str(np.amax(k_max_arr[1,:,:])))
     Pa.root_print('nlg, nly: '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1]))
