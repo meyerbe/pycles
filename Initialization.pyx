@@ -583,12 +583,12 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     #                 # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
     #                 # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
     #
-    # Pa.root_print('Initialization: finished k_max[0:1] computation')
-    # Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
-    # Pa.root_print(k_max_arr.shape)
-    # Pa.root_print(str(np.amax(k_max_arr[0,:,:]))+', '+str(np.amax(k_max_arr[1,:,:])))
-    # Pa.root_print('nlg, nly: '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1]))
-    #
+    Pa.root_print('Initialization: finished k_max[0:1] computation')
+    Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
+    Pa.root_print(k_max_arr.shape)
+    Pa.root_print(str(np.amax(k_max_arr[0,:,:]))+', '+str(np.amax(k_max_arr[1,:,:])))
+    Pa.root_print('nlg, nly: '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1]))
+
     # ''' theta-anomaly'''
     # # from thermodynamic_functions cimport theta_c
 
