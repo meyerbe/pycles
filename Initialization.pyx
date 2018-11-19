@@ -494,6 +494,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double yc = Gr.y_half[jc]       # center of cold-pool
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
+    Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
+    Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
 
     # temepratures
     cdef:
@@ -501,14 +503,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         double theta_pert_
-
-    # for i in xrange(Gr.dims.nlg[0]):
-    #     ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-    #     for j in xrange(Gr.dims.nlg[1]):
-    #         jshift = j * Gr.dims.nlg[2]
-    #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-    #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-    #         k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
 
     count_0 = 0
     count_1 = 0
@@ -518,11 +512,11 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             jshift = j * Gr.dims.nlg[2]
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            if r < rstar:
+            if r <= rstar:
                 count_0 += 1
                 k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
                 k_max_arr[0, i, j] = np.int(np.round(k_max))
-            elif r < (rstar + marg_i):
+            elif r <= (rstar + marg):
                 count_1 += 1
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
@@ -533,10 +527,11 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
 
-                r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
-                             + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)     # changed since VisualizationOutput defined in yz-plane
-                r = fmin(r,1.0)   # cos(pi)=0
-                th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
+                # r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
+                #              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)
+                # r = fmin(r,1.0)   # cos(pi)=0
+                # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
+                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
                 if k <= k_max_arr[0, i, j]:
                     theta[i,j,k] = th_g - dTh
@@ -550,8 +545,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
 
-                # Pa.root_print(str(k_max)
-                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
     Pa.root_print('Initialization: finished PV initialization')
     # Pa.root_print('k_max '+str(np.amax(k_max_arr[1,:,:]))+ ', ' + str(np.int(np.round(k_max))) +', ' + str(count))
