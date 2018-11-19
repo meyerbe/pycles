@@ -517,6 +517,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('rootprint i: ' + str(ic) + ', ' + str(ic_) + ', ' + str(gw) + ', ' + str(Gr.dims.indx_lo[0]))
     Pa.root_print('rootprint j: ' + str(jc) + ', ' + str(jc_) + ', ' + str(gw) + ', ' + str(Gr.dims.indx_lo[1]))
 
+    cdef:
         double th
         double dTh = namelist['init']['dTh']
         double th_g = 300.0  # value from Soares Surface
