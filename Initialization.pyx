@@ -455,7 +455,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
-    Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
+    Pa.root_print('NEW Initialization: Single Dry Cold Pool (3D)')
     Pa.root_print('')
 
     #Generate reference profiles
@@ -493,8 +493,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 # dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/8.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
                 r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 10.0)/1.2)**2.0)     # changed since VisualizationOutput defined in yz-plane
                 r = fmin(r,1.0)
-                th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
-                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
+                th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
+    Pa.root_print('Initialization: finished PV initialization')
 
     return
 
