@@ -529,8 +529,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     aux_j_min = 9999.0
     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
-            r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-            Pa.root_print('r_2: '+str(r) +', '+str(rstar))
+            # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            # Pa.root_print('r_2: '+str(r) +', '+str(rstar))
 
             # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
             # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
@@ -561,13 +561,13 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
                     print('Smaller than rstar: '+ str(k_max) + ', ' + str(np.int(np.round(k_max))) +
                           ', ' + str(i) + ', '+str(j))
-                    if i<aux_i_min:
+                    if i < aux_i_min:
                         aux_i_min = i
-                    elif i>aux_i_max:
+                    elif i > aux_i_max:
                         aux_i_max = i
-                    if j<aux_j_min:
+                    if j < aux_j_min:
                         aux_j_min = j
-                    elif i>aux_j_max:
+                    elif i > aux_j_max:
                         aux_j_max = j
                     k_max_arr[0, i, j] = np.int(np.round(k_max))
                     k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
