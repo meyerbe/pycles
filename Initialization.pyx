@@ -497,13 +497,12 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # imax = imin + 2*istar + 2*marg_i
         # jmin = jc - jstar - marg_i
         # jmax = jmin + 2*jstar + 2*marg_i
-        # double rstar = 5000.0  # half of the width of initial cold-pools [m]
+
         double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        # Py_ssize_t marg_i = 10  # width of margin
-        Py_ssize_t marg_i = 5  # width of margin
+        Py_ssize_t marg_i = 5  # 10, width of margin
         double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
         Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
@@ -515,6 +514,15 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double r
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
+
+        double th
+        double dTh = namelist['init']['dTh']
+        double th_g = 300.0  # value from Soares Surface
+        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
+        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+        # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+        double theta_pert_
+
         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
     print('xc, min, max, '+str(xc) + ', ' + str(Gr.dims.indx_lo[0])+ ', ' + str(Gr.x_half.shape))
@@ -584,15 +592,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     #
     # ''' theta-anomaly'''
     # # from thermodynamic_functions cimport theta_c
-    # cdef:
-    #     double th
-    #     double dTh = namelist['init']['dTh']
-    #     double th_g = 300.0  # value from Soares Surface
-    #     # ''' ??? correct dimensions with nlg? '''
-    #     double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
-    #     double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
-    #     # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
-    #     double theta_pert_
+
     #
     # # Pa.root_print('Initialization')
     # # Pa.root_print(theta.shape)
