@@ -512,6 +512,17 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
+            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            if r < rstar:
+                count_0 += 1
+                k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
+                k_max_arr[0, i, j] = np.int(np.round(k_max))
+            elif r < (rstar + marg_i):
+                count_1 += 1
+                k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                k_max_arr[1, i, j] = np.int(np.round(k_max))
+
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
                 PV.values[u_varshift + ijk] = 0.0
@@ -522,16 +533,13 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)     # changed since VisualizationOutput defined in yz-plane
                 r = fmin(r,1.0)   # cos(pi)=0
                 th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
-                r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-                if r < rstar:
-                    count_0 += 1
-                    k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-                    k_max_arr[0, i, j] = np.int(np.round(k_max))
-                elif r < (rstar + marg_i):
-                    count_1 += 1
-                    k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-                    k_max_arr[1, i, j] = np.int(np.round(k_max))
+
+                # if k <= k_max_arr[0, i, j]:
+                #     th = th_g - dTh
+                # elif k <= k_max_arr[1, i, j]:
+                #         # th = th_g - dTh
+                #     th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
+                # theta[i, j, k] = th
 
                 # Pa.root_print(str(k_max)
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
