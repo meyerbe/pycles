@@ -498,13 +498,17 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # temepratures
     cdef:
         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = j * Gr.dims.nlg[2]
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+        double theta_pert_
+
+    # for i in xrange(Gr.dims.nlg[0]):
+    #     ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+    #     for j in xrange(Gr.dims.nlg[1]):
+    #         jshift = j * Gr.dims.nlg[2]
+    #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+    #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+    #         k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
 
     count_0 = 0
     count_1 = 0
