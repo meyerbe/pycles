@@ -527,11 +527,11 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     count += 1
                     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                     k_max_arr[1, i, j] = np.int(np.round(k_max))
-                # Pa.root_print(str(k_max) + ', ' + str(np.int(np.round(k_max))) )
+                # Pa.root_print(str(k_max)
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
     Pa.root_print('Initialization: finished PV initialization')
-    Pa.root_print('k_max'+str(k_max_arr[1,:,:])+', ' + str(count))
+    Pa.root_print('k_max '+str(k_max_arr[1,:,:])+ ', ' + str(np.int(np.round(k_max))) +', ' + str(count))
 
     return
 
