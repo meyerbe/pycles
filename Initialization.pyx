@@ -506,10 +506,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t marg_i = 5  # width of margin
         double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
-        # Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
-        Py_ssize_t jc = np.int(Gr.dims.ng[1] / 4)
-        Py_ssize_t ic_ = np.int(Gr.dims.ng[0] / 2) - Gr.dims.indx_lo[0]     # for MPI run
-        Py_ssize_t jc_ = np.int(Gr.dims.ng[1] / 4) - Gr.dims.indx_lo[1]     # for MPI run
+        Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
+        Py_ssize_t ic_ = ic - Gr.dims.indx_lo[0]     # for MPI run
+        Py_ssize_t jc_ = jc - Gr.dims.indx_lo[1]     # for MPI run
         double xc = Gr.x_half[ic]       # center of cold-pool
         double yc = Gr.y_half[jc]       # center of cold-pool
         Py_ssize_t ir
@@ -522,94 +521,94 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print(str(Gr.x_half[Gr.dims.indx_lo[0]] - xc))
     print('yc, min, max, '+str(yc) + ', ' + str(Gr.dims.indx_lo[1])+ ', ' + str(Gr.y_half.shape))
 
-    ''' compute k_max '''
-    aux_i_max = -9999.0
-    aux_i_min = 9999.0
-    aux_j_max = -9999.0
-    aux_j_min = 9999.0
-    for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
-        for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
-            # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-            # Pa.root_print('r_2: '+str(r) +', '+str(rstar))
-
-            # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
-            # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
-            # r = Gr.y_half[j + Gr.dims.indx_lo[1]]
-            # r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
-            # r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
-            # r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
-            # r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
-            # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
-            # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            Pa.root_print('r_1: '+str(r) +', '+str(rstar))
-
-            if (r <= (rstar + marg) ):
-                print('smaller than rstar + marg')
-                print('r/(rstar + marg): ' + str(r/(rstar / marg)))
-                print('r/rstar: ' + str(r/rstar))
-                k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-                k_max_arr[1, i, j] = np.int(np.round(k_max))
-                k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
-                k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
-                k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
-                # k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
-                # k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
-                # k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
-                if (r <= rstar):
-                    k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-                    print('Smaller than rstar: '+ str(k_max) + ', ' + str(np.int(np.round(k_max))) +
-                          ', ' + str(i) + ', '+str(j))
-                    if i < aux_i_min:
-                        aux_i_min = i
-                    elif i > aux_i_max:
-                        aux_i_max = i
-                    if j < aux_j_min:
-                        aux_j_min = j
-                    elif i > aux_j_max:
-                        aux_j_max = j
-                    k_max_arr[0, i, j] = np.int(np.round(k_max))
-                    k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
-                    k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
-                    k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
-                    # k_max_arr[0, 2*ic-i, j] = k_max_arr[0,i,j]
-                    # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
-                    # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
-
-    Pa.root_print('Initialization: finished k_max[0:1] computation')
-    Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
-    Pa.root_print(k_max_arr.shape)
-    Pa.root_print(str(np.amax(k_max_arr[0,:,:]))+', '+str(np.amax(k_max_arr[1,:,:])))
-    Pa.root_print('nlg, nly: '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1]))
-
-    ''' theta-anomaly'''
-    # from thermodynamic_functions cimport theta_c
-    cdef:
-        double th
-        double dTh = namelist['init']['dTh']
-        double th_g = 300.0  # value from Soares Surface
-        # ''' ??? correct dimensions with nlg? '''
-        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
-        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
-        # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
-        double theta_pert_
-
-    # Pa.root_print('Initialization')
-    # Pa.root_print(theta.shape)
-
-    for i in xrange(Gr.dims.nlg[0]):
-        for j in xrange(Gr.dims.nlg[1]):
-            # Pa.root_print('ij' + str(i)+', '+str(j)+', '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1])+', '+str(k_max_arr[0,i,j])+', '+str(k_max_arr[1,i,j]))
-            if k_max_arr[1, i, j] > 0:
-                for k in xrange(Gr.dims.nlg[2]):
-                    th = th_g
-                    if k <= k_max_arr[0, i, j]:
-                        th = th_g - dTh
-                    elif k <= k_max_arr[1, i, j]:
-                        th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
-                    theta[i, j, k] = th
-    Pa.root_print('Initialization: finished theta anomaly')
+    # ''' compute k_max '''
+    # aux_i_max = -9999.0
+    # aux_i_min = 9999.0
+    # aux_j_max = -9999.0
+    # aux_j_min = 9999.0
+    # for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
+    #     for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
+    #         # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+    #         # Pa.root_print('r_2: '+str(r) +', '+str(rstar))
+    #
+    #         # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
+    #         # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
+    #         # r = Gr.y_half[j + Gr.dims.indx_lo[1]]
+    #         # r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
+    #         # r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
+    #         # r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
+    #         # r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
+    #         # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
+    #         # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+    #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+    #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+    #         Pa.root_print('r_1: '+str(r) +', '+str(rstar))
+    #
+    #         if (r <= (rstar + marg) ):
+    #             print('smaller than rstar + marg')
+    #             print('r/(rstar + marg): ' + str(r/(rstar / marg)))
+    #             print('r/rstar: ' + str(r/rstar))
+    #             k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+    #             k_max_arr[1, i, j] = np.int(np.round(k_max))
+    #             k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
+    #             k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
+    #             k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
+    #             # k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
+    #             # k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
+    #             # k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
+    #             if (r <= rstar):
+    #                 k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
+    #                 print('Smaller than rstar: '+ str(k_max) + ', ' + str(np.int(np.round(k_max))) +
+    #                       ', ' + str(i) + ', '+str(j))
+    #                 if i < aux_i_min:
+    #                     aux_i_min = i
+    #                 elif i > aux_i_max:
+    #                     aux_i_max = i
+    #                 if j < aux_j_min:
+    #                     aux_j_min = j
+    #                 elif i > aux_j_max:
+    #                     aux_j_max = j
+    #                 k_max_arr[0, i, j] = np.int(np.round(k_max))
+    #                 k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
+    #                 k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
+    #                 k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
+    #                 # k_max_arr[0, 2*ic-i, j] = k_max_arr[0,i,j]
+    #                 # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
+    #                 # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
+    #
+    # Pa.root_print('Initialization: finished k_max[0:1] computation')
+    # Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
+    # Pa.root_print(k_max_arr.shape)
+    # Pa.root_print(str(np.amax(k_max_arr[0,:,:]))+', '+str(np.amax(k_max_arr[1,:,:])))
+    # Pa.root_print('nlg, nly: '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1]))
+    #
+    # ''' theta-anomaly'''
+    # # from thermodynamic_functions cimport theta_c
+    # cdef:
+    #     double th
+    #     double dTh = namelist['init']['dTh']
+    #     double th_g = 300.0  # value from Soares Surface
+    #     # ''' ??? correct dimensions with nlg? '''
+    #     double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
+    #     double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+    #     # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+    #     double theta_pert_
+    #
+    # # Pa.root_print('Initialization')
+    # # Pa.root_print(theta.shape)
+    #
+    # for i in xrange(Gr.dims.nlg[0]):
+    #     for j in xrange(Gr.dims.nlg[1]):
+    #         # Pa.root_print('ij' + str(i)+', '+str(j)+', '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1])+', '+str(k_max_arr[0,i,j])+', '+str(k_max_arr[1,i,j]))
+    #         if k_max_arr[1, i, j] > 0:
+    #             for k in xrange(Gr.dims.nlg[2]):
+    #                 th = th_g
+    #                 if k <= k_max_arr[0, i, j]:
+    #                     th = th_g - dTh
+    #                 elif k <= k_max_arr[1, i, j]:
+    #                     th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
+    #                 theta[i, j, k] = th
+    # Pa.root_print('Initialization: finished theta anomaly')
 
     #Get the variable number for each of the velocity components
     cdef:
@@ -617,8 +616,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-
-    # Pa.root_print('Initialization')
 
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
