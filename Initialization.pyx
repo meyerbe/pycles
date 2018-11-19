@@ -503,16 +503,19 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         Py_ssize_t marg_i = 5  # 10, width of margin
         double marg = marg_i*Gr.dims.dx[0]  # width of margin
-        Py_ssize_t ic = np.int(Gr.dims.ng[0] / 2)
-        Py_ssize_t jc = np.int(Gr.dims.ng[1] / 2)
-        Py_ssize_t ic_ = ic - Gr.dims.indx_lo[0]     # for MPI run
-        Py_ssize_t jc_ = jc - Gr.dims.indx_lo[1]     # for MPI run
+        Py_ssize_t ic = np.int(Gr.dims.n[0] / 2)
+        Py_ssize_t jc = np.int(Gr.dims.n[1] / 2)
+        Py_ssize_t ic_ = ic + gw - Gr.dims.indx_lo[0]     # for MPI run
+        Py_ssize_t jc_ = jc + gw - Gr.dims.indx_lo[1]     # for MPI run
         double xc = Gr.x_half[ic]       # center of cold-pool
         double yc = Gr.y_half[jc]       # center of cold-pool
         Py_ssize_t ir
         double r
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
+
+    Pa.root_print('rootprint i: ' + str(ic) + ', ' + str(ic_) + ', ' + str(gw) + ', ' + str(Gr.dims.indx_lo[0]))
+    Pa.root_print('rootprint j: ' + str(jc) + ', ' + str(jc_) + ', ' + str(gw) + ', ' + str(Gr.dims.indx_lo[1]))
 
         double th
         double dTh = namelist['init']['dTh']
@@ -533,6 +536,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     aux_i_min = 9999.0
     aux_j_max = -9999.0
     aux_j_min = 9999.0
+    aux = np.zeros((Gr.dims.ng[0],Gr.dims.ng[1]))
+    aux[gw+ic, gw+jc] = 2
     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
             # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
@@ -549,40 +554,48 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            Pa.root_print('r_1: '+str(r) +', '+str(rstar) + ', ' + str(rstar+marg))
+            ir = np.sqrt( ( i - ic_ )**2 + ( j + - jc_)**2 )
+            # dist  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 10.0)/1.2)**2.0)     # changed since VisualizationOutput defined in yz-plane
+
+            Pa.root_print('r_1: '+str(r) +', '+str(rstar) + ', ' + str(rstar+marg)
+                          + ', '+str(ir) +', '+str(irstar) )
 
             if (r <= (rstar + marg) ):
-                print('smaller than rstar + marg')
-                print('r/(rstar + marg): ' + str(r/(rstar / marg)))
-                print('r/rstar: ' + str(r/rstar))
+                Pa.root_print('smaller than rstar + marg' + str(r) + ', '+str(rstar+marg) + ', ' +
+                              str(ir)+ ', ' + str(irstar + marg_i) + ', ' + str(i) + ', '+str(j))
+                # print('r/(rstar + marg): ' + str(r/(rstar / marg)))
+                # print('r/rstar: ' + str(r/rstar))
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                Pa.root_print(str(k_max) + ', ' + str(np.int(np.round(k_max))) )
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
-    #             k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
-    #             k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
-    #             k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
-    #             # k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
-    #             # k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
-    #             # k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
+                # k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
+                # k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
+                # k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
+                # # k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
+                # # k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
+                # # k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
                 if (r <= rstar):
-                    print('Smaller than rstar: '+ str(k_max) + ', ' + str(np.int(np.round(k_max))) +
-                          ', ' + str(i) + ', '+str(j))
+                    Pa.root_print('Smaller than rstar: '+  str(r) + ', '+str(rstar) + ', ' +
+                              str(ir)+ ', ' + str(irstar) + ', ' + str(i) + ', '+str(j))
                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-    #                 if i < aux_i_min:
-    #                     aux_i_min = i
-    #                 elif i > aux_i_max:
-    #                     aux_i_max = i
-    #                 if j < aux_j_min:
-    #                     aux_j_min = j
-    #                 elif i > aux_j_max:
-    #                     aux_j_max = j
+                    Pa.root_print(str(k_max) + ', ' + str(np.int(np.round(k_max))) )
+                    aux[gw + Gr.dims.indx_lo[0]+i, gw + Gr.dims.indx_lo[1]+j] = 1
+                    # if i < aux_i_min:
+                    #     aux_i_min = i
+                    # elif i > aux_i_max:
+                    #     aux_i_max = i
+                    # if j < aux_j_min:
+                    #     aux_j_min = j
+                    # elif i > aux_j_max:
+                    #     aux_j_max = j
                     k_max_arr[0, i, j] = np.int(np.round(k_max))
-    #                 k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
-    #                 k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
-    #                 k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
-    #                 # k_max_arr[0, 2*ic-i, j] = k_max_arr[0,i,j]
-    #                 # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
-    #                 # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
-    #
+                    # k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
+                    # k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
+                    # k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
+                    # # k_max_arr[0, 2*ic-i, j] = k_max_arr[0,i,j]
+                    # # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
+                    # # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
+
     Pa.root_print('Initialization: finished k_max[0:1] computation')
     Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
     Pa.root_print(k_max_arr.shape)
@@ -592,7 +605,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # ''' theta-anomaly'''
     # # from thermodynamic_functions cimport theta_c
 
-    #
+
     # # Pa.root_print('Initialization')
     # # Pa.root_print(theta.shape)
     #
