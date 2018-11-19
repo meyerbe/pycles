@@ -27,14 +27,11 @@ cdef class PressureSolver:
         PM.root_print('pressure solver initialize')
         DV.add_variables('dynamic_pressure', 'Pa', r'p', 'dynamic pressure', 'sym', PM)
         DV.add_variables('divergence', '1/s', r'd', '3d divergence', 'sym',PM)
-        PM.root_print('pressure solver initialize 2')
 
         self.divergence = np.zeros(Gr.dims.npl,dtype=np.double, order='c')
         #self.poisson_solver = PressureFFTSerial.PressureFFTSerial()
         self.poisson_solver = PressureFFTParallel.PressureFFTParallel()
-        PM.root_print('pressure solver initialize 3')
         self.poisson_solver.initialize(Gr,RS,PM)
-        PM.root_print('pressure solver initialize 4')
 
         return
 

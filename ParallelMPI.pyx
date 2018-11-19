@@ -549,7 +549,6 @@ cdef class Pencil:
         pass
 
     cpdef initialize(self, Grid.Grid Gr, ParallelMPI Pa, int dim):
-        Pa.root_print('Pencil initialize')
         self.dim = dim
         self.n_local_values = Gr.dims.npl
 
@@ -558,19 +557,16 @@ cdef class Pencil:
             int i
 
         if dim==0:
-            Pa.root_print('dim=0')
             self.size = Pa.sub_x_size
             self.rank = Pa.sub_x_rank
             self.n_total_pencils = Gr.dims.nl[1] * Gr.dims.nl[2]
             self.pencil_length = Gr.dims.n[0]
         elif dim==1:
-            Pa.root_print('dim=1')
             self.size = Pa.sub_y_size
             self.rank = Pa.sub_y_rank
             self.n_total_pencils = Gr.dims.nl[0] * Gr.dims.nl[2]
             self.pencil_length = Gr.dims.n[1]
         elif dim==2:
-            Pa.root_print('dim=2')
             self.size = Pa.sub_z_size
             self.rank = Pa.sub_z_rank
             self.n_total_pencils = Gr.dims.nl[0] * Gr.dims.nl[1]
@@ -579,7 +575,6 @@ cdef class Pencil:
             Pa.root_print('Pencil dim='+ str(dim) + 'not valid')
             Pa.root_print('Killing simuulation')
             Pa.kill()
-        Pa.root_print('Pencil initialize 2')
 
         remainder =  self.n_total_pencils%self.size
         self.n_pencil_map = np.empty((self.size,),dtype=np.int,order='c')
@@ -587,7 +582,6 @@ cdef class Pencil:
         for i in xrange(self.size):
             if i < remainder:
                 self.n_pencil_map[i] += 1
-        Pa.root_print('Pencil initialize 3')
 
         self.n_local_pencils = self.n_pencil_map[self.rank]               #Number of pencils locally
         self.nl_map = np.empty((self.size),dtype=np.int,order='c')        #Number of local grid points in pencild dir
@@ -598,7 +592,6 @@ cdef class Pencil:
 
         #Now need to communicate number of local points on each process
         if self.dim==0:
-            Pa.root_print('dim=0, b')
             #Gather the number of points on in direction dim for each rank
             mpi.MPI_Allgather(&Gr.dims.nl[0],1,mpi.MPI_LONG,&self.nl_map[0],1,mpi.MPI_LONG,Pa.cart_comm_sub_x)
 
@@ -607,14 +600,12 @@ cdef class Pencil:
                 self.send_counts[i] = Gr.dims.nl[0] * self.n_pencil_map[i]
                 self.recv_counts[i] = self.n_local_pencils * self.nl_map[i]
         elif self.dim==1:
-            Pa.root_print('dim=1, b')
             mpi.MPI_Allgather(&Gr.dims.nl[1],1,mpi.MPI_LONG,&self.nl_map[0],1,mpi.MPI_LONG,Pa.cart_comm_sub_y)
             #Now compute the send counts
             for i in xrange(self.size):
                 self.send_counts[i] = Gr.dims.nl[1] * self.n_pencil_map[i]
                 self.recv_counts[i] = self.n_local_pencils * self.nl_map[i]
         else:
-            Pa.root_print('dim=2, b')
             mpi.MPI_Allgather(&Gr.dims.nl[2],1,mpi.MPI_LONG,&self.nl_map[0],1,mpi.MPI_LONG,Pa.cart_comm_sub_z)
             #Now compute the send counts
             for i in xrange(self.size):
@@ -625,9 +616,7 @@ cdef class Pencil:
         for i in xrange(self.size-1):
             self.sdispls[i+1] = self.sdispls[i] + self.send_counts[i]
             self.rdispls[i+1] = self.rdispls[i] + self.recv_counts[i]
-        Pa.root_print('last before barrier')
         Pa.barrier()
-        Pa.root_print('last after barrier')
         return
 
     cdef double [:,:] forward_double(self, Grid.DimStruct *dims, ParallelMPI Pa ,double *data):
