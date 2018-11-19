@@ -512,7 +512,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
-            
+
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             if r <= rstar:
@@ -550,9 +550,15 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
     Pa.root_print('Initialization: finished PV initialization')
-    # Pa.root_print('k_max '+str(np.amax(k_max_arr[1,:,:]))+ ', ' + str(np.int(np.round(k_max))) +', ' + str(count))
     Pa.root_print('k_max[0] '+str(np.amax(k_max_arr[0,:,:]))+ ', ' + str(count_0))
     Pa.root_print('k_max[1] '+str(np.amax(k_max_arr[1,:,:]))+ ', ' + str(count_1))
+
+    Pa.root_print('Initialization: finished loop')
+
+    ''' Initialize passive tracer phi '''
+    init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
+
+    Pa.root_print('Initialization: finished initialization')
 
     return
 
@@ -645,18 +651,6 @@ def InitColdPoolDry_single_3D_(namelist, Grid.Grid Gr,PrognosticVariables.Progno
     aux[gw+ic, gw+jc] = 2
     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
-            # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-            # Pa.root_print('r_2: '+str(r) +', '+str(rstar))
-
-            # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
-            # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
-            # r = Gr.y_half[j + Gr.dims.indx_lo[1]]
-            # r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
-            # r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
-            # r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
-            # r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
-            # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
-            # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             ir = np.sqrt( ( i - ic_ )**2 + ( j + - jc_)**2 )
