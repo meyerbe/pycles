@@ -490,8 +490,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double marg = marg_i*Gr.dims.dx[0]  # width of margin
         Py_ssize_t ic = np.int(Gr.dims.n[0] / 2)
         Py_ssize_t jc = np.int(Gr.dims.n[1] / 2)
-        double xc = Gr.x_half[ic]       # center of cold-pool
-        double yc = Gr.y_half[jc]       # center of cold-pool
+        double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
+        double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
@@ -512,6 +512,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
+            
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             if r <= rstar:
