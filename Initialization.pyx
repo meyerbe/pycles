@@ -535,11 +535,15 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
 
                 if k <= k_max_arr[0, i, j]:
-                    th = th_g - dTh
+                    theta[i,j,k] = th_g - dTh
                 elif k <= k_max_arr[1, i, j]:
-                        # th = th_g - dTh
                     th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
-                theta[i, j, k] = th
+                    theta[i, j, k] = th
+
+                if k <= kstar + 2:
+                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+                else:
+                    theta_pert_ = 0.0
 
                 # Pa.root_print(str(k_max)
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
