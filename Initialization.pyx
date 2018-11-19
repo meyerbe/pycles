@@ -496,8 +496,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double k_max = 0
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
     Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
-    Pa.root_print(Gr.x_half[:])
-    Pa.root_print(Gr.y_half[:])
+    Pa.root_print(np.asarray(Gr.x_half[:]))
+    Pa.root_print(np.asarray(Gr.y_half[:]))
 
     # temepratures
     cdef:
