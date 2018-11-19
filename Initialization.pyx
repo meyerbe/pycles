@@ -487,8 +487,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double dx = Gr.dims.dx[0]
         Py_ssize_t gw = Gr.dims.gw
 
-    # parameters
-    cdef:
+        # parameters
         # xstar = 5000.0  # half of the width of initial cold-pools [m]
         # ystar = 5000.0  # half of the width of initial cold-pools [m]
         # istar = np.int(np.round(xstar / dx))
@@ -529,29 +528,29 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print(str(Gr.x_half[Gr.dims.indx_lo[0]] - xc))
     print('yc, min, max, '+str(yc) + ', ' + str(Gr.dims.indx_lo[1])+ ', ' + str(Gr.y_half.shape))
 
-    # ''' compute k_max '''
-    # aux_i_max = -9999.0
-    # aux_i_min = 9999.0
-    # aux_j_max = -9999.0
-    # aux_j_min = 9999.0
-    # for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
-    #     for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
-    #         # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
-    #         # Pa.root_print('r_2: '+str(r) +', '+str(rstar))
-    #
-    #         # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
-    #         # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
-    #         # r = Gr.y_half[j + Gr.dims.indx_lo[1]]
-    #         # r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
-    #         # r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
-    #         # r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
-    #         # r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
-    #         # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
-    #         # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-    #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-    #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-    #         Pa.root_print('r_1: '+str(r) +', '+str(rstar))
-    #
+    ''' compute k_max '''
+    aux_i_max = -9999.0
+    aux_i_min = 9999.0
+    aux_j_max = -9999.0
+    aux_j_min = 9999.0
+    for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
+        for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
+            # r = np.sqrt((Gr.x_half[i]-xc)**2 + (Gr.y_half[j]-yc)**2)
+            # Pa.root_print('r_2: '+str(r) +', '+str(rstar))
+
+            # r = np.sqrt((Gr.x_half[i + Gr.dims.indx_lo[0]]-xc)**2 + (Gr.y_half[j + Gr.dims.indx_lo[1]]-yc)**2)
+            # r = Gr.x_half[i + Gr.dims.indx_lo[0]]
+            # r = Gr.y_half[j + Gr.dims.indx_lo[1]]
+            # r = Gr.x_half[i + Gr.dims.indx_lo[0]] - xc
+            # r = Gr.y_half[j + Gr.dims.indx_lo[1]] - yc
+            # r = (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2
+            # r = (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2
+            # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 )
+            # r = np.sqrt( (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            Pa.root_print('r_1: '+str(r) +', '+str(rstar))
+
     #         if (r <= (rstar + marg) ):
     #             print('smaller than rstar + marg')
     #             print('r/(rstar + marg): ' + str(r/(rstar / marg)))
