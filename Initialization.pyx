@@ -579,10 +579,10 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # Pa.root_print('k_max[0] '+str(np.amax(k_max_arr[0,:,:])))
     # Pa.root_print('k_max[1] '+str(np.amax(k_max_arr[1,:,:])))
 
-    # ''' Initialize passive tracer phi '''
-    # init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
-    #
-    # Pa.root_print('Initialization: finished initialization')
+    ''' Initialize passive tracer phi '''
+    init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
+
+    Pa.root_print('Initialization: finished initialization')
 
     return
 
