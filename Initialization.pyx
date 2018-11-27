@@ -555,7 +555,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 if Gr.z_half[k] <= z_max_arr[0,i,j]:
                     theta_z[i,j,k] = th_g - dTh
                 elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    th = th_g - dTh * np.sin((z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[1, i, j] - z_max_arr[0, i, j]) * np.pi/2) ** 2
+                    th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
                     theta_z[i, j, k] = th
 
                 if k <= kstar + 2:
