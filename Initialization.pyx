@@ -533,13 +533,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
                 z_max_arr[0, i, j] = z_max
 
-    #         if r <= (rstar + marg):
-    #             count_1 += 1
-    #             k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-    #             k_max_arr[1, i, j] = np.int(np.round(k_max))
-    #             z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-    #             z_max_arr[1, i, j] = z_max
-    #
+            if r2 <= rstar_marg2:
+            # if r <= (rstar + marg):
+            #     count_1 += 1
+            #     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+            #     k_max_arr[1, i, j] = np.int(np.round(k_max))
+                z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                z_max_arr[1, i, j] = z_max
+
     #         # maybe looping over all k?
     #         # if marked from ehre >> not working
     #         #
