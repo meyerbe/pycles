@@ -481,7 +481,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ijk
         Py_ssize_t gw = Gr.dims.gw
         double th
-        double r
+        double r, r2
 
     # parameters
     cdef:
@@ -499,6 +499,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
         double z_max = 0
+        double rstar2 = rstar**2
+        double rstar_marg2 = (rstar+marg)**2
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
     Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
     # Pa.root_print(np.asarray(Gr.x_half[:]))
@@ -523,14 +525,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-    #         # if r2 <= rstar2
-    #         if r <= rstar:
-    #             # count_0 += 1
-    #             k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
-    #             k_max_arr[0, i, j] = np.int(np.round(k_max))
-    #             z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
-    #             z_max_arr[0, i, j] = z_max
-    #
+            if r2 <= rstar2
+            # if r <= rstar:
+            #     # count_0 += 1
+            #     k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+            #     k_max_arr[0, i, j] = np.int(np.round(k_max))
+                z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+                z_max_arr[0, i, j] = z_max
+
     #         if r <= (rstar + marg):
     #             count_1 += 1
     #             k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
