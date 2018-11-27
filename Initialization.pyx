@@ -514,11 +514,11 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # count_0 = 0
     # count_1 = 0
-    # for i in xrange(Gr.dims.nlg[0]):
-    #     ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-    #     for j in xrange(Gr.dims.nlg[1]):
-    #         jshift = j * Gr.dims.nlg[2]
-    #
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+
     #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
     #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
     #         if r <= rstar:
@@ -536,6 +536,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     #             z_max_arr[1, i, j] = z_max
     #
     #         # maybe looping over all k?
+    #         # if marked from ehre >> not working
     #         #
     #         # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
     #         #     ijk = ishift + jshift + k
@@ -572,10 +573,10 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # Pa.root_print('k_max[0] '+str(np.amax(k_max_arr[0,:,:])))
     # Pa.root_print('k_max[1] '+str(np.amax(k_max_arr[1,:,:])))
 
-    ''' Initialize passive tracer phi '''
-    init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
-
-    Pa.root_print('Initialization: finished initialization')
+    # ''' Initialize passive tracer phi '''
+    # init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
+    #
+    # Pa.root_print('Initialization: finished initialization')
 
     return
 
