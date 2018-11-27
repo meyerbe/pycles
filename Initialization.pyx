@@ -36,7 +36,7 @@ def InitializationFactory(namelist):
         elif casename == 'ColdPoolDry_double_2D':
             print('calling Initialization double ColdPoolDry 2D')
             return InitColdPoolDry_double_2D
-        elif casename == 'ColdPoolDry_single_3D':
+        elif casename == 'ColdPoolDry_3D':
             print('calling Initialization single ColdPoolDry 3D')
             return InitColdPoolDry_single_3D
         elif casename == 'ColdPoolDry_double_3D':
@@ -478,6 +478,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
         Py_ssize_t ijk
+        Py_ssize_t gw = Gr.dims.gw
         double th
         double r
 
@@ -493,8 +494,10 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t jc = np.int(Gr.dims.n[1] / 2)
         double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
         double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
-        double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        double [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
+        double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
+        double z_max = 0
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
     Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
     Pa.root_print(np.asarray(Gr.x_half[:]))
@@ -504,11 +507,12 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     cdef:
         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:,:,:] theta_z = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         double theta_pert_
 
-    count_0 = 0
-    count_1 = 0
+    # count_0 = 0
+    # count_1 = 0
     for i in xrange(Gr.dims.nlg[0]):
         ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
@@ -517,15 +521,20 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             if r <= rstar:
-                count_0 += 1
-                k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
+                # count_0 += 1
+                k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
                 k_max_arr[0, i, j] = np.int(np.round(k_max))
-            elif r <= (rstar + marg):
+                z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+                z_max_arr[0, i, j] = z_max
+
+            if r <= (rstar + marg):
                 count_1 += 1
                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 k_max_arr[1, i, j] = np.int(np.round(k_max))
+                z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                z_max_arr[1, i, j] = zmax
 
-            for k in xrange(Gr.dims.nlg[2]):
+            for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
                 ijk = ishift + jshift + k
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
@@ -537,22 +546,28 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
                 # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
-                if k <= k_max_arr[0, i, j]:
+                if (k-gw) <= k_max_arr[0, i, j]:
                     theta[i,j,k] = th_g - dTh
-                elif k <= k_max_arr[1, i, j]:
-                    th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
+                elif (k-gw) <= k_max_arr[1, i, j]:
+                    th = th_g - dTh * np.sin(( (k-gw) - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j]) * np.pi/2) ** 2
                     theta[i, j, k] = th
+
+                if Gr.z_half[k] <= z_max_arr[0,i,j]:
+                    theta_z[i,j,k] = th_g - dTh
+                elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+                    th = th_g - dTh * np.sin((z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[1, i, j] - z_max_arr[0, i, j]) * np.pi/2) ** 2
+                    theta_z[i, j, k] = th
 
                 if k <= kstar + 2:
                     theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
                 else:
                     theta_pert_ = 0.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
 
 
     Pa.root_print('Initialization: finished PV initialization')
-    Pa.root_print('k_max[0] '+str(np.amax(k_max_arr[0,:,:]))+ ', ' + str(count_0))
-    Pa.root_print('k_max[1] '+str(np.amax(k_max_arr[1,:,:]))+ ', ' + str(count_1))
+    Pa.root_print('k_max[0] '+str(np.amax(k_max_arr[0,:,:])))
+    Pa.root_print('k_max[1] '+str(np.amax(k_max_arr[1,:,:])))
 
     ''' Initialize passive tracer phi '''
     init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
@@ -3140,8 +3155,6 @@ def interp_pchip(z_out, z_in, v_in, pchip_type=True):
 
 def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                 ParallelMPI.ParallelMPI Pa, k_max_arr, ic_arr, jc_arr):
-    Pa.root_print('init_tracer')
-
     ''' Initialize passive tracer phi '''
     try:
         use_tracers = namelist['tracers']['use_tracers']
