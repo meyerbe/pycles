@@ -541,14 +541,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
 
-    #         # maybe looping over all k?
-    #         # if marked from ehre >> not working
-    #         #
-    #         # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
-    #         #     ijk = ishift + jshift + k
-    #         #     PV.values[u_varshift + ijk] = 0.0
-    #         #     PV.values[v_varshift + ijk] = 0.0
-    #         #     PV.values[w_varshift + ijk] = 0.0
+            # maybe looping over all k?
+            # if marked from ehre >> not working
+            #
+            for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = 0.0
+                PV.values[v_varshift + ijk] = 0.0
+                PV.values[w_varshift + ijk] = 0.0
     #         #
     #         #     # r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
     #         #     #              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)
