@@ -10,13 +10,20 @@
 
 # (try with multiple cores)
 
-dTh=2
+dTh=$1
+#dTh=4
 #th_params=( 2 3 )
 
-if [ $dTh -eq 3 ]
+if [ $dTh -eq 4 ]
+then 
+  z_params=( 430 870 1730 )
+  r_params=( 1730 870 430 )
+elif [ $dTh -eq 3 ]
 then
-  z_params=( 500 1000 2000 )
-  r_params=( 2000 1000 500 )
+  #z_params=( 2000 250 500 670 1000 1500 2000 4000 )
+  #r_params=( 2000 4000 2000 1500 1000 670 500 250 )
+  z_params=( 2000 )
+  r_params=( 2000 )
 elif [ $dTh -eq 2 ]
 then
   z_params=( 2450 1225 815 )
@@ -44,7 +51,7 @@ do
   # 'echo $z_params' will output only the first element.
   zstar=${z_params[$count_geom]}
   rstar=${r_params[$count_geom]}
-  echo "parameters:" $zstar $rstar
+  echo "parameters: z*"$zstar", r*"$rstar
   python generate_namelist_sbatch.py ColdPoolDry_single_3D --zstar $zstar --rstar $rstar --dTh $dTh
   
   echo "generated namelist file"
@@ -61,7 +68,7 @@ do
   # s for seconds (default); m for minutes; h for hours; d for days
 
   cp ColdPoolDry_single_3D.in "ColdPoolDry_single_3D_"$id".in"
-  sleep 10
+  sleep 30
 
 
   ((count_geom++))
