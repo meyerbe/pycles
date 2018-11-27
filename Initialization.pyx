@@ -501,8 +501,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double z_max = 0
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
     Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
-    Pa.root_print(np.asarray(Gr.x_half[:]))
-    Pa.root_print(np.asarray(Gr.y_half[:]))
+    # Pa.root_print(np.asarray(Gr.x_half[:]))
+    # Pa.root_print(np.asarray(Gr.y_half[:]))
 
     # temepratures
     cdef:
@@ -514,56 +514,58 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # count_0 = 0
     # count_1 = 0
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = j * Gr.dims.nlg[2]
-
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            if r <= rstar:
-                # count_0 += 1
-                k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
-                k_max_arr[0, i, j] = np.int(np.round(k_max))
-                z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
-                z_max_arr[0, i, j] = z_max
-
-            if r <= (rstar + marg):
-                count_1 += 1
-                k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-                k_max_arr[1, i, j] = np.int(np.round(k_max))
-                z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-                z_max_arr[1, i, j] = z_max
-            #
-            # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
-            #     ijk = ishift + jshift + k
-            #     PV.values[u_varshift + ijk] = 0.0
-            #     PV.values[v_varshift + ijk] = 0.0
-            #     PV.values[w_varshift + ijk] = 0.0
-            #
-            #     # r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
-            #     #              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)
-            #     # r = fmin(r,1.0)   # cos(pi)=0
-            #     # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
-            #     # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
-            #
-            #     if (k-gw) <= k_max_arr[0, i, j]:
-            #         theta[i,j,k] = th_g - dTh
-            #     elif (k-gw) <= k_max_arr[1, i, j]:
-            #         th = th_g - dTh * np.sin(( (k-gw) - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j]) * np.pi/2) ** 2
-            #         theta[i, j, k] = th
-            #
-            #     if Gr.z_half[k] <= z_max_arr[0,i,j]:
-            #         theta_z[i,j,k] = th_g - dTh
-            #     elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-            #         th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-            #         theta_z[i, j, k] = th
-            #
-            #     if k <= kstar + 2:
-            #         theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
-            #     else:
-            #         theta_pert_ = 0.0
-            #     PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+    # for i in xrange(Gr.dims.nlg[0]):
+    #     ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+    #     for j in xrange(Gr.dims.nlg[1]):
+    #         jshift = j * Gr.dims.nlg[2]
+    #
+    #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+    #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+    #         if r <= rstar:
+    #             # count_0 += 1
+    #             k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+    #             k_max_arr[0, i, j] = np.int(np.round(k_max))
+    #             z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+    #             z_max_arr[0, i, j] = z_max
+    #
+    #         if r <= (rstar + marg):
+    #             count_1 += 1
+    #             k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+    #             k_max_arr[1, i, j] = np.int(np.round(k_max))
+    #             z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+    #             z_max_arr[1, i, j] = z_max
+    #
+    #         # maybe looping over all k?
+    #         #
+    #         # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
+    #         #     ijk = ishift + jshift + k
+    #         #     PV.values[u_varshift + ijk] = 0.0
+    #         #     PV.values[v_varshift + ijk] = 0.0
+    #         #     PV.values[w_varshift + ijk] = 0.0
+    #         #
+    #         #     # r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
+    #         #     #              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)
+    #         #     # r = fmin(r,1.0)   # cos(pi)=0
+    #         #     # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
+    #         #     # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
+    #         #
+    #         #     if (k-gw) <= k_max_arr[0, i, j]:
+    #         #         theta[i,j,k] = th_g - dTh
+    #         #     elif (k-gw) <= k_max_arr[1, i, j]:
+    #         #         th = th_g - dTh * np.sin(( (k-gw) - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j]) * np.pi/2) ** 2
+    #         #         theta[i, j, k] = th
+    #         #
+    #         #     if Gr.z_half[k] <= z_max_arr[0,i,j]:
+    #         #         theta_z[i,j,k] = th_g - dTh
+    #         #     elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+    #         #         th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+    #         #         theta_z[i, j, k] = th
+    #         #
+    #         #     if k <= kstar + 2:
+    #         #         theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+    #         #     else:
+    #         #         theta_pert_ = 0.0
+    #         #     PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
 
 
     Pa.root_print('Initialization: finished PV initialization')
