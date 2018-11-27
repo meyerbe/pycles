@@ -495,7 +495,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t jc = np.int(Gr.dims.n[1] / 2)
         double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
         double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
-        double [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
+        Py_ssize_t [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
         double z_max = 0
