@@ -519,8 +519,11 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
 
-    #         r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-    #                      (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+    #         # if r2 <= rstar2
     #         if r <= rstar:
     #             # count_0 += 1
     #             k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
