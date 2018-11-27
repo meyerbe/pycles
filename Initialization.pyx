@@ -568,11 +568,11 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
                     theta_z[i, j, k] = th
 
-            #     if k <= kstar + 2:
-            #         theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
-            #     else:
-            #         theta_pert_ = 0.0
-            #     PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+                if k <= kstar + 2:
+                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+                else:
+                    theta_pert_ = 0.0
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
 
 
     Pa.root_print('Initialization: finished PV initialization')
