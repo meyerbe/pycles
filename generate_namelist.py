@@ -297,7 +297,7 @@ def ColdPoolDry_3D(number):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 3000.0
+    namelist['time_stepping']['t_max'] = 3600.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
@@ -349,8 +349,8 @@ def ColdPoolDry_3D(number):
 
     namelist['meta'] = {}
     if number == 'single':
-        namelist['meta']['casename'] = 'ColdPoolDry_3D'
-        namelist['meta']['simname'] = 'ColdPoolDry_3D'
+        namelist['meta']['casename'] = 'ColdPoolDry_single_3D'
+        namelist['meta']['simname'] = 'ColdPoolDry_single_3D'
     elif number == 'double':
         namelist['meta']['casename'] = 'ColdPoolDry_double_3D'
         namelist['meta']['simname'] = 'ColdPoolDry_double_3D'

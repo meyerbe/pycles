@@ -75,12 +75,12 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
     namelist['grid']['dz'] = 100.0
 
     namelist['init'] = {}
-    # namelist['init']['dTh'] = 2.0          # temperature anomaly
+    # namelist['init']['dTh'] = 2.0      # temperature anomaly
     namelist['init']['dTh'] = dTh  # temperature anomaly
-    namelist['init']['shape'] = 1  # shape of temperature anomaly: 1 = cos2-shape
-    # namelist['init']['h'] = 2000.0         # initial height of temperature anomaly
+    namelist['init']['shape'] = 1       # shape of temperature anomaly: 1 = cos2-shape
+    # namelist['init']['h'] = 2000.0      # initial height of temperature anomaly
     namelist['init']['h'] = zstar  # initial height of temperature anomaly
-    # namelist['init']['r'] = 1000.0         # initial radius of temperature anomaly
+    # namelist['init']['r'] = 1000.0      # initial radius of temperature anomaly
     namelist['init']['r'] = rstar  # initial radius of temperature anomaly
 
     namelist['mpi'] = {}
@@ -93,7 +93,7 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 30.0
+    namelist['time_stepping']['t_max'] = 3000.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
@@ -187,6 +187,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['init']['h'] = zstar           # initial height of temperature anomaly
     #namelist['init']['r'] = 1000.0         # initial radius of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
+    namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
 
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 4
