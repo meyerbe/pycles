@@ -171,13 +171,13 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
 
     namelist['grid'] = {}
     namelist['grid']['dims'] = 3
-    namelist['grid']['nx'] = 200
-    namelist['grid']['ny'] = 200
-    namelist['grid']['nz'] = 150
+    namelist['grid']['nx'] = 400
+    namelist['grid']['ny'] = 400
+    namelist['grid']['nz'] = 240
     namelist['grid']['gw'] = 5
-    namelist['grid']['dx'] = 200.0
-    namelist['grid']['dy'] = 200.0
-    namelist['grid']['dz'] = 100.0
+    namelist['grid']['dx'] = 100.0#50.0
+    namelist['grid']['dy'] = 100.0#50.0
+    namelist['grid']['dz'] = 100.0#50.0
 
     namelist['init'] = {}
     #namelist['init']['dTh'] = 2.0          # temperature anomaly
@@ -189,8 +189,8 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
 
     namelist['mpi'] = {}
-    namelist['mpi']['nprocx'] = 1
-    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocx'] = 4
+    namelist['mpi']['nprocy'] = 4
     namelist['mpi']['nprocz'] = 1
 
     namelist['time_stepping'] = {}
@@ -198,7 +198,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 3000.0
+    namelist['time_stepping']['t_max'] = 3600.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
@@ -233,7 +233,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['restart']['output'] = True
     namelist['restart']['init_from'] = False
     namelist['restart']['input_path'] = './'
-    namelist['restart']['frequency'] = 600.0
+    namelist['restart']['frequency'] = 300.0
 
     namelist['conditional_stats'] = {}
 
@@ -260,7 +260,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
         namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 20.0
+    namelist['visualization']['frequency'] = 50.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
@@ -289,7 +289,7 @@ def Bomex():
     namelist['grid']['dz'] = 100 / 2.5
 
     namelist['mpi'] = {}
-    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocx'] = 2
     namelist['mpi']['nprocy'] = 1
     namelist['mpi']['nprocz'] = 1
 
@@ -376,7 +376,6 @@ def Bomex():
 
 
 def write_file_CP(namelist,  zstar, rstar, dTh):
-    print('writing namelist file: '+namelist['meta']['simname'])
     try:
         type(namelist['meta']['simname'])
     except:
@@ -384,16 +383,20 @@ def write_file_CP(namelist,  zstar, rstar, dTh):
         print('FatalError')
         exit()
 
-    # namelist['meta']['uuid'] = str(uuid.uuid4())
-    # fh = open(namelist['meta']['simname'] + '_' + uuid_[-5:] + '.in', 'w')
+    namelist['meta']['uuid'] = str(uuid.uuid4())
+    fh = open(namelist['meta']['simname'] + '.in', 'w')
 
-    # uuid_ = str(uuid.uuid4())
-    # namelist['meta']['uuid'] = uuid_
-    # fh = open(namelist['meta']['simname'] + '_' + uuid_[-5:] + '.in', 'w')
+    #file_id = str(uuid.uuid4())
+    #namelist['meta']['uuid'] = file_id
+    #fh = open(namelist['meta']['simname'] + '_' + file_id[-5:] + '.in', 'w')
+    #print('writing namelist file: '+namelist['meta']['simname'] + '_' + file_id[-5:])
 
-    id = 'z'+str(np.int(zstar))+'_r'+str(np.int(rstar)) + '_dTh'+str(np.int(dTh))
-    namelist['meta']['uuid'] = id
-    fh = open(namelist['meta']['simname'] + '_' + id + '.in', 'w')
+    #file_id = 'z'+str(np.int(zstar))+'_r'+str(np.int(rstar)) + '_dTh'+str(np.int(dTh))    
+    #namelist['meta']['uuid'] = file_id   
+    #fh = open(namelist['meta']['simname'] + '_' + file_id '.in', 'w')
+    #print('writing namelist file: '+namelist['meta']['simname'] + '_' + file_id)
+    
+    
     #pprint.pprint(namelist)
     json.dump(namelist, fh, sort_keys=True, indent=4)
     fh.close()
