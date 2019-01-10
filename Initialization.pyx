@@ -497,7 +497,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t jc = namelist['init']['jc']      # np.int(Gr.dims.n[1] / 2)
         double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
         double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
-        Py_ssize_t [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
+        # Py_ssize_t [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double k_max = 0
         double z_max = 0
@@ -511,7 +511,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # temepratures
     cdef:
         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
-        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
         double [:,:,:] theta_z = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         double theta_pert_
@@ -519,7 +519,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # count_0 = 0
     # count_1 = 0
     for i in xrange(Gr.dims.nlg[0]):
-        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
 
@@ -529,16 +529,13 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             if r2 <= rstar2:
             # if r <= rstar:
-            #     # count_0 += 1
             #     k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
             #     k_max_arr[0, i, j] = np.int(np.round(k_max))
                 z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
                 z_max_arr[0, i, j] = z_max
 
             if r2 <= rstar_marg2:
-            # if r <= (rstar + marg):
-            #     count_1 += 1
-            #     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+            # if r <= (rstar + marg):            #     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
             #     k_max_arr[1, i, j] = np.int(np.round(k_max))
                 z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
@@ -578,8 +575,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
     Pa.root_print('Initialization: finished PV initialization')
-    # Pa.root_print('k_max[0] '+str(np.amax(k_max_arr[0,:,:])))
-    # Pa.root_print('k_max[1] '+str(np.amax(k_max_arr[1,:,:])))
 
     ''' Initialize passive tracer phi '''
     init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
@@ -641,9 +636,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 #         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
 #         double k_max = 0
 #
-#     Pa.root_print('rootprint i: ' + str(ic) + ', ' + str(ic_) + ', ' + str(gw) + ', ' + str(Gr.dims.indx_lo[0]))
-#     Pa.root_print('rootprint j: ' + str(jc) + ', ' + str(jc_) + ', ' + str(gw) + ', ' + str(Gr.dims.indx_lo[1]))
-#
 #     cdef:
 #         double th
 #         double dTh = namelist['init']['dTh']
@@ -653,90 +645,39 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 #         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
 #         double theta_pert_
 #
-#         # double [:,:] ir_arr = np.ones((nxg, nyg), dtype=np.double)
-#         # double [:,:] ir_arr_marg = np.ones((nxg, nyg), dtype=np.double)
-#     print('xc, min, max, '+str(xc) + ', ' + str(Gr.dims.indx_lo[0])+ ', ' + str(Gr.x_half.shape))
-#     print(str(Gr.x_half[Gr.dims.indx_lo[0]] - xc))
-#     print('yc, min, max, '+str(yc) + ', ' + str(Gr.dims.indx_lo[1])+ ', ' + str(Gr.y_half.shape))
-#
 #     ''' compute k_max '''
-#     aux_i_max = -9999.0
-#     aux_i_min = 9999.0
-#     aux_j_max = -9999.0
-#     aux_j_min = 9999.0
-#     aux = np.zeros((Gr.dims.ng[0],Gr.dims.ng[1]))
-#     aux[gw+ic, gw+jc] = 2
 #     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
 #         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
 #             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
 #                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
 #             ir = np.sqrt( ( i - ic_ )**2 + ( j + - jc_)**2 )
-#             # dist  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 10.0)/1.2)**2.0)     # changed since VisualizationOutput defined in yz-plane
-#
-#             Pa.root_print('r_1: '+str(r) +', '+str(rstar) + ', ' + str(rstar+marg)
-#                           + ', '+str(ir) +', '+str(irstar) )
 #
 #             if (r <= (rstar + marg) ):
-#                 Pa.root_print('smaller than rstar + marg' + str(r) + ', '+str(rstar+marg) + ', ' +
-#                               str(ir)+ ', ' + str(irstar + marg_i) + ', ' + str(i) + ', '+str(j))
-#                 # print('r/(rstar + marg): ' + str(r/(rstar / marg)))
-#                 # print('r/rstar: ' + str(r/rstar))
 #                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-#                 Pa.root_print(str(k_max) + ', ' + str(np.int(np.round(k_max))) )
 #                 k_max_arr[1, i, j] = np.int(np.round(k_max))
 #                 # k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
 #                 # k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
 #                 # k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
-#                 # # k_max_arr[1, 2 * ic - i, j] = k_max_arr[1, i, j]
-#                 # # k_max_arr[1, 2 * ic - i, 2 * jc - j] = k_max_arr[1, i, j]
-#                 # # k_max_arr[1, i, 2 * jc - j] = k_max_arr[1, i, j]
 #                 if (r <= rstar):
-#                     Pa.root_print('Smaller than rstar: '+  str(r) + ', '+str(rstar) + ', ' +
-#                               str(ir)+ ', ' + str(irstar) + ', ' + str(i) + ', '+str(j))
 #                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-#                     Pa.root_print(str(k_max) + ', ' + str(np.int(np.round(k_max))) )
-#                     aux[gw + Gr.dims.indx_lo[0]+i, gw + Gr.dims.indx_lo[1]+j] = 1
-#                     # if i < aux_i_min:
-#                     #     aux_i_min = i
-#                     # elif i > aux_i_max:
-#                     #     aux_i_max = i
-#                     # if j < aux_j_min:
-#                     #     aux_j_min = j
-#                     # elif i > aux_j_max:
-#                     #     aux_j_max = j
 #                     k_max_arr[0, i, j] = np.int(np.round(k_max))
 #                     # k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
 #                     # k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
 #                     # k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
-#                     # # k_max_arr[0, 2*ic-i, j] = k_max_arr[0,i,j]
-#                     # # k_max_arr[0, 2*ic-i, 2*jc-j] = k_max_arr[0,i,j]
-#                     # # k_max_arr[0, i, 2*jc-j] = k_max_arr[0,i,j]
-#
-#     Pa.root_print('Initialization: finished k_max[0:1] computation')
-#     Pa.root_print(str(aux_i_min) +', '+ str(aux_i_max) +', '+ str(aux_j_min) +', '+ str(aux_j_max))
-#     Pa.root_print(k_max_arr.shape)
-#     Pa.root_print(str(np.amax(k_max_arr[0,:,:]))+', '+str(np.amax(k_max_arr[1,:,:])))
-#     Pa.root_print('nlg, nly: '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1]))
 #
 #     # ''' theta-anomaly'''
 #     # # from thermodynamic_functions cimport theta_c
 #
-#
-#     # # Pa.root_print('Initialization')
-#     # # Pa.root_print(theta.shape)
-#     #
-#     # for i in xrange(Gr.dims.nlg[0]):
-#     #     for j in xrange(Gr.dims.nlg[1]):
-#     #         # Pa.root_print('ij' + str(i)+', '+str(j)+', '+str(Gr.dims.nlg[0])+', '+str(Gr.dims.nlg[1])+', '+str(k_max_arr[0,i,j])+', '+str(k_max_arr[1,i,j]))
-#     #         if k_max_arr[1, i, j] > 0:
-#     #             for k in xrange(Gr.dims.nlg[2]):
-#     #                 th = th_g
-#     #                 if k <= k_max_arr[0, i, j]:
-#     #                     th = th_g - dTh
-#     #                 elif k <= k_max_arr[1, i, j]:
-#     #                     th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
-#     #                 theta[i, j, k] = th
-#     # Pa.root_print('Initialization: finished theta anomaly')
+#     for i in xrange(Gr.dims.nlg[0]):
+#         for j in xrange(Gr.dims.nlg[1]):
+#             if k_max_arr[1, i, j] > 0:
+#                 for k in xrange(Gr.dims.nlg[2]):
+#                     th = th_g
+#                     if k <= k_max_arr[0, i, j]:
+#                         th = th_g - dTh
+#                     elif k <= k_max_arr[1, i, j]:
+#                         th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
+#                     theta[i, j, k] = th
 #
 #     #Get the variable number for each of the velocity components
 #     cdef:
@@ -760,8 +701,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 #                 else:
 #                     theta_pert_ = 0.0
 #                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
-#                 # PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k], 0.0)
-#     Pa.root_print('Initialization: finished PV initialization')
 #
 #     # ''' plotting '''
 #     # var_name = 'theta'
@@ -784,8 +723,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 #
 #     ''' Initialize passive tracer phi '''
 #     init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
-#
-#     Pa.root_print('Initialization: finished initialization')
 #
 #     return
 
