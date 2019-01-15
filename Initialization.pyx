@@ -577,7 +577,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('Initialization: finished PV initialization')
 
     ''' Initialize passive tracer phi '''
-    init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
+    init_tracer(namelist, Gr, PV, Pa, z_max_arr, np.asarray(ic), np.asarray(jc))
 
     Pa.root_print('Initialization: finished initialization')
 
@@ -3103,7 +3103,7 @@ def interp_pchip(z_out, z_in, v_in, pchip_type=True):
 
 
 def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
-                ParallelMPI.ParallelMPI Pa, k_max_arr, ic_arr, jc_arr):
+                ParallelMPI.ParallelMPI Pa, z_max_arr, ic_arr, jc_arr):
     ''' Initialize passive tracer phi '''
     try:
         use_tracers = namelist['tracers']['use_tracers']
