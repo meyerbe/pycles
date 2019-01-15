@@ -180,14 +180,11 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['grid']['dz'] = 100.0#50.0
 
     namelist['init'] = {}
-    #namelist['init']['dTh'] = 2.0          # temperature anomaly
     namelist['init']['dTh'] = dTh           # temperature anomaly
     namelist['init']['shape'] = 1           # shape of temperature anomaly: 1 = cos2-shape
-    #namelist['init']['h'] = 2000.0         # initial height of temperature anomaly
     namelist['init']['h'] = zstar           # initial height of temperature anomaly
-    #namelist['init']['r'] = 1000.0         # initial radius of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
-    namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
+    namelist['init']['marg'] = 200.         # width or margin (transition for temeprature anomaly)
     if number == 'single':
         namelist['init']['ic'] = namelist['grid']['nx'] / 2
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
