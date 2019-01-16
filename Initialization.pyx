@@ -535,15 +535,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 z_max_arr[0, i, j] = z_max
 
             if r2 <= rstar_marg2:
-            # if r <= (rstar + marg):            #     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+            # if r <= (rstar + marg):
+            #     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
             #     k_max_arr[1, i, j] = np.int(np.round(k_max))
                 z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
 
-            # maybe looping over all k?
-            # if marked from ehre >> not working
-            #
-            for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
+            # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
+            for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
@@ -572,12 +571,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 else:
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+                # t = (theta[k] + theta_pert_)*exner_c(RS.p0_half[k])
+                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
 
-    Pa.root_print('Initialization: finished PV initialization')
+    # Pa.root_print('Initialization: finished PV initialization')
 
-    ''' Initialize passive tracer phi '''
-    init_tracer(namelist, Gr, PV, Pa, z_max_arr, np.asarray(ic), np.asarray(jc))
+    # ''' Initialize passive tracer phi '''
+    # init_tracer(namelist, Gr, PV, Pa, z_max_arr, np.asarray(ic), np.asarray(jc))
 
     Pa.root_print('Initialization: finished initialization')
 
