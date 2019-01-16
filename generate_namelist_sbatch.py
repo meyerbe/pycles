@@ -173,7 +173,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['grid']['dims'] = 3
     namelist['grid']['nx'] = 400
     namelist['grid']['ny'] = 400
-    namelist['grid']['nz'] = 240
+    namelist['grid']['nz'] = 150 #240
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = 100.0#50.0
     namelist['grid']['dy'] = 100.0#50.0
@@ -225,7 +225,10 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['scalar_transport']['order'] = 5
 
     namelist['damping'] = {}
-    namelist['damping']['scheme'] = 'None'
+    namelist['damping']['scheme'] = 'Rayleigh' #'None'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 600
 
     namelist['output'] = {}
     namelist['output']['output_root'] = './'
@@ -261,7 +264,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
         namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 50.0
+    namelist['visualization']['frequency'] = 100.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
