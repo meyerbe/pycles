@@ -333,7 +333,7 @@ def ColdPoolDry_3D(number):
     namelist['damping']['scheme'] = 'Rayleigh' #'None'
     namelist['damping']['Rayleigh'] = {}
     namelist['damping']['Rayleigh']['gamma_r'] = 0.2
-    namelist['damping']['Rayleigh']['z_d'] = 500
+    namelist['damping']['Rayleigh']['z_d'] = 600
 
     namelist['output'] = {}
     namelist['output']['output_root'] = './'
