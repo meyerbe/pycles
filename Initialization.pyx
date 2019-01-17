@@ -168,6 +168,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
     ''' (b) theta-anomaly'''
     # from thermodynamic_functions cimport theta_c
+    np.random.seed(Pa.rank)
     cdef:
         double th
         double dTh = namelist['init']['dTh']
@@ -397,10 +398,13 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     ''' theta-anomaly'''
     # from thermodynamic_functions cimport theta_c
+    np.random.seed(Pa.rank)
     cdef:
         double th
         double dTh = namelist['init']['dTh']
         double th_g = 300.0  # value from Soares Surface
+        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+        double theta_pert_
     ''' ??? correct dimensions with nlg? '''
     theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
 
@@ -509,6 +513,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # Pa.root_print(np.asarray(Gr.y_half[:]))
 
     # temepratures
+    np.random.seed(Pa.rank)
     cdef:
         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
@@ -817,7 +822,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' theta-anomaly'''
     # Noise
     np.random.seed(Pa.rank)
-
     # from thermodynamic_functions cimport theta_c
     cdef:
         double th
