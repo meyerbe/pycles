@@ -592,146 +592,162 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 
-# def InitColdPoolDry_single_3D_(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-#                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
-#     Pa.root_print('')
-#     Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
-#     Pa.root_print('')
-#     # set zero ground humidity, no horizontal wind at ground
-#     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
-#
-#     # # for plotting
-#     from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
-#     cdef:
-#         PrognosticVariables.PrognosticVariables PV_ = PV
-#     j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
-#
-#     #Generate reference profiles
-#     RS.Pg = 1.0e5
-#     RS.Tg = 300.0
-#     RS.qtg = 0.0
-#     #Set velocities for Galilean transformation
-#     RS.u0 = 0.0
-#     RS.v0 = 0.0
-#     RS.initialize(Gr, Th, NS, Pa)
-#     Pa.root_print('finished RS.initialize')
-#
-#
-#     cdef:
-#         Py_ssize_t i,j,k
-#         Py_ssize_t ishift, jshift
-#         Py_ssize_t ijk
-#         Py_ssize_t istride_2d = Gr.dims.nlg[1]
-#         double dx = Gr.dims.dx[0]
-#         Py_ssize_t gw = Gr.dims.gw
-#
-#         # parameters
-#         double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
-#         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
-#         double zstar = namelist['init']['h']
-#         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-#         Py_ssize_t marg_i = 5  # 10, width of margin
-#         double marg = marg_i*Gr.dims.dx[0]  # width of margin
-#         Py_ssize_t ic = np.int(Gr.dims.n[0] / 2)
-#         Py_ssize_t jc = np.int(Gr.dims.n[1] / 2)
-#         Py_ssize_t ic_ = ic + gw - Gr.dims.indx_lo[0]     # for MPI run
-#         Py_ssize_t jc_ = jc + gw - Gr.dims.indx_lo[1]     # for MPI run
-#         double xc = Gr.x_half[ic]       # center of cold-pool
-#         double yc = Gr.y_half[jc]       # center of cold-pool
-#         Py_ssize_t ir
-#         double r
-#         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-#         double k_max = 0
-#
-#     cdef:
-#         double th
-#         double dTh = namelist['init']['dTh']
-#         double th_g = 300.0  # value from Soares Surface
-#         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
-#         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
-#         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
-#         double theta_pert_
-#
-#     ''' compute k_max '''
-#     for i in xrange(gw-1, Gr.dims.nlg[0]-gw+1):
-#         for j in xrange(gw-1, Gr.dims.nlg[1]-gw+1):
-#             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-#                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-#             ir = np.sqrt( ( i - ic_ )**2 + ( j + - jc_)**2 )
-#
-#             if (r <= (rstar + marg) ):
-#                 k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-#                 k_max_arr[1, i, j] = np.int(np.round(k_max))
-#                 # k_max_arr[1, 2*ic_-i, j] = k_max_arr[1, i, j]
-#                 # k_max_arr[1, 2*ic_-i, 2*jc_-j] = k_max_arr[1, i, j]
-#                 # k_max_arr[1, i, 2*jc_-j] = k_max_arr[1, i, j]
-#                 if (r <= rstar):
-#                     k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-#                     k_max_arr[0, i, j] = np.int(np.round(k_max))
-#                     # k_max_arr[0, 2*ic_-i, j] = k_max_arr[0,i,j]
-#                     # k_max_arr[0, 2*ic_-i, 2*jc_-j] = k_max_arr[0,i,j]
-#                     # k_max_arr[0, i, 2*jc_-j] = k_max_arr[0,i,j]
-#
-#     # ''' theta-anomaly'''
-#     # # from thermodynamic_functions cimport theta_c
-#
-#     for i in xrange(Gr.dims.nlg[0]):
-#         for j in xrange(Gr.dims.nlg[1]):
-#             if k_max_arr[1, i, j] > 0:
-#                 for k in xrange(Gr.dims.nlg[2]):
-#                     th = th_g
-#                     if k <= k_max_arr[0, i, j]:
-#                         th = th_g - dTh
-#                     elif k <= k_max_arr[1, i, j]:
-#                         th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
-#                     theta[i, j, k] = th
-#
-#     #Get the variable number for each of the velocity components
-#     cdef:
-#         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-#         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-#         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-#         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-#
-#     for i in xrange(Gr.dims.nlg[0]):
-#         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#         for j in xrange(Gr.dims.nlg[1]):
-#             jshift = j * Gr.dims.nlg[2]
-#             for k in xrange(Gr.dims.nlg[2]):
-#                 ijk = ishift + jshift + k
-#                 PV.values[u_varshift + ijk] = 0.0
-#                 PV.values[v_varshift + ijk] = 0.0
-#                 PV.values[w_varshift + ijk] = 0.0
-#                 # --- adding noise ---
-#                 if k <= kstar + 2:
-#                     theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
-#                 else:
-#                     theta_pert_ = 0.0
-#                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
-#
-#     # ''' plotting '''
-#     # var_name = 'theta'
-#     # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
-#     # # plot_imshow(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-#     # #plot_var_profile(var_name, theta[:, :, :], j0, imin1, imax1, imin2, imax2, marg_i)
-#     #
-#     # plot_k_profile_3D(Gr.x_half, k_max_arr, Gr.dims.dx[0], Gr.dims.dx[1], Gr.dims.dx[2],
-#     #                   ic, jc)
-#     #
-#     # var_name = 's'
-#     # var_shift = PV_.get_varshift(Gr, var_name)
-#     # var1 = PV_.get_variable_array(var_name, Gr)
-#     # plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'single_3D')
-#     # # var_name = 'qt'
-#     # # var_shift = PV_.get_varshift(Gr, var_name)
-#     # # var1 = PV_.get_variable_array(var_name, Gr)
-#     # # plot_s_profile(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-#     # del var1
-#
-#     ''' Initialize passive tracer phi '''
-#     init_tracer(namelist, Gr, PV, Pa, k_max_arr, np.asarray(ic), np.asarray(jc))
-#
-#     return
+def InitColdPoolDry_single_3D_asymm(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+    Pa.root_print('')
+    Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
+    Pa.root_print('')
+    # set zero ground humidity, no horizontal wind at ground
+
+    #Generate reference profiles
+    RS.Pg = 1.0e5
+    RS.Tg = 300.0
+    RS.qtg = 0.0
+    #Set velocities for Galilean transformation
+    RS.u0 = 0.0
+    RS.v0 = 0.0
+    RS.initialize(Gr, Th, NS, Pa)
+    Pa.root_print('finished RS.initialize')
+
+    #Get the variable number for each of the velocity components
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk
+        Py_ssize_t gw = Gr.dims.gw
+        double th
+        double r, r2
+
+    # parameters
+    cdef:
+        double dTh = namelist['init']['dTh']
+        double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
+        double zstar = namelist['init']['h']
+        Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+        double marg = namelist['init']['marg']
+        Py_ssize_t marg_i = np.int(np.round(marg/Gr.dims.dx[0]))  # width of margin
+        Py_ssize_t ic = namelist['init']['ic']      # np.int(Gr.dims.n[0] / 2)
+        Py_ssize_t jc = namelist['init']['jc']      # np.int(Gr.dims.n[1] / 2)
+        double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
+        double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
+        double xc_marg       # center of margin (shifted wrt xc)
+        double yc_marg       # center of margin
+        double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        double k_max = 0
+        double z_max = 0
+        double rstar2 = rstar**2
+        double rstar_marg2 = (rstar+marg)**2
+    Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
+    Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
+
+    # ----- for asymmetry -----
+    # for shifted margin
+    # marg_shift = 200.   # shift of center of margin wrt CP center (xc, yc)
+    marg_shift = 0.   # shift of center of margin wrt CP center (xc, yc)
+    if marg_shift >= (marg - 100):
+        marg += marg_shift - (marg-100)
+    marg_i_shift = np.int(np.round(marg_shift/Gr.dims.dx[0]))
+    xc_marg = Gr.x_half[ic + marg_i_shift + Gr.dims.gw]       # center of margin (shifted wrt xc)
+    yc_marg = Gr.y_half[jc + marg_i_shift + Gr.dims.gw]       # center of margin
+    # -------------------------
+
+    # temperatures
+    np.random.seed(Pa.rank)
+    cdef:
+        double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
+        double [:,:,:] theta_z = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:,:,:] theta_r = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+        double theta_pert_
+
+    # compute radius of envelope for each height
+    r_arr = np.zeros((2, Gr.dims.nlg[2]), dytpe=np.double)
+    for k in xrange(Gr.dims.nlg[2]):
+        r_arr[0, k] = 2*rstar/np.pi * np.arcos( np.sqrt(Gr.z_half[k + Gr.dims.indx_lo[2]]/zstar) )
+        r_arr[1, k] = 2*(rstar+marg)/np.pi * np.arcos( np.sqrt(Gr.z_half[k + Gr.dims.indx_lo[2]]/(zstar+marg)) )
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+
+            r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r_shift2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc_marg)**2 +
+                            (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc_marg)**2 )
+
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = 0.0
+                PV.values[v_varshift + ijk] = 0.0
+                PV.values[w_varshift + ijk] = 0.0
+
+                if r2 <= rstar2:
+                    theta_r[i,j,k] = th_g - dTh
+                elif r_shift2 <= rstar_marg2:
+                    # (a) for (xc, yc) = (xc_marg, yc_marg)
+                    th = th_g - dTh * np.sin( (np.sqrt(r2) - r_arr[0, k]) / r_arr[1,k] * np.pi/2) ** 2
+                    # (b) for (xc, yc) != (xc_marg, yc_marg)
+                    th = th_g - dTh * np.sin( np.sqrt(r2) / (marg + marg_shift) * np.pi/2) ** 2
+                    theta_r[i, j, k] = th
+
+                if k <= kstar + 2:
+                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+                else:
+                    theta_pert_ = 0.0
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_r[i, j, k] + theta_pert_, 0.0)
+
+
+
+    # compute height of envelope for each (i,j)
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+
+            # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+            #              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r_shift2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc_marg)**2 +
+                            (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc_marg)**2 )
+            if r2 <= rstar2:
+                z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+                z_max_arr[0, i, j] = z_max
+            if r_shift2 <= rstar_marg2:
+                z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                z_max_arr[1, i, j] = z_max
+
+            # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = 0.0
+                PV.values[v_varshift + ijk] = 0.0
+                PV.values[w_varshift + ijk] = 0.0
+
+                if Gr.z_half[k] <= z_max_arr[0,i,j]:
+                    theta_z[i,j,k] = th_g - dTh
+                elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+                    th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                    theta_z[i, j, k] = th
+
+                if k <= kstar + 2:
+                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+                else:
+                    theta_pert_ = 0.0
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+
+    # ''' Initialize passive tracer phi '''
+    Pa.root_print('initialize passive tracer phi')
+    init_tracer(namelist, Gr, PV, Pa, z_max_arr, np.asarray(ic), np.asarray(jc))
+
+    Pa.root_print('Initialization: finished initialization')
+
+    return
+
 
 
 
