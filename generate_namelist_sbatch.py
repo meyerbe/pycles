@@ -173,7 +173,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['grid']['dims'] = 3
     namelist['grid']['nx'] = 400
     namelist['grid']['ny'] = 400
-    namelist['grid']['nz'] = 150 #240
+    namelist['grid']['nz'] = 150 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = 100.0#50.0
     namelist['grid']['dy'] = 100.0#50.0
