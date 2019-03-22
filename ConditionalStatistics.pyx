@@ -36,19 +36,19 @@ cdef class ConditionalStatistics:
         if not type(conditional_statistics) == list:
             conditional_statistics = [conditional_statistics]
 
-        # #Build list of twodimensional statistics class instances
-        # if 'Spectra' in conditional_statistics:
-        #     self.CondStatsClasses.append(SpectraStatistics(Gr,PV, DV, NC, Pa))
+        #Build list of twodimensional statistics class instances
+        if 'Spectra' in conditional_statistics:
+            self.CondStatsClasses.append(SpectraStatistics(Gr,PV, DV, NC, Pa))
         # if 'Null' in conditional_statistics:
         #     self.CondStatsClasses.append(NullCondStats())
         # # # __
-        # # if 'NanStatistics' in conditional_statistics:
-        # #     self.CondStatsClasses.append(NanStatistics(Gr, PV, DV, NC, Pa))
-        # # # if 'Test' in conditional_statistics:
-        # # #     self.CondStatsClasses.append(TestStatistics(Gr, PV, DV, NC, Pa))
-        # # # __
-        # #
-        # # print('CondStatsClasses: ', self.CondStatsClasses)
+        # if 'NanStatistics' in conditional_statistics:
+        #     self.CondStatsClasses.append(NanStatistics(Gr, PV, DV, NC, Pa))
+        # # if 'Test' in conditional_statistics:
+        # #     self.CondStatsClasses.append(TestStatistics(Gr, PV, DV, NC, Pa))
+        # # __
+        #
+        # print('CondStatsClasses: ', self.CondStatsClasses)
         return
 
 
