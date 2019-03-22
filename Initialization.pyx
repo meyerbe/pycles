@@ -939,7 +939,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     ''' Initialize passive tracer phi '''
     Pa.root_print('initialize passive tracer phi')
-    init_tracer(namelist, Gr, PV, Pa, k_max_arr, ic_arr, jc_arr)
+    init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
     Pa.root_print('Initialization: finished initialization')
     return
 
