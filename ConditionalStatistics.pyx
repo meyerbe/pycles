@@ -197,6 +197,18 @@ cdef class SpectraStatistics:
         cdef:
             double [:,:] x_pencil
             complex [:,:] x_pencil_fft,  y_pencil, y_pencil_fft
+
+
+        #Do fft in x direction
+        x_pencil = self.X_Pencil.forward_double(&Gr.dims, Pa, &data[0])
+        x_pencil_fft = fft(x_pencil,axis=1)
+        self.X_Pencil.reverse_complex(&Gr.dims, Pa, x_pencil_fft, &data_fft[0])
+
+        #Do fft in y direction
+        y_pencil = self.Y_Pencil.forward_complex(&Gr.dims, Pa, &data_fft[0])
+        y_pencil_fft = fft(y_pencil,axis=1)
+        self.Y_Pencil.reverse_complex(&Gr.dims, Pa, y_pencil_fft, &data_fft[0])
+
         return
 
 
