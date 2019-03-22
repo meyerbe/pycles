@@ -104,10 +104,10 @@ cdef class SpectraStatistics:
         NC.create_condstats_group('spectra','wavenumber', self.wavenumbers, Gr, Pa)
 
 
-    cpdef forward_transform(self, Grid.Grid Gr,ParallelMPI.ParallelMPI Pa, double [:] data, complex [:] data_fft):
-        cdef:
-            double [:,:] x_pencil
-            complex [:,:] x_pencil_fft,  y_pencil, y_pencil_fft
+        #Instantiate classes used for Pencil communication/transposes
+        self.X_Pencil = ParallelMPI.Pencil()
+        self.Y_Pencil = ParallelMPI.Pencil()
+
 
         return
 
@@ -148,6 +148,12 @@ cdef class SpectraStatistics:
                         uc[ijk] = 0.5 * (PV.values[u_shift + ijk - istride] + PV.values[u_shift + ijk])
                         vc[ijk] = 0.5 * (PV.values[v_shift + ijk - jstride] + PV.values[v_shift + ijk])
                         wc[ijk] = 0.5 * (PV.values[w_shift + ijk - 1] + PV.values[w_shift + ijk])
+        return
+
+    cpdef forward_transform(self, Grid.Grid Gr,ParallelMPI.ParallelMPI Pa, double [:] data, complex [:] data_fft):
+        cdef:
+            double [:,:] x_pencil
+            complex [:,:] x_pencil_fft,  y_pencil, y_pencil_fft
         return
 
 
