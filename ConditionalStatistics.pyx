@@ -109,6 +109,9 @@ cdef class SpectraStatistics:
         self.Y_Pencil = ParallelMPI.Pencil()
 
 
+        #Initialize classes used for Pencil communication/tranposes (here dim corresponds to the pencil direction)
+        self.X_Pencil.initialize(Gr,Pa,dim=0)
+        self.Y_Pencil.initialize(Gr,Pa,dim=1)
         return
 
 
