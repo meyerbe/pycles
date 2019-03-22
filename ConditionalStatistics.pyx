@@ -55,9 +55,9 @@ cdef class ConditionalStatistics:
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, PrognosticVariables.PrognosticVariables PV,
                  DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa):
 
-        # #loop over class instances and class stats_io
-        # for _class in self.CondStatsClasses:
-        #     _class.stats_io(Gr, RS, PV, DV, NC, Pa)
+        #loop over class instances and class stats_io
+        for _class in self.CondStatsClasses:
+            _class.stats_io(Gr, RS, PV, DV, NC, Pa)
 
         return
 
