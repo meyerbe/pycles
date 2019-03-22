@@ -145,3 +145,18 @@ cdef class SpectraStatistics:
             double [:,:] spec = np.zeros((Gr.dims.nl[2],self.nwave),dtype=np.double, order ='c')
 
         return spec
+
+    cpdef compute_cospectrum(self, Grid.Grid Gr, ParallelMPI.ParallelMPI Pa, complex [:] data_fft_1,  complex [:] data_fft_2):
+        cdef:
+            Py_ssize_t i, j, k, ijk, ik, kg, ishift, jshift
+            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            Py_ssize_t jstride = Gr.dims.nlg[2]
+            Py_ssize_t gw = Gr.dims.gw
+            Py_ssize_t nwave = self.nwave
+            double [:] kx = self.kx
+            double [:] ky = self.ky
+            double dk = self.dk
+            double kmag, R1, R2
+            double [:,:] spec = np.zeros((Gr.dims.nl[2],self.nwave),dtype=np.double, order ='c')
+
+        return
