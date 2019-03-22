@@ -109,16 +109,16 @@ else:
 #                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
 #                  runtime_library_dirs=library_dirs)
 # extensions.append(_ext)
-#
-# _ext = Extension('Microphysics', ['Microphysics.pyx'], include_dirs=include_path,
-#                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
-#                  runtime_library_dirs=library_dirs)
-# extensions.append(_ext)
-#
-# _ext = Extension('Microphysics_Arctic_1M', ['Microphysics_Arctic_1M.pyx'], include_dirs=include_path,
-#                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
-#                  runtime_library_dirs=library_dirs)
-# extensions.append(_ext)
+
+_ext = Extension('Microphysics', ['Microphysics.pyx'], include_dirs=include_path,
+                 extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
+                 runtime_library_dirs=library_dirs)
+extensions.append(_ext)
+
+_ext = Extension('Microphysics_Arctic_1M', ['Microphysics_Arctic_1M.pyx'], include_dirs=include_path,
+                 extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
+                 runtime_library_dirs=library_dirs)
+extensions.append(_ext)
 
 # _ext = Extension('thermodynamic_functions', ['thermodynamic_functions.pyx'], include_dirs=include_path,
 #                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
