@@ -39,8 +39,8 @@ cdef class ConditionalStatistics:
         #Build list of twodimensional statistics class instances
         if 'Spectra' in conditional_statistics:
             self.CondStatsClasses.append(SpectraStatistics(Gr,PV, DV, NC, Pa))
-        # if 'Null' in conditional_statistics:
-        #     self.CondStatsClasses.append(NullCondStats())
+        if 'Null' in conditional_statistics:
+            self.CondStatsClasses.append(NullCondStats())
         # # # __
         # if 'NanStatistics' in conditional_statistics:
         #     self.CondStatsClasses.append(NanStatistics(Gr, PV, DV, NC, Pa))
