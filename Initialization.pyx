@@ -852,6 +852,8 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             jshift = j * Gr.dims.nlg[2]
 
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2) # not MPI-compatible
+            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
             if (r2 <= rstar_marg2):
@@ -982,7 +984,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         double marg = namelist['init']['marg']
         Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
-        double r2
+        double r, r2
         double rstar2 = rstar**2
         double rstar_marg2 = (rstar+marg)**2
 
@@ -1046,8 +1048,8 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)      # not MPI-compatible
-            # r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
-            #              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
+            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
             r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
             if (r2 <= rstar_marg2):
