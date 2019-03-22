@@ -100,7 +100,8 @@ cdef class SpectraStatistics:
             else:
                 yj = np.double(j-Gr.dims.n[1])
             self.ky[jj] = yj * self.dk
-        return
+
+        NC.create_condstats_group('spectra','wavenumber', self.wavenumbers, Gr, Pa)
 
 
     cpdef forward_transform(self, Grid.Grid Gr,ParallelMPI.ParallelMPI Pa, double [:] data, complex [:] data_fft):
