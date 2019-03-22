@@ -280,7 +280,14 @@ cdef class SpectraStatistics:
                         ijk = ishift + jshift + kg
                         spec[k, ik] += data_fft[ijk].real *  data_fft[ijk].real +  data_fft[ijk].imag *  data_fft[ijk].imag
 
+        for k in xrange(Gr.dims.nl[2]):
+            for ik in xrange(nwave):
+                spec[k, ik] = Pa.domain_scalar_sum(spec[k,ik])
+
         return spec
+
+
+
 
     cpdef compute_cospectrum(self, Grid.Grid Gr, ParallelMPI.ParallelMPI Pa, complex [:] data_fft_1,  complex [:] data_fft_2):
         cdef:
