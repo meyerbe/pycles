@@ -53,7 +53,8 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
                 or casename == 'ColdPoolDry_triple_3D':
             # return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
-            return SurfaceNone()
+            # return SurfaceNone()
+            return SurfaceColdPools(LH)
         elif casename == 'Bomex':
             return SurfaceBomex(LH)
         elif casename == 'Gabls':
