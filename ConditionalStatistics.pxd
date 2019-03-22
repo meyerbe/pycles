@@ -21,3 +21,18 @@ cdef class ConditionalStatistics:
                                DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa)
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, PrognosticVariables.PrognosticVariables PV,
                  DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa)
+
+    cdef class NullCondStats:
+
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,  NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa)
+
+
+cdef class SpectraStatistics:
+    cdef:
+        Py_ssize_t nwave
+        double dk
+        double [:] wavenumbers
+        double [:] kx
+        double [:] ky
+        cdef ParallelMPI.Pencil X_Pencil, Y_Pencil, Z_Pencil

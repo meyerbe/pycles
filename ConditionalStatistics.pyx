@@ -60,3 +60,20 @@ cdef class ConditionalStatistics:
         #     _class.stats_io(Gr, RS, PV, DV, NC, Pa)
 
         return
+
+cdef class NullCondStats:
+    def __init__(self) :
+        return
+
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,  NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa):
+        return
+
+
+cdef class SpectraStatistics:
+    def __init__(self, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                 NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa):
+        Pa.root_print('SpectraStatistics initialized')
+
+
+        return
