@@ -77,6 +77,29 @@ cdef class SpectraStatistics:
         cdef:
             Py_ssize_t ii, i,  jj, j
             double xi, yj
+
+        # Set up the wavenumber vectors
+        self.nwave = int( np.ceil(np.sqrt(2.0) * (Gr.dims.n[0] + 1.0) * 0.5 ) + 1.0)
+        self.dk = 2.0 * pi/(Gr.dims.n[0]*Gr.dims.dx[0])
+        self.wavenumbers = np.arange(self.nwave, dtype=np.double) * self.dk
+
+        self.kx = np.zeros(Gr.dims.nl[0],dtype=np.double,order='c')
+        self.ky = np.zeros(Gr.dims.nl[1],dtype=np.double,order='c')
+
+        for ii in xrange(Gr.dims.nl[0]):
+            i = Gr.dims.indx_lo[0] + ii
+            if i <= (Gr.dims.n[0])/2:
+                xi = np.double(i)
+            else:
+                xi = np.double(i - Gr.dims.n[0])
+            self.kx[ii] = xi * self.dk
+        for jj in xrange(Gr.dims.nl[1]):
+            j = Gr.dims.indx_lo[1] + jj
+            if j <= Gr.dims.n[1]/2:
+                yj = np.double(j)
+            else:
+                yj = np.double(j-Gr.dims.n[1])
+            self.ky[jj] = yj * self.dk
         return
 
 
@@ -86,6 +109,7 @@ cdef class SpectraStatistics:
             complex [:,:] x_pencil_fft,  y_pencil, y_pencil_fft
 
         return
+
 
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, PrognosticVariables.PrognosticVariables PV,
                  DiagnosticVariables.DiagnosticVariables DV,  NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa):
@@ -110,6 +134,19 @@ cdef class SpectraStatistics:
             double [:,:] spec_u, spec_v, spec_w, spec
 
 
+
+
+        #Interpolate to cell centers
+        with nogil:
+            for i in xrange(1, Gr.dims.nlg[0]):
+                ishift = i * istride
+                for j in xrange(1, Gr.dims.nlg[1]):
+                    jshift = j * jstride
+                    for k in xrange(1, Gr.dims.nlg[2]):
+                        ijk = ishift + jshift + k
+                        uc[ijk] = 0.5 * (PV.values[u_shift + ijk - istride] + PV.values[u_shift + ijk])
+                        vc[ijk] = 0.5 * (PV.values[v_shift + ijk - jstride] + PV.values[v_shift + ijk])
+                        wc[ijk] = 0.5 * (PV.values[w_shift + ijk - 1] + PV.values[w_shift + ijk])
         return
 
 
