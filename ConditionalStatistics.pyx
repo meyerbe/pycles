@@ -202,6 +202,64 @@ cdef class SpectraStatistics:
 
         spec = np.add(np.add(spec_u,spec_v), spec_w)
         NC.write_condstat('energy_spectrum', 'spectra', spec[:,:], Pa)
+
+        if 's' in PV.name_index:
+            var_shift = PV.get_varshift(Gr, 's')
+            self.fluctuation_forward_transform(Gr, Pa, PV.values[var_shift:var_shift+npg], data_fft_s[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft_s[:])
+            NC.write_condstat('s_spectrum', 'spectra', spec[:,:], Pa)
+        if 'qt' in PV.name_index:
+            var_shift = PV.get_varshift(Gr, 'qt')
+            self.fluctuation_forward_transform(Gr, Pa, PV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('qt_spectrum', 'spectra', spec[:,:], Pa)
+        if 's' in PV.name_index and 'qt' in PV.name_index:
+            spec = self.compute_cospectrum(Gr, Pa, data_fft_s[:], data_fft[:])
+            NC.write_condstat('s_qt_cospectrum', 'spectra', spec[:,:], Pa)
+
+
+        if 'theta_rho' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 'theta_rho')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('theta_rho_spectrum', 'spectra', spec[:,:], Pa)
+        if 'thetali' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 'thetali')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('thetali_spectrum', 'spectra', spec[:,:], Pa)
+        if 'theta' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 'theta')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('theta_spectrum', 'spectra', spec[:,:], Pa)
+
+        if 'qt_variance' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 'qt_variance')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('qtvar_spectrum', 'spectra', spec[:,:], Pa)
+
+        if 'qt_variance_clip' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 'qt_variance_clip')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('qtvarclip_spectrum', 'spectra', spec[:,:], Pa)
+
+        if 's_variance' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 's_variance')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('svar_spectrum', 'spectra', spec[:,:], Pa)
+
+        if 'covariance' in DV.name_index:
+            var_shift = DV.get_varshift(Gr, 'covariance')
+            self.fluctuation_forward_transform(Gr, Pa, DV.values[var_shift:var_shift+npg], data_fft[:])
+            spec = self.compute_spectrum(Gr, Pa,  data_fft[:])
+            NC.write_condstat('covar_spectrum', 'spectra', spec[:,:], Pa)
+
+
+
         return
 
     cpdef forward_transform(self, Grid.Grid Gr,ParallelMPI.ParallelMPI Pa, double [:] data, complex [:] data_fft):
