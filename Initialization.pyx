@@ -77,8 +77,8 @@ def InitializationFactory(namelist):
         #     return InitSoares
         # elif casename == 'DCBLSoares_moist':
         #     return InitSoares_moist
-        # else:
-        #     pass
+        else:
+            pass
 
 
 
