@@ -26,11 +26,11 @@ cdef class ConditionalStatistics:
     cpdef initialize(self, namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                                DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_CondStats NC, ParallelMPI.ParallelMPI Pa):
 
-        # try:
-        #     conditional_statistics = namelist['conditional_stats']['classes']
-        # except:
-        #     conditional_statistics = ['Null']
-        #
+        try:
+            conditional_statistics = namelist['conditional_stats']['classes']
+        except:
+            conditional_statistics = ['Null']
+
         #
         # #Convert whatever is in twodimensional_statistics to list if not already
         # if not type(conditional_statistics) == list:
