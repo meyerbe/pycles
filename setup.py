@@ -239,11 +239,11 @@ extensions.append(_ext)
 #                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
 #                  runtime_library_dirs=library_dirs)
 # extensions.append(_ext)
-#
-# _ext = Extension('SurfaceBudget', ['SurfaceBudget.pyx'], include_dirs=include_path,
-#                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
-#                  runtime_library_dirs=library_dirs)
-# extensions.append(_ext)
+
+_ext = Extension('SurfaceBudget', ['SurfaceBudget.pyx'], include_dirs=include_path,
+                 extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
+                 runtime_library_dirs=library_dirs)
+extensions.append(_ext)
 
 _ext = Extension('Damping', ['Damping.pyx'], include_dirs=include_path,
                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
