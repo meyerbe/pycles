@@ -39,10 +39,10 @@ def InitializationFactory(namelist):
         if casename == 'ColdPoolDry_single_3D':
             print('calling Initialization single ColdPoolDry 3D')
             return InitColdPoolDry_single_3D
-        # elif casename == 'ColdPoolDry_double_3D':
-        #     return InitColdPoolDry_double_3D
-        # elif casename == 'ColdPoolDry_triple_3D':
-        #     return InitColdPoolDry_triple_3D
+        elif casename == 'ColdPoolDry_double_3D':
+            return InitColdPoolDry_double_3D
+        elif casename == 'ColdPoolDry_triple_3D':
+            return InitColdPoolDry_triple_3D
         elif casename == 'SullivanPatton':
             return InitSullivanPatton
         # elif casename == 'StableBubble':
