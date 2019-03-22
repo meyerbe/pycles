@@ -104,6 +104,31 @@ cdef class SpectraStatistics:
         NC.create_condstats_group('spectra','wavenumber', self.wavenumbers, Gr, Pa)
 
 
+        # set up the names of the variables
+        NC.add_condstat('energy_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 's' in PV.name_index:
+            NC.add_condstat('s_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'qt' in PV.name_index:
+            NC.add_condstat('qt_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'theta_rho' in DV.name_index:
+            NC.add_condstat('theta_rho_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'thetali' in DV.name_index:
+            NC.add_condstat('thetali_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'theta' in DV.name_index:
+            NC.add_condstat('theta_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'qt_variance' in DV.name_index:
+            NC.add_condstat('qtvar_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'qt_variance_clip' in DV.name_index:
+            NC.add_condstat('qtvarclip_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 's_variance' in DV.name_index:
+            NC.add_condstat('svar_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+        if 'covariance' in DV.name_index:
+            NC.add_condstat('covar_spectrum', 'spectra', 'wavenumber', Gr, Pa)
+
+        if 's' in PV.name_index and 'qt' in PV.name_index:
+            NC.add_condstat('s_qt_cospectrum', 'spectra', 'wavenumber', Gr, Pa)
+
+
         #Instantiate classes used for Pencil communication/transposes
         self.X_Pencil = ParallelMPI.Pencil()
         self.Y_Pencil = ParallelMPI.Pencil()
@@ -112,6 +137,21 @@ cdef class SpectraStatistics:
         #Initialize classes used for Pencil communication/tranposes (here dim corresponds to the pencil direction)
         self.X_Pencil.initialize(Gr,Pa,dim=0)
         self.Y_Pencil.initialize(Gr,Pa,dim=1)
+
+
+        # # _____
+        # Pa.root_print('NanStatistics initialization')
+        #
+        # self.sk_arr = np.zeros((1,2),dtype=np.double)
+        # self.qtk_arr = np.zeros((1,2),dtype=np.double)
+        #
+        # nz = np.arange(Gr.dims.n[2], dtype=np.double) * Gr.dims.dx[2]
+        # # NC.create_condstats_group('nan_array','nz', nz, Gr, Pa)
+        # # set up the names of the variables
+        # NC.add_condstat('sk_arr', 'spectra', 'wavenumber', Gr, Pa)
+        # NC.add_condstat('qtk_arr', 'spectra', 'wavenumber', Gr, Pa)
+
+
         return
 
 
