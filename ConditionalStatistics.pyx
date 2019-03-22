@@ -31,11 +31,11 @@ cdef class ConditionalStatistics:
         except:
             conditional_statistics = ['Null']
 
-        #
-        # #Convert whatever is in twodimensional_statistics to list if not already
-        # if not type(conditional_statistics) == list:
-        #     conditional_statistics = [conditional_statistics]
-        #
+
+        #Convert whatever is in twodimensional_statistics to list if not already
+        if not type(conditional_statistics) == list:
+            conditional_statistics = [conditional_statistics]
+
         # #Build list of twodimensional statistics class instances
         # if 'Spectra' in conditional_statistics:
         #     self.CondStatsClasses.append(SpectraStatistics(Gr,PV, DV, NC, Pa))
