@@ -226,8 +226,33 @@ cdef class SpectraStatistics:
         cdef:
             double [:] data_mean = Pa.HorizontalMean(Gr, &data[0])
 
+        with nogil:
+            for i in xrange(1, Gr.dims.nlg[0]):
+                ishift = i * istride
+                for j in xrange(1, Gr.dims.nlg[1]):
+                    jshift = j * jstride
+                    for k in xrange(1, Gr.dims.nlg[2]):
+                        ijk = ishift + jshift + k
+
+                        #Compute fluctuations
+                        fluctuation[ijk] = data[ijk] - data_mean[k]
+
+        #Do fft in x direction
+        x_pencil = self.X_Pencil.forward_double(&Gr.dims, Pa, &fluctuation[0])
+        x_pencil_fft = fft(x_pencil,axis=1)
+        self.X_Pencil.reverse_complex(&Gr.dims, Pa, x_pencil_fft, &data_fft[0])
+
+        #Do fft in y direction
+        y_pencil = self.Y_Pencil.forward_complex(&Gr.dims, Pa, &data_fft[0])
+        y_pencil_fft = fft(y_pencil,axis=1)
+        self.Y_Pencil.reverse_complex(&Gr.dims, Pa, y_pencil_fft, &data_fft[0])
+
+        del fluctuation
 
         return
+
+
+
 
 
     cpdef compute_spectrum(self, Grid.Grid Gr, ParallelMPI.ParallelMPI Pa, complex [:] data_fft ):
@@ -242,6 +267,18 @@ cdef class SpectraStatistics:
             double dk = self.dk
             double kmag
             double [:,:] spec = np.zeros((Gr.dims.nl[2],self.nwave),dtype=np.double, order ='c')
+
+        with nogil:
+            for i in xrange(Gr.dims.nl[0]):
+                ishift = (i + gw) * istride
+                for j in xrange(Gr.dims.nl[1]):
+                    jshift = (j + gw) * jstride
+                    kmag = sqrt(kx[i]*kx[i] + ky[j]*ky[j])
+                    ik = int(ceil(kmag/dk + 0.5) - 1.0)
+                    for k in xrange(Gr.dims.nl[2]):
+                        kg = k + gw
+                        ijk = ishift + jshift + kg
+                        spec[k, ik] += data_fft[ijk].real *  data_fft[ijk].real +  data_fft[ijk].imag *  data_fft[ijk].imag
 
         return spec
 
