@@ -62,23 +62,23 @@ elif (platform.machine()  == 'x86_64') and ('LD_LIBRARY_PATH' in os.environ):
     libraries.append('gfortran')
     extensions = []
     extra_compile_args=[]
-    extra_compile_args+=['-std=c99', '-O3', '-march=native', '-Wno-unused',
-                         '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
-    extra_objects=['./RRTMG/rrtmg_build/rrtmg_combined.o']
-    netcdf_include = '/central/software/netcdf-c/4.6.1/include'
-    netcdf_lib = '/central/software/netcdf-c/4.6.1/lib'
-    # Comment the above two lines and uncomment below to use Fram@Caltech)
+    extra_objects = ['./RRTMG/rrtmg_build/rrtmg_combined.o']
+    f_compiler = 'gfortran'
+
+    # # Central @ Caltech
+    # extra_compile_args+=['-std=c99', '-O3', '-march=native', '-Wno-unused',
+    #                      '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
+    # netcdf_include = '/central/software/netcdf-c/4.6.1/include'
+    # netcdf_lib = '/central/software/netcdf-c/4.6.1/lib'
+    # # Fram @ Caltech
     # netcdf_include = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/include'
     # netcdf_lib = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/lib'
 
-    # Comment the above three lines for the netcdf library to use HPC@ Copenhagen University
-    # extra_compile_args+=['-std=c99', '-O3', '-Wno-unused',
-    #                      '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
-    # netcdf_include = '/groups/ocean/software/netcdf4/gcc/4.4.1.1/include'
-    # netcdf_lib = '/groups/ocean/software/netcdf4/gcc/4.4.1.1/lib'
-
-    f_compiler = 'gfortran'
-
+    # HPC@ Copenhagen University
+    extra_compile_args+=['-std=c99', '-O3', '-Wno-unused',
+                         '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
+    netcdf_include = '/groups/ocean/software/netcdf4/gcc/4.4.1.1/include'
+    netcdf_lib = '/groups/ocean/software/netcdf4/gcc/4.4.1.1/lib'
 else:
     if platform.system()=='Linux':
         #Best guess at compile flags for a Linux computer
