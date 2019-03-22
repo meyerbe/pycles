@@ -17,3 +17,7 @@ import numpy as np
 from libc.math cimport sqrt, ceil
 from thermodynamic_functions cimport thetas_c
 include "parameters.pxi"
+
+cdef class ConditionalStatistics:
+    def __init__(self, namelist):
+        self.CondStatsClasses = []

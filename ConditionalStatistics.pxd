@@ -14,3 +14,6 @@ cimport ParallelMPI
 from NetCDFIO cimport NetCDFIO_CondStats
 
 include "parameters.pxi"
+
+cdef class ConditionalStatistics:
+    cdef list CondStatsClasses
