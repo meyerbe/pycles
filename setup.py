@@ -149,11 +149,11 @@ _ext = Extension('Simulation3d', ['Simulation3d.pyx'], include_dirs=include_path
                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
                  runtime_library_dirs=library_dirs)
 extensions.append(_ext)
-#
-# _ext = Extension('ParallelMPI', ['ParallelMPI.pyx'], include_dirs=include_path,
-#                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
-#                  runtime_library_dirs=library_dirs)
-# extensions.append(_ext)
+
+_ext = Extension('ParallelMPI', ['ParallelMPI.pyx'], include_dirs=include_path,
+                 extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
+                 runtime_library_dirs=library_dirs)
+extensions.append(_ext)
 #
 # _ext = Extension('PrognosticVariables', ['PrognosticVariables.pyx'], include_dirs=include_path,
 #                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
