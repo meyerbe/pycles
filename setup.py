@@ -35,6 +35,10 @@ if sys.platform == 'darwin':
     netcdf_lib = os.path.join(get_netcdf_prefix(), 'lib')
     # f_compiler = 'gfortran'
     f_compiler = 'gfortran-mp-4.8'
+
+    # upstream: setup
+    # f_compiler = 'gfortran'
+
 # elif 'euler' in platform.node():
 elif 'eu' in platform.node():
     #Compile flags for euler @ ETHZ
@@ -51,7 +55,7 @@ elif 'eu' in platform.node():
     netcdf_lib = '/cluster/apps/netcdf/4.3.1/x86_64/gcc_4.8.2/openmpi_1.6.5/lib'
     f_compiler = 'gfortran'
 elif (platform.machine()  == 'x86_64') and ('LD_LIBRARY_PATH' in os.environ):
-    #Compile flags for fram @ Caltech
+    #Compile flags for Central @ Caltech
     library_dirs = os.environ['LD_LIBRARY_PATH'].split(':')
     libraries = []
     libraries.append('mpi')
@@ -61,8 +65,18 @@ elif (platform.machine()  == 'x86_64') and ('LD_LIBRARY_PATH' in os.environ):
     extra_compile_args+=['-std=c99', '-O3', '-march=native', '-Wno-unused',
                          '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
     extra_objects=['./RRTMG/rrtmg_build/rrtmg_combined.o']
-    netcdf_include = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/include'
-    netcdf_lib = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/lib'
+    netcdf_include = '/central/software/netcdf-c/4.6.1/include'
+    netcdf_lib = '/central/software/netcdf-c/4.6.1/lib'
+    # Comment the above two lines and uncomment below to use Fram@Caltech)
+    # netcdf_include = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/include'
+    # netcdf_lib = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/lib'
+
+    # Comment the above three lines for the netcdf library to use HPC@ Copenhagen University
+    # extra_compile_args+=['-std=c99', '-O3', '-Wno-unused',
+    #                      '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
+    # netcdf_include = '/groups/ocean/software/netcdf4/gcc/4.4.1.1/include'
+    # netcdf_lib = '/groups/ocean/software/netcdf4/gcc/4.4.1.1/lib'
+
     f_compiler = 'gfortran'
 
 else:
@@ -81,7 +95,7 @@ else:
         netcdf_lib = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/lib'
         f_compiler = 'gfortran'
 
-    else: 
+    else:
         print('Unknown system platform: ' + sys.platform  + 'or unknown system name: ' + platform.node())
         sys.exit()
 
