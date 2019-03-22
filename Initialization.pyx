@@ -852,8 +852,8 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             jshift = j * Gr.dims.nlg[2]
 
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2) # not MPI-compatible
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
             r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
             if (r2 <= rstar_marg2):
