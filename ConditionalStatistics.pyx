@@ -191,6 +191,13 @@ cdef class SpectraStatistics:
                         uc[ijk] = 0.5 * (PV.values[u_shift + ijk - istride] + PV.values[u_shift + ijk])
                         vc[ijk] = 0.5 * (PV.values[v_shift + ijk - jstride] + PV.values[v_shift + ijk])
                         wc[ijk] = 0.5 * (PV.values[w_shift + ijk - 1] + PV.values[w_shift + ijk])
+
+        self.fluctuation_forward_transform(Gr, Pa, uc[:], data_fft[:])
+        spec_u = self.compute_spectrum(Gr, Pa,  data_fft[:])
+        self.fluctuation_forward_transform(Gr, Pa, vc[:], data_fft[:])
+        spec_v = self.compute_spectrum(Gr, Pa,  data_fft[:])
+        self.fluctuation_forward_transform(Gr, Pa, wc[:], data_fft[:])
+        spec_w = self.compute_spectrum(Gr, Pa,  data_fft[:])
         return
 
     cpdef forward_transform(self, Grid.Grid Gr,ParallelMPI.ParallelMPI Pa, double [:] data, complex [:] data_fft):
