@@ -3271,3 +3271,79 @@ def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables 
     return
 
 
+
+def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
+                       DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+
+    casename = nml['meta']['casename']
+    if casename == 'SMOKE':
+        PV.add_variable('smoke', 'kg/kg', 'smoke', 'radiatively active smoke', "sym", "scalar", Pa)
+        return
+    return
+
+
+def thetal_mpace(p_, t_, ql_):
+    return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(2.26e6*ql_)/(cpd*263.0))
+
+def thetal_isdac(p_, t_, ql_, qt_):
+    rl_ = ql_ / (1 - qt_)
+    #return (p_tilde/p_)**(Rd/cpd)*(t_ - 2.26e6 * rl_ / cpd)
+    return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(rl_*2.501e6) / (t_*cpd))
+
+def sat_adjst(p_, thetal_, qt_, Th):
+
+    """
+    Use saturation adjustment scheme to compute temperature and ql given thetal and qt.
+    :param p_: pressure [Pa]
+    :param thetal_: liquid water potential temperature  [K]
+    :param qt_:  total water specific humidity
+    :return: t_2, ql_2
+    """
+
+    #Compute temperature
+    t_1 = thetal_ * (p_/p_tilde)**(Rd/cpd)
+    #Compute saturation vapor pressure
+    pv_star_1 = Th.get_pv_star(t_1)
+    #Compute saturation mixing ratio
+    qs_1 = qv_star_c(p_,qt_,pv_star_1)
+
+    if qt_ <= qs_1:
+        #If not saturated return temperature and ql = 0.0
+        return t_1, 0.0
+    else:
+        ql_1 = qt_ - qs_1
+        # f_1 = thetal_ - thetal_mpace(p_,t_1,ql_1)
+        f_1 = thetal_ - thetal_isdac(p_,t_1,ql_1,qt_)
+        t_2 = t_1 + 2.501e6*ql_1/cpd
+        pv_star_2 = Th.get_pv_star(t_2)
+        qs_2 = qv_star_c(p_,qt_,pv_star_2)
+        ql_2 = qt_ - qs_2
+
+        while fabs(t_2 - t_1) >= 1e-9:
+            pv_star_2 = Th.get_pv_star(t_2)
+            qs_2 = qv_star_c(p_,qt_,pv_star_2)
+            ql_2 = qt_ - qs_2
+            # f_2 = thetal_ - thetal_mpace(p_, t_2, ql_2)
+            f_2 = thetal_ - thetal_isdac(p_, t_2, ql_2, qt_)
+            t_n = t_2 - f_2 * (t_2 - t_1)/(f_2 - f_1)
+            t_1 = t_2
+            t_2 = t_n
+            f_1 = f_2
+
+    return t_2, ql_2
+
+def qv_star_rh(p0, rh, pv):
+    val = eps_v*pv/(p0-pv)/(1 + rh*eps_v*pv/(p0-pv))
+    return val
+
+def qv_unsat(p0, pv):
+    val = 1.0/(eps_vi * (p0 - pv)/pv + 1.0)
+    return val
+
+from scipy.interpolate import pchip
+def interp_pchip(z_out, z_in, v_in, pchip_type=True):
+    if pchip_type:
+        p = pchip(z_in, v_in, extrapolate=True)
+        return p(z_out)
+    else:
+        return np.interp(z_out, z_in, v_in)
