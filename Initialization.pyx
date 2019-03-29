@@ -581,7 +581,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 # t = (theta[k] + theta_pert_)*exner_c(RS.p0_half[k])
                 # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
-
     # Pa.root_print('Initialization: finished PV initialization')
 
     # ''' Initialize passive tracer phi '''
@@ -1344,137 +1343,137 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
 
 
 
-# def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-#                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
-#
-#     #First generate the reference profiles
-#     RS.Pg = 1.015e5  #Pressure at ground
-#     RS.Tg = 300.4  #Temperature at ground
-#     RS.qtg = 0.02245   #Total water mixing ratio at surface
-#
-#     RS.initialize(Gr, Th, NS, Pa)
-#
-#     try:
-#         random_seed_factor = namelist['initialization']['random_seed_factor']
-#     except:
-#         random_seed_factor = 1
-#
-#     np.random.seed(Pa.rank * random_seed_factor)
-#
-#     #Get the variable number for each of the velocity components
-#
-#     cdef:
-#         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-#         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-#         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-#         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-#         Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
-#         Py_ssize_t i,j,k
-#         Py_ssize_t ishift, jshift
-#         Py_ssize_t ijk, e_varshift
-#         double temp
-#         double qt_
-#         double [:] thetal = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
-#         double [:] qt = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
-#         double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
-#         Py_ssize_t count
-#
-#         theta_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.1
-#         qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
-#
-#     #     double dz = 50.0
-#     for k in xrange(Gr.dims.nlg[2]):
-#         # Set Thetal profile
-#         # --
-#         # if Gr.zl_half[k] <= 520. - dz:
-#         #     thetal[k] = 298.7
-#         # elif Gr.zl_half[k] <= 520. + dz:
-#         #     thetal[k] = 298.7 + (Gr.zl_half[k] - (520-dz)) * 1.4e-3
-#         # elif Gr.zl_half[k] <= 1480.0:                               # 3.85 K / km
-#         #     thetal[k] = (298.7+2*dz*1.4e-3) + (Gr.zl_half[k] - (520+dz))  * (302.4 - 298.7)/(1480.0 - 520.0)
-#         # elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:        # 11.15 K / km
-#         #     thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
-#         # elif Gr.zl_half[k] > 2000.0:                                  # 3.65 K / km
-#         #     thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
-#         # --
-#
-#         if Gr.zl_half[k] <= 520.:
-#             thetal[k] = 298.7
-#         elif Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:           # 3.85 K / km
-#             thetal[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
-#         elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:            # 11.15 K / km
-#             thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
-#         elif Gr.zl_half[k] > 2000.0:                                    # 3.65 K / km
-#             thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
-#
-#         #Set qt profile
-#         if Gr.zl_half[k] <= 520:
-#             qt[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
-#         if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-#             qt[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-#         if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
-#             qt[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
-#         if Gr.zl_half[k] > 2000.0:
-#             qt[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
-#
-#         #Change units to kg/kg
-#         qt[k]/= 1000.0
-#
-#         #Set u profile
-#         if Gr.zl_half[k] <= 700.0:
-#             u[k] = -8.75
-#         if Gr.zl_half[k] > 700.0:
-#             u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
-#
-#     # --
-#     #plt.figure(figsize=(12,6))
-#     #plt.subplot(1,2,1)
-#     #plt.plot(thetal,Gr.zl_half)
-#     #plt.subplot(1,2,2)
-#     #plt.plot(thetal[Gr.dims.gw:30],Gr.zl_half[Gr.dims.gw:30])
-#     #plt.show()
-#     # --
-#
-#     #Set velocities for Galilean transformation
-#     RS.v0 = 0.0
-#     RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
-#
-#
-#
-#     #Now loop and set the initial condition
-#     #First set the velocities
-#     count = 0
-#     for i in xrange(Gr.dims.nlg[0]):
-#         ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#         for j in xrange(Gr.dims.nlg[1]):
-#             jshift = j * Gr.dims.nlg[2]
-#             for k in xrange(Gr.dims.nlg[2]):
-#                 ijk = ishift + jshift + k
-#                 PV.values[u_varshift + ijk] = u[k] - RS.u0
-#                 PV.values[v_varshift + ijk] = 0.0 - RS.v0
-#                 PV.values[w_varshift + ijk] = 0.0
-#                 if Gr.zl_half[k] <= 1600.0:
-#                     temp = (thetal[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
-#                     qt_ = qt[k]+qt_pert[count]
-#                 else:
-#                     temp = (thetal[k]) * exner_c(RS.p0_half[k])
-#                     qt_ = qt[k]
-#                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],temp,qt_,0.0,0.0)
-#                 PV.values[qt_varshift + ijk] = qt_
-#                 count += 1
-#
-#     if 'e' in PV.name_index:
-#         e_varshift = PV.get_varshift(Gr, 'e')
-#         for i in xrange(Gr.dims.nlg[0]):
-#             ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#             for j in xrange(Gr.dims.nlg[1]):
-#                 jshift = j * Gr.dims.nlg[2]
-#                 for k in xrange(Gr.dims.nlg[2]):
-#                     ijk = ishift + jshift + k
-#                     PV.values[e_varshift + ijk] = 1.0-Gr.zl_half[k]/3000.0
-#
-#
-#     return
+def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
+
+    # First generate the reference profiles
+    RS.Pg = 1.015e5  #Pressure at ground
+    RS.Tg = 300.4  #Temperature at ground
+    RS.qtg = 0.02245   #Total water mixing ratio at surface
+
+    RS.initialize(Gr, Th, NS, Pa)
+
+    try:
+        random_seed_factor = namelist['initialization']['random_seed_factor']
+    except:
+        random_seed_factor = 1
+
+    np.random.seed(Pa.rank * random_seed_factor)
+
+    # Get the variable number for each of the velocity components
+
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk, e_varshift
+        double temp
+        double qt_
+        double [:] thetal = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
+        double [:] qt = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
+        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
+        Py_ssize_t count
+
+        theta_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.1
+        qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+
+    #     double dz = 50.0
+    for k in xrange(Gr.dims.nlg[2]):
+        # Set Thetal profile
+        # --
+        # if Gr.zl_half[k] <= 520. - dz:
+        #     thetal[k] = 298.7
+        # elif Gr.zl_half[k] <= 520. + dz:
+        #     thetal[k] = 298.7 + (Gr.zl_half[k] - (520-dz)) * 1.4e-3
+        # elif Gr.zl_half[k] <= 1480.0:                               # 3.85 K / km
+        #     thetal[k] = (298.7+2*dz*1.4e-3) + (Gr.zl_half[k] - (520+dz))  * (302.4 - 298.7)/(1480.0 - 520.0)
+        # elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:        # 11.15 K / km
+        #     thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
+        # elif Gr.zl_half[k] > 2000.0:                                  # 3.65 K / km
+        #     thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
+        # --
+
+        if Gr.zl_half[k] <= 520.:
+            thetal[k] = 298.7
+        elif Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:           # 3.85 K / km
+            thetal[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
+        elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:            # 11.15 K / km
+            thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
+        elif Gr.zl_half[k] > 2000.0:                                    # 3.65 K / km
+            thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
+
+        # Set qt profile
+        if Gr.zl_half[k] <= 520:
+            qt[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
+        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
+            qt[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
+            qt[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+        if Gr.zl_half[k] > 2000.0:
+            qt[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+
+        # Change units to kg/kg
+        qt[k]/= 1000.0
+
+        # Set u profile
+        if Gr.zl_half[k] <= 700.0:
+            u[k] = -8.75
+        if Gr.zl_half[k] > 700.0:
+            u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
+
+    # --
+    #plt.figure(figsize=(12,6))
+    #plt.subplot(1,2,1)
+    #plt.plot(thetal,Gr.zl_half)
+    #plt.subplot(1,2,2)
+    #plt.plot(thetal[Gr.dims.gw:30],Gr.zl_half[Gr.dims.gw:30])
+    #plt.show()
+    # --
+
+    # Set velocities for Galilean transformation
+    RS.v0 = 0.0
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+
+
+
+    # Now loop and set the initial condition
+    # First set the velocities
+    count = 0
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = u[k] - RS.u0
+                PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                PV.values[w_varshift + ijk] = 0.0
+                if Gr.zl_half[k] <= 1600.0:
+                    temp = (thetal[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
+                    qt_ = qt[k]+qt_pert[count]
+                else:
+                    temp = (thetal[k]) * exner_c(RS.p0_half[k])
+                    qt_ = qt[k]
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],temp,qt_,0.0,0.0)
+                PV.values[qt_varshift + ijk] = qt_
+                count += 1
+
+    if 'e' in PV.name_index:
+        e_varshift = PV.get_varshift(Gr, 'e')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[e_varshift + ijk] = 1.0-Gr.zl_half[k]/3000.0
+
+
+    return
 #
 # def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
 #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
