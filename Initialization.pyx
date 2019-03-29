@@ -555,31 +555,32 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
 
-                # r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
-                #              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)
-                # r = fmin(r,1.0)   # cos(pi)=0
-                # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
-                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
-
-                # if (k-gw) <= k_max_arr[0, i, j]:
-                #     theta[i,j,k] = th_g - dTh
-                # elif (k-gw) <= k_max_arr[1, i, j]:
-                #     th = th_g - dTh * np.sin(( (k-gw) - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j]) * np.pi/2) ** 2
-                #     theta[i, j, k] = th
-
-                if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    theta_z[i,j,k] = th_g - dTh
-                elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-                    theta_z[i, j, k] = th
-
-                if k <= kstar + 2:
-                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
-                else:
-                    theta_pert_ = 0.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
-                # t = (theta[k] + theta_pert_)*exner_c(RS.p0_half[k])
-                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
+                # # r  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 1.5)/1.0)**2.0
+                # #              + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 1.0)/1)**2.0)
+                # # r = fmin(r,1.0)   # cos(pi)=0
+                # # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
+                # # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
+                #
+                # # if (k-gw) <= k_max_arr[0, i, j]:
+                # #     theta[i,j,k] = th_g - dTh
+                # # elif (k-gw) <= k_max_arr[1, i, j]:
+                # #     th = th_g - dTh * np.sin(( (k-gw) - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j]) * np.pi/2) ** 2
+                # #     theta[i, j, k] = th
+                #
+                # if Gr.z_half[k] <= z_max_arr[0,i,j]:
+                #     theta_z[i,j,k] = th_g - dTh
+                # elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+                #     th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                #     theta_z[i, j, k] = th
+                #
+                # if k <= kstar + 2:
+                #     theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+                # else:
+                #     theta_pert_ = 0.0
+                # PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+                # # t = (theta[k] + theta_pert_)*exner_c(RS.p0_half[k])
+                # # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(th_g, 0.0)
 
     # Pa.root_print('Initialization: finished PV initialization')
 
