@@ -455,9 +455,9 @@ def InitializationFactory(namelist):
 #     init_tracer(namelist, Gr, PV, Pa, k_max_arr, ic_arr, np.asarray([j0,j0]))
 #
 #     return
-#
-#
-#
+
+
+
 def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
@@ -3346,3 +3346,83 @@ def interp_pchip(z_out, z_in, v_in, pchip_type=True):
         return p(z_out)
     else:
         return np.interp(z_out, z_in, v_in)
+
+
+def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
+                ParallelMPI.ParallelMPI Pa, z_max_arr, ic_arr, jc_arr):
+    ''' Initialize passive tracer phi '''
+    try:
+        use_tracers = namelist['tracers']['use_tracers']
+    except:
+        use_tracers = False
+
+    try:
+        phi_number = namelist['tracers']['number']
+    except:
+        phi_number = 1
+
+    try:
+        kmax_tracer = namelist['tracers']['kmax']
+    except:
+        kmax_tracer = 10
+
+    try:
+        kmin_tracer = namelist['tracers']['kmin']
+    except:
+        kmin_tracer = 0
+
+    cdef:
+        Py_ssize_t i, j, k
+        Py_ssize_t ishift, jshift, ijk
+        Py_ssize_t var_shift
+        Py_ssize_t kmin = kmin_tracer + Gr.dims.gw
+        Py_ssize_t kmax = kmax_tracer + Gr.dims.gw
+        Py_ssize_t dk = 50
+
+    if use_tracers == 'passive':
+        Pa.root_print('initializing passive tracer phi, smooth profile, kmax: ' + str(kmax_tracer) + ', dk: ' + str(dk))
+        var_shift = PV.get_varshift(Gr, 'phi')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    if k > kmin and k <= kmax:
+                        PV.values[var_shift + ijk] = 1.0
+                    elif k > kmax and k < (kmax + dk):
+                        PV.values[var_shift + ijk] = 0.5*( 1+np.cos((k-kmax)/np.double(dk)*np.pi) )
+                    else:
+                        PV.values[var_shift + ijk] = 0.0
+
+    elif use_tracers == 'surface':
+        Pa.root_print('Initalization: Surface Tracers')
+        # kmax = 0
+        k0 = 0
+        Pa.root_print('initializing passive tracer phi at surface' )
+        var_shift = PV.get_varshift(Gr, 'phi')
+        i_max = Gr.dims.nlg[0]-1
+        j_max = Gr.dims.nlg[1]-1
+        k_max = Gr.dims.nlg[2]-1
+        ijk_min = var_shift
+        ijk_max = var_shift + i_max * Gr.dims.nlg[1] * Gr.dims.nlg[2] + j_max * Gr.dims.nlg[2] + k_max
+        PV.values[var_shift:] = 0.0
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                ijk = ishift + jshift + k0
+                PV.values[var_shift + ijk] = 1.0
+                for k in xrange(k0+1,Gr.dims.nlg[2]):
+                    jshift = j * Gr.dims.nlg[2]
+                    ijk = ishift + jshift + k
+                    PV.values[var_shift + ijk] = 0.0
+
+    elif use_tracers == 'coldpool':
+        Pa.root_print('Initalization: Cold Pool Tracers')
+        for nv in range(phi_number):
+            var_shift = PV.get_varshift(Gr, 'phi'+str(nv))
+
+
+
+
+    return
