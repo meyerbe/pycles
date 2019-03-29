@@ -49,8 +49,8 @@ def InitializationFactory(namelist):
         #     return InitStableBubble
         # elif casename == 'SaturatedBubble':
         #     return InitSaturatedBubble
-        # elif casename == 'Bomex':
-        #     return InitBomex
+        elif casename == 'Bomex':
+            return InitBomex
         # elif casename == 'Gabls':
         #     return InitGabls
         # elif casename == 'DYCOMS_RF01':
