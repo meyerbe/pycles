@@ -232,7 +232,7 @@ cdef class SurfaceColdPools(SurfaceBase):
         self.cm =0.001229       # bulk coefficient for momentum flux (from Rico-case)
         self.ch = 0.001094      # bulk coefficient for heat flux (from Rico-case)
         # self.cq = 0.001133
-        # self.z0 = 0.00015
+        self.z0 = 0.00015
         self.gustiness = 0.0
         self.L_fp = LH.L_fp
         self.Lambda_fp = LH.Lambda_fp
@@ -243,9 +243,9 @@ cdef class SurfaceColdPools(SurfaceBase):
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
         SurfaceBase.initialize(self,Gr,Ref,NS,Pa)
 
-        # self.cm = self.cm*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
-        # self.ch = self.ch*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
-        # # self.cq = self.cq*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
+        self.cm = self.cm*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
+        self.ch = self.ch*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
+        # self.cq = self.cq*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
 
         return
 
