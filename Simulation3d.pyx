@@ -147,21 +147,13 @@ class Simulation3d:
             SetInitialConditions = InitializationFactory(namelist)
             SetInitialConditions(namelist,self.Gr, self.PV, self.Ref, self.Th, self.StatsIO, self.Pa, self.LH)
             del SetInitialConditions
-        self.Pa.root_print('continuing Simulation')
         self.Pr.initialize(namelist, self.Gr, self.Ref, self.DV, self.Pa)
-        self.Pa.root_print('1')
         self.DV.initialize(self.Gr, self.StatsIO, self.Pa)
-        self.Pa.root_print('2')
         self.Fo.initialize(self.Gr, self.Ref, self.Th, self.StatsIO, self.Pa)
-        self.Pa.root_print('3')
         self.Ra.initialize(self.Gr, self.StatsIO,self.Pa)
-        self.Pa.root_print('4')
         self.Budg.initialize(self.Gr, self.StatsIO,self.Pa)
-        self.Pa.root_print('5')
         self.Damping.initialize(self.Gr, self.Ref)
-        self.Pa.root_print('6')
         self.Aux.initialize(namelist, self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
-        self.Pa.root_print('7')
         self.CondStats.initialize(namelist, self.Gr, self.PV, self.DV, self.CondStatsIO, self.Pa)
 
         self.Pa.root_print('Initialization completed!')
@@ -188,7 +180,6 @@ class Simulation3d:
         #Do IO if not a restarted run
         if not self.Restart.is_restart_run:
             self.force_io()
-        # self.Pa.root_print('after force_io')
         #_
         # self.debug_tend('before loop')
         # self.Pa.barrier()
@@ -237,7 +228,7 @@ class Simulation3d:
 
 
     # def plot_figure(self,var_name):
-    #     print('outpath', self.outpath)
+    #     # print('outpath', self.outpath)
     #     cdef PrognosticVariables.PrognosticVariables PV_ = self.PV
     #     cdef Grid.Grid Gr_ = self.Gr
     #     print('plot figure')
