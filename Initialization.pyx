@@ -814,10 +814,11 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t sep = namelist['init']['sep']
         Py_ssize_t isep = sep*irstar
         Py_ssize_t jsep = 0
-        # Py_ssize_t ic1 = np.int(Gr.dims.ng[0] / 3)
-        # Py_ssize_t jc1 = np.int(Gr.dims.ng[1] / 2)
-        Py_ssize_t ic1 = namelist['init']['ic1']
-        Py_ssize_t jc1 = namelist['init']['jc1']
+        Py_ssize_t ic = namelist['init']['ic']
+        Py_ssize_t ic1 = ic - np.int(np.round(isep / 2))
+        Py_ssize_t jc1 = namelist['init']['jc']
+        # Py_ssize_t ic1 = namelist['init']['ic1']
+        # Py_ssize_t jc1 = namelist['init']['jc1']
         Py_ssize_t ic2 = ic1 + isep
         Py_ssize_t jc2 = jc1 + jsep
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2])

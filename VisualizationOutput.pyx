@@ -1,4 +1,3 @@
-
 import numpy as np
 from mpi4py import MPI
 cimport numpy as np
@@ -46,9 +45,6 @@ cdef class VisualizationOutput:
 
     cpdef initialize(self):
         self.last_vis_time = 0.0
-        # #__
-        # self.count = 0
-        # #__
 
         return
 
@@ -125,63 +121,68 @@ cdef class VisualizationOutput:
             dv_vars = ['theta','ql', 'diffusivity']
         # __
 
-        # # output in y-z plane
-        # for var in pv_vars:
-        #     local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
-        #     reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
-        #     try:
-        #         var_shift = PV.get_varshift(Gr, var)
-        #
-        #         with nogil:
-        #             if global_shift_i == 0:
-        #                 i = 0
-        #                 ishift = i * istride
-        #                 for j in xrange(jmin, jmax):
-        #                     jshift = j * jstride
-        #                     for k in xrange(kmin, kmax):
-        #                         ijk = ishift + jshift + k
-        #                         j2d = global_shift_j + j - Gr.dims.gw
-        #                         k2d = global_shift_k + k - Gr.dims.gw
-        #                         local_var[j2d, k2d] = PV.values[var_shift + ijk]
-        #
-        #         comm.Reduce(local_var, reduced_var, op=MPI.SUM)
-        #         del local_var
-        #         if Pa.rank == 0:
-        #             out_dict[var] = np.array(reduced_var, dtype=np.double)
-        #         del reduced_var
-        #
-        #
-        #
-        #     except:
-        #         Pa.root_print('Trouble Writing ' + var)
-        #
-        #
-        # for var in dv_vars:
-        #     local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
-        #     reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
-        #     try:
-        #         var_shift = DV.get_varshift(Gr, var)
-        #
-        #         with nogil:
-        #             if global_shift_i == 0:
-        #                 i = 0
-        #                 ishift = i * istride
-        #                 for j in xrange(jmin, jmax):
-        #                     jshift = j * jstride
-        #                     for k in xrange(kmin, kmax):
-        #                         ijk = ishift + jshift + k
-        #                         j2d = global_shift_j + j - Gr.dims.gw
-        #                         k2d = global_shift_k + k - Gr.dims.gw
-        #                         local_var[j2d, k2d] = DV.values[var_shift + ijk]
-        #
-        #         comm.Reduce(local_var, reduced_var, op=MPI.SUM)
-        #         del local_var
-        #         if Pa.rank == 0:
-        #             out_dict[var] = np.array(reduced_var, dtype=np.double)
-        #         del reduced_var
-        #
-        #     except:
-        #         Pa.root_print('Trouble Writing ' + var)
+        # output in y-z plane
+        i = np.int(Gr.dims.n[0] / 2)       # for single CP
+        for var in pv_vars:
+            local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
+            reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
+            try:
+                var_shift = PV.get_varshift(Gr, var)
+
+                with nogil:
+                    if global_shift_i == 0:
+                        # i = 0
+                        ishift = i * istride
+                        for j in xrange(jmin, jmax):
+                            jshift = j * jstride
+                            for k in xrange(kmin, kmax):
+                                ijk = ishift + jshift + k
+                                j2d = global_shift_j + j - Gr.dims.gw
+                                k2d = global_shift_k + k - Gr.dims.gw
+                                local_var[j2d, k2d] = PV.values[var_shift + ijk]
+
+                comm.Reduce(local_var, reduced_var, op=MPI.SUM)
+                del local_var
+                if Pa.rank == 0:
+                    out_dict[var] = np.array(reduced_var, dtype=np.double)
+                del reduced_var
+
+
+
+            except:
+                Pa.root_print('Trouble Writing ' + var)
+
+
+        for var in dv_vars:
+            local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
+            reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
+            try:
+                var_shift = DV.get_varshift(Gr, var)
+
+                with nogil:
+                    if global_shift_i == 0:
+                        i = 0
+                        ishift = i * istride
+                        for j in xrange(jmin, jmax):
+                            jshift = j * jstride
+                            for k in xrange(kmin, kmax):
+                                ijk = ishift + jshift + k
+                                j2d = global_shift_j + j - Gr.dims.gw
+                                k2d = global_shift_k + k - Gr.dims.gw
+                                local_var[j2d, k2d] = DV.values[var_shift + ijk]
+
+                comm.Reduce(local_var, reduced_var, op=MPI.SUM)
+                del local_var
+                if Pa.rank == 0:
+                    out_dict[var] = np.array(reduced_var, dtype=np.double)
+                del reduced_var
+
+            except:
+                Pa.root_print('Trouble Writing ' + var)
+
+        if Pa.rank == 0:
+            with open(self.vis_path+ '/'  + str(10000000 + np.int(self.last_vis_time)) +  '.pkl', 'wb') as f:
+                pickle.dump(out_dict, f, protocol=2)
 
 
 
@@ -189,7 +190,7 @@ cdef class VisualizationOutput:
 
 
         # vis output x-z plane
-        cdef Py_ssize_t j0 = np.int(Gr.dims.ng[1]/2)
+        j0 = np.int(Gr.dims.n[1]/2)     # for single CP
         for var in pv_vars:
             local_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
@@ -253,7 +254,7 @@ cdef class VisualizationOutput:
             #     pickle.dump(out_dict, f, protocol=2)
             # self.count += 1
             #__
-            with open(self.vis_path+ '/'  + str(10000000 + np.int(self.last_vis_time)) +  '.pkl', 'wb') as f:
+            with open(self.vis_path+ '/'  + str(10000000 + np.int(self.last_vis_time)) +  '_yz.pkl', 'wb') as f:
                 pickle.dump(out_dict, f, protocol=2)
 
         return
