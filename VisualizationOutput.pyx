@@ -202,9 +202,9 @@ cdef class VisualizationOutput:
                 var_shift = PV.get_varshift(Gr, var)
 
                 with nogil:
-                    if global_shift_j == 0:
-                        #j = 0
-                        #jshift = j * jstride
+                    # if global_shift_j == 0:
+                    #     j0 = 0
+                    if global_shift_j == j0:
                         jshift = j0 * jstride
                         for i in xrange(imin, imax):
                             ishift = i * istride
