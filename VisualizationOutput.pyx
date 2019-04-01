@@ -123,6 +123,7 @@ cdef class VisualizationOutput:
         # __
 
         # output in y-z plane
+        npts = Gr.dims.n[i]//mpi_dims[i]
         i0 = np.int(Gr.dims.n[0] / 2)       # for single CP
         Pa.root_print('Vis: writing yz-plane, i0='+str(i0))
         for var in pv_vars:
@@ -193,7 +194,8 @@ cdef class VisualizationOutput:
 
         # vis output x-z plane
         j0 = np.int(Gr.dims.n[1]/2)     # for single CP
-        Pa.root_print('Vis: writing xz-plane, j0='+str(j0))
+        Pa.root_print('Vis: writing xz-plane, j0='+str(j0), global_shift_j)
+        nlg = Gr.dims.nlg[1]        # Gr.dims.nl[i] + 2*gw
         for var in pv_vars:
             local_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
@@ -204,7 +206,7 @@ cdef class VisualizationOutput:
                 with nogil:
                     # if global_shift_j == 0:
                     #     j0 = 0
-                    if global_shift_j == j0:
+                    if global_shift_j >= j0 and global_shift_j < (j0 + nlg):
                         jshift = j0 * jstride
                         for i in xrange(imin, imax):
                             ishift = i * istride
