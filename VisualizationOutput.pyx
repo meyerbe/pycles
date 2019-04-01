@@ -123,7 +123,6 @@ cdef class VisualizationOutput:
         # __
 
         # output in y-z plane
-        npts = Gr.dims.n[i]//mpi_dims[i]
         i0 = np.int(Gr.dims.n[0] / 2)       # for single CP
         Pa.root_print('Vis: writing yz-plane, i0='+str(i0))
         for var in pv_vars:
@@ -180,8 +179,11 @@ cdef class VisualizationOutput:
                     out_dict[var] = np.array(reduced_var, dtype=np.double)
                 del reduced_var
 
+
+
             except:
                 Pa.root_print('Trouble Writing ' + var)
+
 
         if Pa.rank == 0:
             with open(self.vis_path+ '/'  + str(10000000 + np.int(self.last_vis_time)) +  '.pkl', 'wb') as f:
