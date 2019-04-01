@@ -811,10 +811,13 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # imax = imin + 2*istar + 2*marg_i
         # jmin = jc - jstar - marg_i
         # jmax = jmin + 2*jstar + 2*marg_i
-        Py_ssize_t isep = 7*irstar
+        Py_ssize_t sep = namelist['init']['sep']
+        Py_ssize_t isep = sep*irstar
         Py_ssize_t jsep = 0
-        Py_ssize_t ic1 = np.int(Gr.dims.ng[0] / 3)
-        Py_ssize_t jc1 = np.int(Gr.dims.ng[1] / 2)
+        # Py_ssize_t ic1 = np.int(Gr.dims.ng[0] / 3)
+        # Py_ssize_t jc1 = np.int(Gr.dims.ng[1] / 2)
+        Py_ssize_t ic1 = namelist['init']['ic1']
+        Py_ssize_t jc1 = namelist['init']['jc1']
         Py_ssize_t ic2 = ic1 + isep
         Py_ssize_t jc2 = jc1 + jsep
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2])
@@ -823,11 +826,12 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
         # double xc2 = Gr.x_half[ic1]       # center of cold-pool 2
         # double yc2 = Gr.y_half[jc2]       # center of cold-pool 2
-        Py_ssize_t ir
+        # Py_ssize_t ir
         # double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         # double k_max = 0
         double z_max = 0
+    del sep
 
 
     # theta-anomaly

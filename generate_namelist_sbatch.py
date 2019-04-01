@@ -82,6 +82,8 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
     namelist['init']['h'] = zstar  # initial height of temperature anomaly
     # namelist['init']['r'] = 1000.0      # initial radius of temperature anomaly
     namelist['init']['r'] = rstar  # initial radius of temperature anomaly
+    if number == 'single':
+        namelist['init']['ic'] = namelist['grid']['nx'] / 2
 
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
@@ -171,9 +173,11 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
 
     namelist['grid'] = {}
     namelist['grid']['dims'] = 3
-    namelist['grid']['nx'] = 400
-    namelist['grid']['ny'] = 400
-    namelist['grid']['nz'] = 150 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    # single CP: Lx=Ly=20km, H=12km
+    # double CP: Lx=Ly=30km, H=12km (for z=r=2km, dTh=3K, sep=4r=8km)
+    namelist['grid']['nx'] = 200
+    namelist['grid']['ny'] = 200
+    namelist['grid']['nz'] = 120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = 100.0#50.0
     namelist['grid']['dy'] = 100.0#50.0
@@ -188,10 +192,14 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     if number == 'single':
         namelist['init']['ic'] = namelist['grid']['nx'] / 2
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
+    elif number == 'double':
+        namelist['init']['ic1'] = namelist['grid']['nx'] / 3
+        namelist['init']['jc1'] = namelist['grid']['ny'] / 2
+        namelist['init']['sep'] = 7
 
     namelist['mpi'] = {}
-    namelist['mpi']['nprocx'] = 4
-    namelist['mpi']['nprocy'] = 4
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
     namelist['mpi']['nprocz'] = 1
 
     namelist['time_stepping'] = {}
