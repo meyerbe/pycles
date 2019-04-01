@@ -190,12 +190,11 @@ cdef class VisualizationOutput:
 
 
 
-
-
         # vis output x-z plane
+        cdef:
+            Py_ssize_t nlg = Gr.dims.nlg[1]        # Gr.dims.nl[i] + 2*gw
         j0 = np.int(Gr.dims.n[1]/2)     # for single CP
         Pa.root_print('Vis: writing xz-plane, j0='+str(j0), global_shift_j)
-        nlg = Gr.dims.nlg[1]        # Gr.dims.nl[i] + 2*gw
         for var in pv_vars:
             local_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
