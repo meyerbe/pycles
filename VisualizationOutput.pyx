@@ -205,7 +205,8 @@ cdef class VisualizationOutput:
             # try:
                 var_shift = PV.get_varshift(Gr, var)
 
-                with nogil:
+                # with nogil:
+                if 1 == 1:
                     # if global_shift_j == 0:
                     #     j0 = 0
                     if global_shift_j >= j0 and global_shift_j < (j0 + nlg):
