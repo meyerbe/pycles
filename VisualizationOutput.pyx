@@ -124,6 +124,7 @@ cdef class VisualizationOutput:
 
         # output in y-z plane
         i0 = np.int(Gr.dims.n[0] / 2)       # for single CP
+        Pa.root_print('Vis: writing yz-plane, i0='+str(i0))
         for var in pv_vars:
             local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
@@ -192,6 +193,7 @@ cdef class VisualizationOutput:
 
         # vis output x-z plane
         j0 = np.int(Gr.dims.n[1]/2)     # for single CP
+        Pa.root_print('Vis: writing xz-plane, j0='+str(j0))
         for var in pv_vars:
             local_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[0], Gr.dims.n[2]), dtype=np.double, order='c')
