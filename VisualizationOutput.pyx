@@ -257,7 +257,7 @@ cdef class VisualizationOutput:
             #     pickle.dump(out_dict, f, protocol=2)
             # self.count += 1
             #__
-            with open(self.vis_path+ '/'  + str(10000000 + np.int(self.last_vis_time)) +  '_yz.pkl', 'wb') as f:
+            with open(self.vis_path+ '/'  + str(10000000 + np.int(self.last_vis_time)) +  '_xz.pkl', 'wb') as f:
                 pickle.dump(out_dict, f, protocol=2)
 
         return
