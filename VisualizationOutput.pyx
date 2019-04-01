@@ -59,6 +59,7 @@ cdef class VisualizationOutput:
             double [:,:] local_lwp = np.zeros((Gr.dims.n[0], Gr.dims.n[1]), dtype=np.double, order='c')
             double [:,:] reduced_lwp = np.zeros((Gr.dims.n[0], Gr.dims.n[1]), dtype=np.double, order='c')
             Py_ssize_t i,j,k,ijk
+            Py_ssize_t i0, j0
             Py_ssize_t imin = Gr.dims.gw
             Py_ssize_t jmin = Gr.dims.gw
             Py_ssize_t kmin = Gr.dims.gw
@@ -122,7 +123,7 @@ cdef class VisualizationOutput:
         # __
 
         # output in y-z plane
-        i = np.int(Gr.dims.n[0] / 2)       # for single CP
+        i0 = np.int(Gr.dims.n[0] / 2)       # for single CP
         for var in pv_vars:
             local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
@@ -132,7 +133,7 @@ cdef class VisualizationOutput:
                 with nogil:
                     if global_shift_i == 0:
                         # i = 0
-                        ishift = i * istride
+                        ishift = i0 * istride
                         for j in xrange(jmin, jmax):
                             jshift = j * jstride
                             for k in xrange(kmin, kmax):
