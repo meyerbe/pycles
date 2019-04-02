@@ -210,7 +210,7 @@ cdef class VisualizationOutput:
                 if 1 == 1:
                     # if global_shift_j == 0:
                     #     j0 = 0
-                    if global_shift_j >= j0 and global_shift_j < (j0 + nlg):
+                    if global_shift_j <= j0 and j0 < (global_shift_j + nlg):
                         print('doing Vis Output: ' + str(global_shift_j), j0, j0+nlg)
                         jshift = j0 * jstride
                         for i in xrange(imin, imax):
