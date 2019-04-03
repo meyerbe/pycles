@@ -175,6 +175,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['grid']['dims'] = 3
     # single CP: Lx=Ly=20km, H=12km
     # double CP: Lx=Ly=30km, H=12km (for z=r=2km, dTh=3K, sep=4r=8km)
+    # triple CP: Lx=Ly=40km, H=12km (for z=r=2km, dTh=3K, d=10r)
     namelist['grid']['nx'] = 200
     namelist['grid']['ny'] = 200
     namelist['grid']['nz'] = 120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
@@ -203,6 +204,10 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
         # d: side length of equilateral triangle with 3 CPs at edges
         d = 10 * rstar
         namelist['init']['d'] = d
+
+    namelist['surface'] = {}
+    # schemes: 'none', 'bulk', 'const'
+    namelist['surface']['scheme'] = 'none'
 
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
