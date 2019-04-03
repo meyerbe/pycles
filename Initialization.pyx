@@ -485,7 +485,6 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ishift, jshift
         Py_ssize_t ijk
         Py_ssize_t gw = Gr.dims.gw
-        double th
 
     # parameters
     cdef:
@@ -517,6 +516,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # theta anomaly
     np.random.seed(Pa.rank)     # make Noise reproducable
     cdef:
+        double th
         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
         # double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
         double [:,:,:] theta_z = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
@@ -978,6 +978,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
         Py_ssize_t ijk
+        Py_ssize_t gw = Gr.dims.gw
 
     # parameters
     cdef:
@@ -993,7 +994,6 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # double r, r2
         double rstar2 = rstar**2
         double rstar_marg2 = (rstar+marg)**2
-        # double rmin = 0.0
         Py_ssize_t n, nmin
 
     # geometry of cold pool: equilateral triangle with center in middle of domain
@@ -1020,27 +1020,27 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t id = np.int(np.round(d/Gr.dims.dx[0]))
         Py_ssize_t idhalf = np.int(np.round(id/2))
         Py_ssize_t a = np.int(np.round(id*np.sin(60.0/360.0*2*np.pi)))    # sin(60 degree) = np.sqrt(3)/2
-        Py_ssize_t r_int = np.int(np.sqrt(3)/6*id)       # radius of inscribed circle
+        Py_ssize_t r_int = np.int(np.round(np.sqrt(3.)/6*id))       # radius of inscribed circle
         # point of 3-CP collision (ic, jc)
         Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
         Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
         Py_ssize_t ic1 = ic - r_int
         Py_ssize_t ic2 = ic1
-        Py_ssize_t ic3 = ic + r_int
+        Py_ssize_t ic3 = ic + (a - r_int)
         Py_ssize_t jc1 = jc - idhalf
         Py_ssize_t jc2 = jc + idhalf
         Py_ssize_t jc3 = jc
 
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2,ic3])
         Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2,jc3])
-        double [:] xc = np.asarray([Gr.x_half[ic1], Gr.x_half[ic2], Gr.x_half[ic3]])
-        double [:] yc = np.asarray([Gr.y_half[jc1], Gr.y_half[jc2], Gr.y_half[jc3]])
+        double [:] xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]])
+        double [:] yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]])
         # double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
         # double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
 
-        double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
-        double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
-        double k_max = 0
+        # double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        # double k_max = 0
         double z_max = 0
 
     # theta-anomaly
@@ -1100,10 +1100,10 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[w_varshift + ijk] = 0.0
 
                 if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    th = th_g - dTh
+                    theta_z[i,j,k] = th_g - dTh
                 elif Gr.z_half[k] <= z_max_arr[1,i,j]:
                     th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-                theta_z[i, j, k] = th
+                    theta_z[i, j, k] = th
 
                 # --- adding noise ---
                 if k <= kstar + 2:
