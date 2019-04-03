@@ -862,10 +862,10 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2) # not MPI-compatible
             for n in range(2):
-                r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
-                r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
+                r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+                r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
             if (r2[nmin] <= rstar_marg2):
                 # k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 ) ) ** 2
