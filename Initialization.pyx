@@ -1083,12 +1083,12 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
             if (r2[nmin] <= rstar_marg2):
-                z_max = (zstar + marg) * ( np.cos( r[n]/(rstar + marg) * np.pi / 2 )) ** 2
+                z_max = (zstar + marg) * ( np.cos( r[nmin]/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
                 # z_max_arr[1, i+(ic2-ic1), j+(jc2-jc1)] = z_max
                 # z_max_arr[1, i+(ic3-ic1), j+(jc3-jc1)] = z_max
                 if (r2[nmin] <= rstar2):
-                    z_max = zstar * ( np.cos( r[n]/rstar * np.pi / 2 )) ** 2
+                    z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi / 2 )) ** 2
                     z_max_arr[0, i, j] = z_max
                     # z_max_arr[0, i+(ic2-ic1), j+(jc2-jc1)] = z_max
                     # z_max_arr[0, i+(ic3-ic1), j+(jc3-jc1)] = z_max
