@@ -1019,7 +1019,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t r_int = np.int(np.sqrt(3)/6*id)       # radius of inscribed circle
         # point of 3-CP collision (ic, jc)
         Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
-        Py_ssize_t ic = np.int(np.round(Gr.dims.n[1]/2))
+        Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
         Py_ssize_t ic1 = ic - r_int
         Py_ssize_t ic2 = ic1
         Py_ssize_t ic3 = ic + r_int
