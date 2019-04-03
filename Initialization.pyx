@@ -1033,8 +1033,8 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2,ic3])
         Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2,jc3])
-        double [:] xc = np.asarray(Gr.x_half[ic1], Gr.x_half[ic2], Gr.x_half[ic3])
-        double [:] yc = np.asarray(Gr.y_half[jc1], Gr.y_half[jc2], Gr.y_half[jc3])
+        double [:] xc = np.asarray([Gr.x_half[ic1], Gr.x_half[ic2], Gr.x_half[ic3]])
+        double [:] yc = np.asarray([Gr.y_half[jc1], Gr.y_half[jc2], Gr.y_half[jc3]])
         # double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
         # double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
 
