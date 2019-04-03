@@ -1053,16 +1053,16 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('margin of Th-anomaly: di='+str(marg_i))
     Pa.root_print('distance btw cps: d='+str(d*Gr.dims.n[0])+', id='+str(d))
 
-    print('')
-    print('nx: ' + str(Gr.dims.n[0]), str(Gr.dims.n[1]))
-    print('nyg: ' + str(Gr.dims.ng[0]), str(Gr.dims.ng[1]))
-    print('gw: ' + str(Gr.dims.gw))
-    print('d: ' + str(d) + ', id: ' + str(id))
-    print('Cold Pools:')
-    print('cp1: [' + str(ic1) + ', ' + str(jc1) + ']')
-    print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')
-    print('cp3: [' + str(ic3) + ', ' + str(jc3) + ']')
-    print('')
+    Pa.root_print('')
+    Pa.root_print('nx: ' + str(Gr.dims.n[0]), str(Gr.dims.n[1]))
+    Pa.root_print('nyg: ' + str(Gr.dims.ng[0]), str(Gr.dims.ng[1]))
+    Pa.root_print('gw: ' + str(Gr.dims.gw))
+    Pa.root_print('d: ' + str(d) + ', id: ' + str(id))
+    Pa.root_print('Cold Pools:')
+    Pa.root_print('cp1: [' + str(ic1) + ', ' + str(jc1) + ']')
+    Pa.root_print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')
+    Pa.root_print('cp3: [' + str(ic3) + ', ' + str(jc3) + ']')
+    Pa.root_print('')
 
     ''' compute k_max '''
     for i in xrange(Gr.dims.nlg[0]):
@@ -1084,16 +1084,16 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 z_max_arr[1, i, j] = z_max
                 z_max_arr[1, i+(ic2-ic1), j+(jc2-jc1)] = z_max
                 z_max_arr[1, i+(ic3-ic1), j+(jc3-jc1)] = z_max
-                if (r <= rstar):
+                if (r2 <= rstar2):
                     # k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
                     # k_max_arr[0, i, j] = np.int(np.round(k_max))
                     # k_max_arr[0, 2*ic1-i, j] = k_max_arr[0,i,j]
                     # k_max_arr[0, 2*ic1-i, 2*jc1-j] = k_max_arr[0,i,j]
                     # k_max_arr[0, i, 2*jc1-j] = k_max_arr[0,i,j]
                     z_max = zstar * ( np.cos( r/rstar * np.pi / 2 )) ** 2
-                    z_max_arr[1, i, j] = z_max
-                    z_max_arr[1, i+(ic2-ic1), j+(jc2-jc1)] = z_max
-                    z_max_arr[1, i+(ic3-ic1), j+(jc3-jc1)] = z_max
+                    z_max_arr[0, i, j] = z_max
+                    z_max_arr[0, i+(ic2-ic1), j+(jc2-jc1)] = z_max
+                    z_max_arr[0, i+(ic3-ic1), j+(jc3-jc1)] = z_max
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
