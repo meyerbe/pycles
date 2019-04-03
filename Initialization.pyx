@@ -988,9 +988,13 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         double marg = namelist['init']['marg']
         Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
-        double r, r2
+        double [:] r = np.ndarray((3), dtype=np.double)
+        double [:] r2 = np.ndarray((3), dtype=np.double)
+        # double r, r2
         double rstar2 = rstar**2
         double rstar_marg2 = (rstar+marg)**2
+        # double rmin = 0.0
+        Py_ssize_t n, nmin
 
     # geometry of cold pool: equilateral triangle with center in middle of domain
     # d: side length of the triangle
@@ -1029,8 +1033,10 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2,ic3])
         Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2,jc3])
-        double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
-        double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
+        double [:] xc = np.asarray(Gr.x_half[ic1], Gr.x_half[ic2], Gr.x_half[ic3])
+        double [:] yc = np.asarray(Gr.y_half[jc1], Gr.y_half[jc2], Gr.y_half[jc3])
+        # double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
+        # double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
 
         double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
@@ -1070,30 +1076,22 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)      # not MPI-compatible
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
-            r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc1)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc1)**2 )
-            if (r2 <= rstar_marg2):
-                # k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 ) ) ** 2
-                # k_max_arr[1, i, j] = np.int(np.round(k_max))
-                # k_max_arr[1, 2*ic1-i, j] = k_max_arr[1, i, j]
-                # k_max_arr[1, 2*ic1-i, 2 * jc1 - j] = k_max_arr[1, i, j]
-                # k_max_arr[1, i, 2*jc1-j] = k_max_arr[1, i, j]
+            for n in range(3):
+                r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
+                             (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+                r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
+                             (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+            nmin = np.argmin(r)     # making use of having non-overlapping CPs
+            if (r2[nmin] <= rstar_marg2):
                 z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
-                z_max_arr[1, i+(ic2-ic1), j+(jc2-jc1)] = z_max
-                z_max_arr[1, i+(ic3-ic1), j+(jc3-jc1)] = z_max
-                if (r2 <= rstar2):
-                    # k_max = kstar * ( np.cos( r/rstar * np.pi / 2 ) ) ** 2
-                    # k_max_arr[0, i, j] = np.int(np.round(k_max))
-                    # k_max_arr[0, 2*ic1-i, j] = k_max_arr[0,i,j]
-                    # k_max_arr[0, 2*ic1-i, 2*jc1-j] = k_max_arr[0,i,j]
-                    # k_max_arr[0, i, 2*jc1-j] = k_max_arr[0,i,j]
+                # z_max_arr[1, i+(ic2-ic1), j+(jc2-jc1)] = z_max
+                # z_max_arr[1, i+(ic3-ic1), j+(jc3-jc1)] = z_max
+                if (r2[nmin] <= rstar2):
                     z_max = zstar * ( np.cos( r/rstar * np.pi / 2 )) ** 2
                     z_max_arr[0, i, j] = z_max
-                    z_max_arr[0, i+(ic2-ic1), j+(jc2-jc1)] = z_max
-                    z_max_arr[0, i+(ic3-ic1), j+(jc3-jc1)] = z_max
+                    # z_max_arr[0, i+(ic2-ic1), j+(jc2-jc1)] = z_max
+                    # z_max_arr[0, i+(ic3-ic1), j+(jc3-jc1)] = z_max
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
