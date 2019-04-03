@@ -216,6 +216,7 @@ cdef class SurfaceBase:
 
 cdef class SurfaceNone(SurfaceBase):
     def __init__(self):
+        print('SurfaceNone')
         pass
 
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
@@ -233,6 +234,7 @@ cdef class SurfaceNone(SurfaceBase):
 # COLD POOLS (adapted from Rico Surface scheme)
 cdef class SurfaceColdPools(SurfaceBase):
     def __init__(self, LatentHeat LH):
+        print('calling Surface Cold Pool Scheme (Bulk Formalism)')
         # Grant et al. 2016: C_D = 0.0015 for smooth land surface, e.g. sand or soil (Hartmann, 1993)
         # Rico case: C_D = 0.001229
         self.cm =0.001229       # bulk coefficient for momentum flux (from Rico-case)
