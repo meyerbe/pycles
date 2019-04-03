@@ -1054,8 +1054,8 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('distance btw cps: d='+str(d*Gr.dims.n[0])+', id='+str(d))
 
     Pa.root_print('')
-    Pa.root_print('nx: ' + str(Gr.dims.n[0]), str(Gr.dims.n[1]))
-    Pa.root_print('nyg: ' + str(Gr.dims.ng[0]), str(Gr.dims.ng[1]))
+    Pa.root_print('nx: ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
+    Pa.root_print('nyg: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
     Pa.root_print('gw: ' + str(Gr.dims.gw))
     Pa.root_print('d: ' + str(d) + ', id: ' + str(id))
     Pa.root_print('Cold Pools:')
