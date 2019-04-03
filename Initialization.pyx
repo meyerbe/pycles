@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 
@@ -1149,11 +1149,11 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     # plot_imshow('theta', theta[gw:-gw,gw:-gw,gw:-gw], ic1, ic2, ic3, jc1, jc2, jc3)
 
-        # plot_k_array(ic1, jc1, ic2, jc2, k_max_arr, ir_arr, ir_arr_marg, dx, dy)
+        # plot_k_array(ic1, jc1, ic2, jc2, z_max_arr, ir_arr, ir_arr_marg, dx, dy)
 
     ''' Initialize passive tracer phi '''
     Pa.root_print('initialize passive tracer phi')
-    init_tracer(namelist, Gr, PV, Pa, k_max_arr, ic_arr, jc_arr)
+    init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
     Pa.root_print('Initialization: finished initialization')
 
     return
