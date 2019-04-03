@@ -832,7 +832,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         # double k_max = 0
         double z_max = 0
-    del sep
+    # del sep
 
 
     # theta-anomaly
@@ -997,18 +997,36 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # a: height of the equilateral triangle
     # configuration: ic1 = ic2, ic3 = ic1+a; jc
     cdef:
-        Py_ssize_t d = np.int(np.round(10*irstar))
-        # Py_ssize_t d = np.int(np.round(Gr.dims.ng[1]/2))
-        Py_ssize_t dhalf = np.int(np.round(d/2))
-        Py_ssize_t a = np.int(np.round(d*np.sin(60.0/360.0*2*np.pi)))    # sin(60 degree) = np.sqrt(3)/2
-        Py_ssize_t ic = np.int(np.round(Gr.dims.ng[0]/2))
-        Py_ssize_t jc = np.int(np.round(Gr.dims.ng[1]/2))
-        Py_ssize_t ic1 = ic - np.int(np.round(a/2))
+        # # OLD configuration
+        # Py_ssize_t d = np.int(np.round(10*irstar))
+        # # Py_ssize_t d = np.int(np.round(Gr.dims.ng[1]/2))
+        # Py_ssize_t dhalf = np.int(np.round(d/2))
+        # Py_ssize_t a = np.int(np.round(d*np.sin(60.0/360.0*2*np.pi)))    # sin(60 degree) = np.sqrt(3)/2
+        # Py_ssize_t ic = np.int(np.round(Gr.dims.ng[0]/2))
+        # Py_ssize_t jc = np.int(np.round(Gr.dims.ng[1]/2))
+        # Py_ssize_t ic1 = ic - np.int(np.round(a/2))
+        # Py_ssize_t ic2 = ic1
+        # Py_ssize_t ic3 = ic + np.int(np.round(a/2))
+        # Py_ssize_t jc1 = jc - dhalf
+        # Py_ssize_t jc2 = jc + dhalf
+        # Py_ssize_t jc3 = jc
+
+        # NEW configuration
+        double d = namelist['init']['d']
+        Py_ssize_t id = np.int(np.round(d/Gr.dims.dx[0]))
+        Py_ssize_t idhalf = np.int(np.round(id/2))
+        Py_ssize_t a = np.int(np.round(id*np.sin(60.0/360.0*2*np.pi)))    # sin(60 degree) = np.sqrt(3)/2
+        Py_ssize_t r_int = np.int(np.sqrt(3)/6*id)       # radius of inscribed circle
+        # point of 3-CP collision (ic, jc)
+        Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
+        Py_ssize_t ic = np.int(np.round(Gr.dims.n[1]/2))
+        Py_ssize_t ic1 = ic - r_int
         Py_ssize_t ic2 = ic1
-        Py_ssize_t ic3 = ic + np.int(np.round(a/2))
-        Py_ssize_t jc1 = jc - dhalf
-        Py_ssize_t jc2 = jc + dhalf
+        Py_ssize_t ic3 = ic + r_int
+        Py_ssize_t jc1 = jc - idhalf
+        Py_ssize_t jc2 = jc + idhalf
         Py_ssize_t jc3 = jc
+
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2,ic3])
         Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2,jc3])
         double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
@@ -1039,7 +1057,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     print('nx: ' + str(Gr.dims.n[0]), str(Gr.dims.n[1]))
     print('nyg: ' + str(Gr.dims.ng[0]), str(Gr.dims.ng[1]))
     print('gw: ' + str(Gr.dims.gw))
-    print('d: ' + str(d), np.round(d/2), dhalf, dhalf + Gr.dims.gw, np.int(dhalf + Gr.dims.gw))
+    print('d: ' + str(d) + ', id: ' + str(id))
     print('Cold Pools:')
     print('cp1: [' + str(ic1) + ', ' + str(jc1) + ']')
     print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')

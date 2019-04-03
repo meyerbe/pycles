@@ -193,9 +193,16 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
         namelist['init']['ic'] = namelist['grid']['nx'] / 2
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
     elif number == 'double':
-        namelist['init']['ic1'] = namelist['grid']['nx'] / 3
-        namelist['init']['jc1'] = namelist['grid']['ny'] / 2
+        # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
+        namelist['init']['ic'] = namelist['grid']['nx'] / 2
+        namelist['init']['jc'] = namelist['grid']['ny'] / 2
+        # namelist['init']['ic1'] = namelist['grid']['nx'] / 3
+        # namelist['init']['jc1'] = namelist['grid']['ny'] / 2
         namelist['init']['sep'] = 7
+    elif number == 'triple':
+        # d: side length of equilateral triangle with 3 CPs at edges
+        d = 10 * rstar
+        namelist['init']['d'] = d
 
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
