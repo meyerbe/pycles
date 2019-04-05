@@ -52,6 +52,7 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
             return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
         elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
                 or casename == 'ColdPoolDry_triple_3D':
+            Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
             if namelist['surface']['scheme'] == 'bulk':
                 return SurfaceColdPools(LH)
             elif namelist['surface']['scheme'] == 'const':
