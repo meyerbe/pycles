@@ -153,6 +153,10 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
         namelist['meta']['casename'] = 'ColdPoolDry_double_2D'
         namelist['meta']['simname'] = 'ColdPoolDry_double_2D'
 
+    namelist['surface'] = {}
+    # schemes: 'none', 'bulk', 'const'
+    namelist['surface']['scheme'] = 'none'
+
     namelist['visualization'] = {}
     namelist['visualization']['frequency'] = 20.0
 
