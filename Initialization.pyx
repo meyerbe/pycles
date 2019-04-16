@@ -91,7 +91,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
     # for plotting
-    from Init_plot import plot_k_profile, plot_var_image, plot_imshow
+    # from Init_plot import plot_k_profile, plot_var_image, plot_imshow
     cdef:
         PrognosticVariables.PrognosticVariables PV_ = PV
     j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
@@ -307,7 +307,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
     # for plotting
-    from Init_plot import plot_k_profiles_double, plot_var_image, plot_imshow, plot_var_profile
+    # from Init_plot import plot_k_profiles_double, plot_var_image, plot_imshow, plot_var_profile
     cdef:
         PrognosticVariables.PrognosticVariables PV_ = PV
     j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
@@ -435,21 +435,21 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     ''' plotting '''
     var_name = 'theta'
     # plot_var_image(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
-    plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
-    plot_var_profile(var_name, theta[:,:,:], j0, imin1, imax1, imin2, imax2, marg_i, 'double_2D')
+    # plot_imshow(var_name, theta[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
+    # plot_var_profile(var_name, theta[:,:,:], j0, imin1, imax1, imin2, imax2, marg_i, 'double_2D')
+    #
+    # plot_k_profiles_double(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2],
+    #                        imin1, imin2, imax1, imax2, ic1, ic2, xstar, marg_i, 'double_2D')
 
-    plot_k_profiles_double(Gr.x_half[:], k_max_arr, Gr.dims.dx[0], Gr.dims.dx[2],
-                           imin1, imin2, imax1, imax2, ic1, ic2, xstar, marg_i, 'double_2D')
-
-    var_name = 's'
-    var_shift = PV_.get_varshift(Gr, var_name)
-    var1 = PV_.get_variable_array(var_name, Gr)
+    # var_name = 's'
+    # var_shift = PV_.get_varshift(Gr, var_name)
+    # var1 = PV_.get_variable_array(var_name, Gr)
     # plot_var_image(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_2D')
     # var_name = 'qt'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
     # plot_s_profile(var_name, var1[:,:,:], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    del var1
+    # del var1
 
     ''' Initialize passive tracer phi '''
     init_tracer(namelist, Gr, PV, Pa, k_max_arr, ic_arr, np.asarray([j0,j0]))
