@@ -49,7 +49,8 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         if casename == 'SullivanPatton':
            return SurfaceSullivanPatton(LH)
         elif casename == 'ColdPoolDry_single_2D' or casename == 'ColdPoolDry_double_2D':
-            return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+            # return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+            return SurfaceColdPools(LH)
         elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
                 or casename == 'ColdPoolDry_triple_3D':
             Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
@@ -193,6 +194,8 @@ cdef class SurfaceBase:
         return
 
     cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+        Pa.root_print('stats io (Surface Base)')
+
         cdef double tmp
 
         tmp = Pa.HorizontalMeanSurface(Gr, &self.u_flux[0])
@@ -250,6 +253,7 @@ cdef class SurfaceColdPools(SurfaceBase):
 
 
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+        Pa.root_print('Surface Cold Pool scheme: initialize')
         SurfaceBase.initialize(self,Gr,Ref,NS,Pa)
 
         self.cm = self.cm*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
@@ -260,7 +264,7 @@ cdef class SurfaceColdPools(SurfaceBase):
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
                  DiagnosticVariables.DiagnosticVariables DV,ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS):
-
+        Pa.root_print('Surface Cold Pool scheme: update')
         cdef double pv_star = pv_c(Ref.Pg, Ref.qtg, Ref.qtg)
         cdef double  pd_star = Ref.Pg - pv_star
         # self.s_star = (1.0-Ref.qtg) * sd_c(pd_star, Ref.Tg) + Ref.qtg * sv_c(pv_star,Ref.Tg)
@@ -314,7 +318,8 @@ cdef class SurfaceColdPools(SurfaceBase):
 
 
     cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
-        # SurfaceBase.stats_io(self, Gr, NS, Pa)
+        Pa.root_print('Surface Cold Pool scheme: stats io')
+        SurfaceBase.stats_io(self, Gr, NS, Pa)
         return
 
 # SULLIVAN
