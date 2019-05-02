@@ -246,7 +246,7 @@ def ColdPoolDry_2D(number):
     namelist['fields_io']['fields_dir'] = 'fields'
     namelist['fields_io']['frequency'] = 100.0
     # namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
-    namelist['fields_io']['diagnostic_fields'] = ['temperature']
+    namelist['fields_io']['diagnostic_fields'] = ['temperature', 'theta']
 
     namelist['meta'] = {}
     if number == 'single':
@@ -278,7 +278,7 @@ def ColdPoolDry_3D(number):
     namelist['grid']['dims'] = 3
     namelist['grid']['nx'] = 200
     namelist['grid']['ny'] = 200
-    namelist['grid']['nz'] = 150
+    namelist['grid']['nz'] = 150        # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = 200.0
     namelist['grid']['dy'] = 200.0
@@ -355,7 +355,7 @@ def ColdPoolDry_3D(number):
     namelist['fields_io']['fields_dir'] = 'fields'
     namelist['fields_io']['frequency'] = 100.0
     # namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
-    namelist['fields_io']['diagnostic_fields'] = ['temperature']
+    namelist['fields_io']['diagnostic_fields'] = ['temperature', 'theta']
 
     namelist['meta'] = {}
     if number == 'single':
