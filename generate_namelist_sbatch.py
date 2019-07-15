@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--zstar')
     parser.add_argument('--rstar')
     parser.add_argument('--dTh')
-
+    parser.add_argument('--dx')
     args = parser.parse_args()
 
     case_name = args.case_name
@@ -35,16 +35,21 @@ def main():
         else:
             dTh = 2.0
 
+        if args.dx:
+            dx = np.double(args.dx)
+        else:
+            dx = 100.0
+
     if case_name == 'ColdPoolDry_single_2D':
-        namelist = ColdPoolDry_2D('single', zstar, rstar, dTh)
+        namelist = ColdPoolDry_2D('single', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_double_2D':
-        namelist = ColdPoolDry_2D('double', zstar, rstar, dTh)
+        namelist = ColdPoolDry_2D('double', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_single_3D':
-        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh)
+        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_double_3D':
-        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh)
+        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_triple_3D':
-        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh)
+        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh, dx)
     elif case_name == 'Bomex':
         namelist = Bomex()
     else:
@@ -60,7 +65,7 @@ def main():
 
 
 
-def ColdPoolDry_2D(number, zstar, rstar, dTh):
+def ColdPoolDry_2D(number, zstar, rstar, dTh, dx):
 
     namelist = {}
 
@@ -70,9 +75,9 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
     namelist['grid']['ny'] = 5
     namelist['grid']['nz'] = 150
     namelist['grid']['gw'] = 5
-    namelist['grid']['dx'] = 200.0
-    namelist['grid']['dy'] = 200.0
-    namelist['grid']['dz'] = 100.0
+    namelist['grid']['dx'] = dx#200.0
+    namelist['grid']['dy'] = dx#200.0
+    namelist['grid']['dz'] = dx#100.0
 
     namelist['init'] = {}
     # namelist['init']['dTh'] = 2.0      # temperature anomaly
@@ -171,7 +176,7 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
 
 
 
-def ColdPoolDry_3D(number, zstar, rstar, dTh):
+def ColdPoolDry_3D(number, zstar, rstar, dTh, dx):
 
     namelist = {}
 
@@ -180,13 +185,13 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     # single CP: Lx=Ly=20km, H=12km
     # double CP: Lx=Ly=30km, H=12km (for z=r=2km, dTh=3K, sep=4r=8km)
     # triple CP: Lx=Ly=40km, H=12km (for z=r=2km, dTh=3K, d=10r)
-    namelist['grid']['nx'] = 200
-    namelist['grid']['ny'] = 200
-    namelist['grid']['nz'] = 120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['nx'] = np.int(200*100./dx)#200
+    namelist['grid']['ny'] = np.int(200*100./dx)#200
+    namelist['grid']['nz'] = np.int(120*100./dx)#120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
-    namelist['grid']['dx'] = 100.0#50.0
-    namelist['grid']['dy'] = 100.0#50.0
-    namelist['grid']['dz'] = 100.0#50.0
+    namelist['grid']['dx'] = dx#50.0
+    namelist['grid']['dy'] = dx#50.0
+    namelist['grid']['dz'] = dx#50.0
 
     namelist['init'] = {}
     namelist['init']['dTh'] = dTh           # temperature anomaly
@@ -214,8 +219,8 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['surface']['scheme'] = 'none'
 
     namelist['mpi'] = {}
-    namelist['mpi']['nprocx'] = 1
-    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocx'] = 4
+    namelist['mpi']['nprocy'] = 4
     namelist['mpi']['nprocz'] = 1
 
     namelist['time_stepping'] = {}
