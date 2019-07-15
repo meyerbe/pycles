@@ -175,7 +175,7 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh, dx):
     namelist['surface']['scheme'] = 'none'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 20.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
@@ -197,8 +197,8 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
     # single CP: Lx=Ly=20km, H=12km
     # double CP: Lx=Ly=30km, H=12km (for z=r=2km, dTh=3K, sep=4r=8km)
     # triple CP: Lx=Ly=40km, H=12km (for z=r=2km, dTh=3K, d=10r)
-    namelist['grid']['nx'] = np.int(200*100./dx)#200            # width of Lx=20km sufficient for run2 (dTh=3K)
-    namelist['grid']['ny'] = np.int(200*100./dx)#200
+    namelist['grid']['nx'] = np.int(400*100./dx)#200            # width of Lx=20km sufficient for run2 (dTh=3K)
+    namelist['grid']['ny'] = np.int(400*100./dx)#200
     namelist['grid']['nz'] = np.int(120*100./dx)#120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = dx#50.0
@@ -306,7 +306,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
         namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 100.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
@@ -404,7 +404,7 @@ def Bomex():
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 1800.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Bomex'
