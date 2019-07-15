@@ -113,19 +113,22 @@ cdef class VisualizationOutput:
         cdef:
             double [:,:] local_var
             double [:,:] reduced_var
-            list pv_vars = ['qt', 's', 'w']
+            list pv_vars = ['s', 'w']
             list dv_vars = ['theta', 'temperature', 'diffusivity']
 
         # __
         if 'qt' in PV.name_index.keys():
         #     pv_vars = ['phi','qt', 's', 'w', 'v', 'u']
-            dv_vars = ['theta','ql', 'diffusivity']
+            pv_vars = ['qt', 's', 'w']
+            dv_vars = ['theta', 'temperature', 'ql', 'diffusivity']
         # __
-
+        # Pa.root_print('pv_list: ' + str(pv_vars))
+        # Pa.root_print('dv_list: ' + str(dv_vars))
         # output in y-z plane
         i0 = np.int(Gr.dims.n[0] / 2)       # for single CP
         Pa.root_print('Vis: writing yz-plane, i0='+str(i0))
         for var in pv_vars:
+            # Pa.root_print('writing ' + var)
             local_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
             reduced_var = np.zeros((Gr.dims.n[1], Gr.dims.n[2]), dtype=np.double, order='c')
             try:

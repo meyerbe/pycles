@@ -68,6 +68,9 @@ cdef class Forcing:
             self.scheme = ForcingNone()
         elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' or casename == 'ColdPoolDry_triple_3D':
             self.scheme = ForcingNone()
+        elif casename == 'ColdPoolDry_single_3D_stable' or casename == 'ColdPoolDry_double_3D_stable' \
+                or casename == 'ColdPoolDry_triple_3D_stable':
+            self.scheme = ForcingNone()
         else:
             Pa.root_print('No forcing for casename: ' +  casename)
             Pa.root_print('Killing simulation now!!!')
