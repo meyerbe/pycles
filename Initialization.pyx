@@ -44,7 +44,8 @@ def InitializationFactory(namelist):
         elif casename == 'ColdPoolDry_triple_3D':
             return InitColdPoolDry_triple_3D
         elif casename == 'ColdPoolDry_single_3D_stable':
-            return InitColdPoolDry_single_3D_stable
+            # return InitColdPoolDry_single_3D_stable
+            return InitColdPoolDry_single_3D
         # elif casename == 'ColdPoolDry_triple_3D_stable':
         #     return InitColdPoolDry_triple_3D_stable
         elif casename == 'SullivanPatton':
@@ -87,7 +88,8 @@ def InitializationFactory(namelist):
 
 
 def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                       ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
     Pa.root_print('Initialization: Dry Cold Pool (2D)')
     Pa.root_print('')
@@ -254,7 +256,6 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
                 else:
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
-                # PV.values[s_varshift + ijk] = entropy_from_thetas_c(th, 0.0)
 
 
 
@@ -289,8 +290,6 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     # __
     print('')
 
-
-
     ''' Initialize passive tracer phi '''
     init_tracer(namelist, Gr, PV, Pa, k_max_arr, ic_arr, [0])
     return
@@ -298,12 +297,9 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
 
 
-
-
-
-
 def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                              ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
     Pa.root_print('Initialization: Double Dry Cold Pool (2D)')
     Pa.root_print('')
@@ -463,7 +459,9 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                              ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+    casename = namelist['meta']['casename']
     Pa.root_print('')
     Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
     Pa.root_print('')
@@ -496,39 +494,47 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        # Py_ssize_t marg_i = np.int(500./np.round(Gr.dims.dx[0]))  # width of margin
-        # double marg = marg_i*Gr.dims.dx[0]  # width of margin
         double marg = namelist['init']['marg']
         Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
         Py_ssize_t ic = np.int(namelist['init']['ic'])   # np.int(Gr.dims.n[0] / 2)
         Py_ssize_t jc = np.int(namelist['init']['jc'])   # np.int(Gr.dims.n[1] / 2)
         double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
         double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
-        # Py_ssize_t [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-        # double k_max = 0
         double z_max = 0
-        double r, r2
-        double rstar2 = rstar**2
-        double rstar_marg2 = (rstar+marg)**2
+        # Py_ssize_t [:,:,:] k_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.int)
+        # double k_max = 0
+        double r
+        # double rstar2 = rstar**2
+        # double rstar_marg2 = (rstar+marg)**2
 
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
     Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
-    # Pa.root_print(np.asarray(Gr.x_half[:]))
-    # Pa.root_print(np.asarray(Gr.y_half[:]))
 
     # theta anomaly
     np.random.seed(Pa.rank)     # make Noise reproducable
     cdef:
         double th
         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
-        # double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
-        double [:,:,:] theta_z = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         double theta_pert_
 
-    # count_0 = 0
-    # count_1 = 0
+    # initialize background stratification
+    if casename[22:28] == 'stable':
+        Nv = 5e-5
+        g = 9.81
+        for k in xrange(Gr.dims.nlg[2]):
+            if Gr.zl_half[k] <= 1000.:
+                theta_bg[k] = th_g
+            else:
+                theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+    else:
+        for k in xrange(Gr.dims.nlg[2]):
+            theta_bg[k] = th_g
+
+    # initialize Cold Pool
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
@@ -536,23 +542,20 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            if r2 <= rstar2:
-            # if r <= rstar:
-            #     k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
-            #     k_max_arr[0, i, j] = np.int(np.round(k_max))
+            # r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+            #              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+            if r <= rstar:
+                # k_max = kstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+                # k_max_arr[0, i, j] = np.int(np.round(k_max))
                 z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
                 z_max_arr[0, i, j] = z_max
 
-            if r2 <= rstar_marg2:
-            # if r <= (rstar + marg):
-            #     k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-            #     k_max_arr[1, i, j] = np.int(np.round(k_max))
+            if r <= (rstar + marg):
+                # k_max = (kstar + marg_i) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+                # k_max_arr[1, i, j] = np.int(np.round(k_max))
                 z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
 
-            # for k in xrange(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
                 PV.values[u_varshift + ijk] = 0.0
@@ -565,27 +568,20 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 # th = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * r) + 1.0) /2.0
                 # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
 
-                # if (k-gw) <= k_max_arr[0, i, j]:
-                #     theta[i,j,k] = th_g - dTh
-                # elif (k-gw) <= k_max_arr[1, i, j]:
-                #     th = th_g - dTh * np.sin(( (k-gw) - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j]) * np.pi/2) ** 2
-                #     theta[i, j, k] = th
-
                 if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    theta_z[i,j,k] = th_g - dTh
+                    theta[i,j,k] = theta_bg[k] - dTh
                 elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-                    theta_z[i, j, k] = th
+                    th = theta_bg[k] - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                    theta[i, j, k] = th
 
                 if k <= kstar + 2:
                     theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
                 else:
                     theta_pert_ = 0.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
+                # Sullivan, Bomex, etc.:
                 # t = (theta[k] + theta_pert_)*exner_c(RS.p0_half[k])
-                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],th,0.0,0.0,0.0)
-
-    # Pa.root_print('Initialization: finished PV initialization')
+                # PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
 
     # ''' Initialize passive tracer phi '''
     Pa.root_print('initialize passive tracer phi')
@@ -598,7 +594,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                                     ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
     Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
     Pa.root_print('')
@@ -639,9 +636,7 @@ def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.
         double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double z_max = 0
-        double r, r2
-        # double rstar2 = rstar**2
-        # double rstar_marg2 = (rstar+marg)**2
+        double r
         double rstar_marg = (rstar+marg)
 
     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
@@ -675,8 +670,6 @@ def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.
 
             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            # r2 = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-            #              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
             if r <= rstar:
                 z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
                 z_max_arr[0, i, j] = z_max
@@ -713,6 +706,9 @@ def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.
     Pa.root_print('Initialization: finished initialization')
 
     return
+
+
+
 
 
 
@@ -877,7 +873,8 @@ def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.
 
 
 def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                              ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
     Pa.root_print('Initialization: Double Dry Cold Pool (3D)')
     Pa.root_print('')
@@ -1080,10 +1077,9 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 
-
-
 def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-            ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+            ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                              ParallelMPI.ParallelMPI Pa, LatentHeat LH):
 
     Pa.root_print('')
     Pa.root_print('Initialization: Triple Dry Cold Pool (3D)')
@@ -1425,7 +1421,8 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 #     return
 
 def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                       ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
 
     #Generate the reference profiles
     RS.Pg = 1.0e5  #Pressure at ground
@@ -1495,8 +1492,10 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
 
 
 
+
 def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+              ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
 
     # First generate the reference profiles
     RS.Pg = 1.015e5  #Pressure at ground
@@ -1626,7 +1625,9 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 
 
     return
-#
+
+
+
 # def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
 #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
 #
@@ -3296,6 +3297,8 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #             f_1 = f_2
 #
 #     return t_2, ql_2
+
+
 
 def qv_star_rh(p0, rh, pv):
     val = eps_v*pv/(p0-pv)/(1 + rh*eps_v*pv/(p0-pv))
