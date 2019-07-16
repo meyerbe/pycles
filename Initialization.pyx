@@ -44,10 +44,9 @@ def InitializationFactory(namelist):
         elif casename == 'ColdPoolDry_triple_3D':
             return InitColdPoolDry_triple_3D
         elif casename == 'ColdPoolDry_single_3D_stable':
-            # return InitColdPoolDry_single_3D_stable
             return InitColdPoolDry_single_3D
-        # elif casename == 'ColdPoolDry_triple_3D_stable':
-        #     return InitColdPoolDry_triple_3D_stable
+        elif casename == 'ColdPoolDry_triple_3D_stable':
+            return InitColdPoolDry_triple_3D
         elif casename == 'SullivanPatton':
             return InitSullivanPatton
         # elif casename == 'StableBubble':
@@ -461,10 +460,10 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
                               ParallelMPI.ParallelMPI Pa, LatentHeat LH):
-    casename = namelist['meta']['casename']
     Pa.root_print('')
     Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
     Pa.root_print('')
+    casename = namelist['meta']['casename']
     # set zero ground humidity, no horizontal wind at ground
 
     #Generate reference profiles
@@ -1084,6 +1083,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('')
     Pa.root_print('Initialization: Triple Dry Cold Pool (3D)')
     Pa.root_print('')
+    casename = namelist['meta']['casename']
     # set zero ground humidity, no horizontal wind at ground
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
@@ -1111,16 +1111,14 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     cdef:
         double dTh = namelist['init']['dTh']
         double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
-        Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         double marg = namelist['init']['marg']
         Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
         double [:] r = np.ndarray((3), dtype=np.double)
-        double [:] r2 = np.ndarray((3), dtype=np.double)
-        # double r, r2
-        double rstar2 = rstar**2
-        double rstar_marg2 = (rstar+marg)**2
+        # double [:] r2 = np.ndarray((3), dtype=np.double)
+        # double rstar2 = rstar**2
+        # double rstar_marg2 = (rstar+marg)**2
         Py_ssize_t n, nmin
 
     # geometry of cold pool: equilateral triangle with center in middle of domain
@@ -1165,9 +1163,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
         # double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
 
-        # double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-        # double k_max = 0
         double z_max = 0
 
     # theta-anomaly
@@ -1175,14 +1171,25 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     cdef:
         double th
         double th_g = 300.0  # value from Soares Surface
-        # ''' ??? correct dimensions with nlg? '''
-        # double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-        double [:,:,:] theta_z = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double theta_pert_
+    # initialize background stratification
+    if casename[22:28] == 'stable':
+        Nv = 5e-5
+        g = 9.81
+        for k in xrange(Gr.dims.nlg[2]):
+            if Gr.zl_half[k] <= 1000.:
+                theta_bg[k] = th_g
+            else:
+                theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+    else:
+        for k in xrange(Gr.dims.nlg[2]):
+            theta_bg[k] = th_g
 
-    Pa.root_print('initial settings: r='+str(rstar)+', ir='+str(irstar)+', z='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
     Pa.root_print('margin of Th-anomaly: di='+str(marg_i))
     Pa.root_print('distance btw cps: d='+str(d*Gr.dims.dx[0])+', id='+str(d))
 
@@ -1197,7 +1204,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('cp3: [' + str(ic3) + ', ' + str(jc3) + ']')
     Pa.root_print('')
 
-    ''' compute k_max '''
+    ''' compute z_max '''
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
@@ -1206,15 +1213,17 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             for n in range(3):
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
                              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
-                r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
-                             (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+                # r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
+                #              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
-            if (r2[nmin] <= rstar_marg2):
+            # if (r2[nmin] <= rstar_marg2):
+            if (r[nmin] <= (rstar + marg)):
                 z_max = (zstar + marg) * ( np.cos( r[nmin]/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
                 # z_max_arr[1, i+(ic2-ic1), j+(jc2-jc1)] = z_max
                 # z_max_arr[1, i+(ic3-ic1), j+(jc3-jc1)] = z_max
-                if (r2[nmin] <= rstar2):
+                # if (r2[nmin] <= rstar2):
+                if (r[nmin] <= rstar):
                     z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi / 2 )) ** 2
                     z_max_arr[0, i, j] = z_max
                     # z_max_arr[0, i+(ic2-ic1), j+(jc2-jc1)] = z_max
@@ -1227,33 +1236,18 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[w_varshift + ijk] = 0.0
 
                 if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    theta_z[i,j,k] = th_g - dTh
+                    theta[i,j,k] = theta_bg[k] - dTh
                 elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-                    theta_z[i, j, k] = th
+                    th = theta_bg[k] - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                    theta[i, j, k] = th
 
                 # --- adding noise ---
                 if k <= kstar + 2:
                     theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
                 else:
                     theta_pert_ = 0.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
+                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
 
-
-
-    # for i in xrange(ic1 + irstar + 10):
-    #     for j in xrange(jc1 + irstar + 10):
-    #         if k_max_arr[1, i, j] > 0:
-    #             for k in xrange(Gr.dims.nlg[2]):
-    #                 th = th_g
-    #                 if k <= k_max_arr[0, i, j]:
-    #                     th = th_g - dTh
-    #                 elif k <= k_max_arr[1, i, j]:
-    #                     # th = th_g - dTh
-    #                     th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
-    #                 theta[i, j, k] = th
-    #                 theta[i, j + d, k] = theta[i, j, k]
-    #                 theta[i + a, j + dhalf, k] = theta[i, j, k]
 
     # '''plotting'''
     # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
