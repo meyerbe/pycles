@@ -4,7 +4,7 @@
 #cython: initializedcheck=False
 #cython: cdivision=True
 
-import pylab as plt
+#import pylab as plt
 
 import netCDF4 as nc
 import numpy as np
@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 
@@ -522,13 +522,14 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # initialize background stratification
     if casename[22:28] == 'stable':
-        Nv = 5e-5
+        Pa.root_print('initializing stable CP')
+        Nv2 = 5e-5  # Brunt-Vaisalla frequency [Nv2] = s^-2
         g = 9.81
         for k in xrange(Gr.dims.nlg[2]):
             if Gr.zl_half[k] <= 1000.:
                 theta_bg[k] = th_g
             else:
-                theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+                theta_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
@@ -557,6 +558,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
+                theta[i, j, k] = theta_bg[k]
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
@@ -1178,6 +1180,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double theta_pert_
     # initialize background stratification
     if casename[22:28] == 'stable':
+        Pa.root_print('initializing stable CP')
         Nv = 5e-5
         g = 9.81
         for k in xrange(Gr.dims.nlg[2]):
@@ -1231,6 +1234,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
+                theta[i, j, k] = theta_bg[k]
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
