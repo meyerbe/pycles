@@ -180,11 +180,11 @@ def ColdPoolDry_2D(number):
     namelist['grid']['dz'] = 100.0
 
     namelist['init'] = {}
-    namelist['init']['dTh'] = 3.0      # temperature anomaly
+    namelist['init']['dTh'] = 3.0       # temperature anomaly
     namelist['init']['shape'] = 1       # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0      # initial height of temperature anomaly
     namelist['init']['r'] = 1000.0      # initial radius of temperature anomaly
-    namelist['init']['marg'] = 500.  # width or margin (transition for temeprature anomaly)
+    namelist['init']['marg'] = 200.     # width or margin (transition for temeprature anomaly)
     if number == 'single':
         namelist['init']['ic'] = namelist['grid']['nx'] / 2
 
@@ -280,20 +280,28 @@ def ColdPoolDry_3D(number):
     namelist['grid']['ny'] = 200
     namelist['grid']['nz'] = 150        # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
-    namelist['grid']['dx'] = 200.0
-    namelist['grid']['dy'] = 200.0
+    namelist['grid']['dx'] = 100.0
+    namelist['grid']['dy'] = 100.0
     namelist['grid']['dz'] = 100.0
 
     namelist['init'] = {}
+    rstar = 1000.0
     namelist['init']['dTh'] = 2.0           # temperature anomaly
     namelist['init']['shape'] = 1           # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0          # initial height of temperature anomaly
-    namelist['init']['r'] = 1000.0          # initial radius of temperature anomaly
+    namelist['init']['r'] = rstar           # initial radius of temperature anomaly
     namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
     if number == 'single':
         namelist['init']['ic'] = namelist['grid']['nx'] / 2
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
-
+    elif number == 'double':
+        d = 10 * rstar
+        # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
+        namelist['init']['sep'] = d
+    elif number == 'triple':
+        d = 10 * rstar
+        namelist['init']['d'] = d
+        namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
     namelist['mpi']['nprocy'] = 1
@@ -368,8 +376,12 @@ def ColdPoolDry_3D(number):
         namelist['meta']['casename'] = 'ColdPoolDry_triple_3D'
         namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
 
+    namelist['surface'] = {}
+    # schemes: 'none', 'bulk', 'const'
+    namelist['surface']['scheme'] = 'none'
+
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 20.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
