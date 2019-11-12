@@ -883,7 +883,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
     # # for plotting
-    from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
+    #from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     cdef:
         PrognosticVariables.PrognosticVariables PV_ = PV
 
@@ -916,8 +916,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        # double marg = marg_i*Gr.dims.dx[0]  # width of margin
-        # Py_ssize_t marg_i = 5  # width of margin
         double marg = namelist['init']['marg']
         Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
         double [:] r = np.ndarray((2), dtype=np.double)
@@ -936,25 +934,21 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # imax = imin + 2*istar + 2*marg_i
         # jmin = jc - jstar - marg_i
         # jmax = jmin + 2*jstar + 2*marg_i
-        Py_ssize_t sep = namelist['init']['sep']
-        Py_ssize_t isep = sep*irstar
+        double sep = namelist['init']['sep']
+        Py_ssize_t isep = np.int(np.round(sep/Gr.dims.dx[0]))
         Py_ssize_t jsep = 0
-        Py_ssize_t ic = np.int(namelist['init']['ic'])
+        #Py_ssize_t ic = np.int(namelist['init']['ic'])
+        Py_ssize_t ic =  np.int(np.round(Gr.dims.n[0]/2))
+        Py_ssize_t jc =  np.int(np.round(Gr.dims.n[1]/2))
         Py_ssize_t ic1 = ic - np.int(np.round(isep / 2))
-        Py_ssize_t jc1 = namelist['init']['jc']
-        # Py_ssize_t ic1 = namelist['init']['ic1']
-        # Py_ssize_t jc1 = namelist['init']['jc1']
+        #Py_ssize_t jc1 = np.int(namelist['init']['jc'])
+        Py_ssize_t jc1 = jc
         Py_ssize_t ic2 = ic1 + isep
         Py_ssize_t jc2 = jc1 + jsep
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2])
         Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2])
         double [:] xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]])
         double [:] yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]])
-        # double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
-        # double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
-        # double xc2 = Gr.x_half[ic1]       # center of cold-pool 2
-        # double yc2 = Gr.y_half[jc2]       # center of cold-pool 2
-        # Py_ssize_t ir
         # double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         # double k_max = 0
