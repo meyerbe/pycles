@@ -66,7 +66,7 @@ def main():
         namelist = Bomex()
     else:
         print('Not a valid case name')
-        print('(REMEMBER: not all cases in generate_namelist_sbatch.py')
+        print('(REMEMBER: not all cases in generate_namelist_sbatch.py)')
         exit()
 
     if case_name[0:11] == 'ColdPoolDry':
@@ -216,11 +216,9 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
     elif number == 'double':
         # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
-        namelist['init']['ic'] = np.int(namelist['grid']['nx'] / 2)
-        namelist['init']['jc'] = np.int(namelist['grid']['ny'] / 2)
-        # namelist['init']['ic1'] = namelist['grid']['nx'] / 3
-        # namelist['init']['jc1'] = namelist['grid']['ny'] / 2
-        namelist['init']['sep'] = 7
+        #namelist['init']['ic'] = np.int(namelist['grid']['nx'] / 2)
+        #namelist['init']['jc'] = np.int(namelist['grid']['ny'] / 2)
+        namelist['init']['sep'] = np.int(d)
     elif number == 'triple':
         # d: side length of equilateral triangle with 3 CPs at edges
         d = 10 * rstar
