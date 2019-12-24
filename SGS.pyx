@@ -36,20 +36,15 @@ cdef extern from "sgs.h":
                             double* strain_rate_mag, double const_visc, double prt)
 
 
-
 cdef class SGS:
     def __init__(self,namelist):
         if(namelist['sgs']['scheme'] == 'UniformViscosity'):
-            print(namelist['sgs']['scheme'])
             self.scheme = UniformViscosity(namelist)
         elif(namelist['sgs']['scheme'] == 'UniformViscosity_cond'):
-            print(namelist['sgs']['scheme'])
             self.scheme = UniformViscosity_cond(namelist)
         elif(namelist['sgs']['scheme'] == 'Smagorinsky'):
-            print(namelist['sgs']['scheme'])
             self.scheme = Smagorinsky(namelist)
         elif(namelist['sgs']['scheme'] == 'TKE'):
-            print(namelist['sgs']['scheme'])
             self.scheme = TKE(namelist)
 
         return
@@ -133,6 +128,7 @@ cdef class UniformViscosity_cond:
             self.const_viscosity = 0.0
 
         self.prt = 1.0/3.0
+
         print('SGS cond, DV:', self.const_diffusivity)
         print('SGS cond, EV:', self.const_viscosity)
         return

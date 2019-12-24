@@ -202,7 +202,6 @@ cdef class ReferenceState:
         NS.add_reference_profile('qi0', Gr, Pa, units=units, nice_name = nice_name, desc=desc)
         NS.write_reference_profile('qi0', qi_half[Gr.dims.gw:-Gr.dims.gw], Pa)
 
-
         # plt.figure(figsize=(6,9))
         # plt.subplot(2,1,1)
         # plt.plot(Gr.z_half,self.rho0_half, '-o', label='rho0_half')

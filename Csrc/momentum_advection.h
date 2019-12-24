@@ -93,6 +93,8 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
             weno_ninth_order_m_pt(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,
                 tendency, d_advected, d_advecting);
             break;
+<<<<<<< HEAD
+=======
 
         // the following schemes are quasi-linear modifications of the cases 2, 4, 14 and 5
         case 102:
@@ -130,6 +132,7 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
                 tendency, d_advected, d_advecting);
             break;
 
+>>>>>>> 41586439b0206325c7d77f964e0a7889f1881122
         default:
             // Default set to second order scheme.
             second_order_m(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,

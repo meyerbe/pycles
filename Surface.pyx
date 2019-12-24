@@ -26,7 +26,6 @@ include "parameters.pxi"
 import cython
 
 
-
 cdef extern from "advection_interpolation.h":
     double interp_2(double phi, double phip1) nogil
 cdef extern from "thermodynamic_functions.h":
@@ -53,13 +52,17 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
             return SurfaceColdPools(LH)
         elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
                 or casename == 'ColdPoolDry_triple_3D':
-            Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
-            if namelist['surface']['scheme'] == 'bulk':
-                return SurfaceColdPools(LH)
-            elif namelist['surface']['scheme'] == 'const':
-                return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
-            # if namelist['surface']['scheme'] == 'none':
-            else:
+            try:
+                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
+                if namelist['surface']['scheme'] == 'bulk':
+                    return SurfaceColdPools(LH)
+                elif namelist['surface']['scheme'] == 'const':
+                    return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+                # if namelist['surface']['scheme'] == 'none':
+                else:
+                    return SurfaceNone()
+            except:
+                Par.root_print('nml surface scheme: none')
                 return SurfaceNone()
         elif casename == 'Bomex':
             return SurfaceBomex(LH)
@@ -660,8 +663,6 @@ cdef class SurfaceDYCOMS_RF01(SurfaceBase):
         SurfaceBase.stats_io(self, Gr, NS, Pa)
 
         return
-
-
 
 
 cdef class SurfaceDYCOMS_RF02(SurfaceBase):

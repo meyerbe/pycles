@@ -160,16 +160,11 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         #double zstar = 2000.0
         int kstar = np.int(np.round(zstar / Gr.dims.dx[2]))       # initial height of cold-pool [m]
         # int marg_i = 5                                            # width of margin [# of grid points]
-        # double marg = marg_i*Gr.dims.dx[0]
         double marg = 1000                                            # width of margin [m]
         int marg_i = np.int(np.round(marg/Gr.dims.dx[0]))
         double xc = Gr.x_half[np.int(Gr.dims.ng[0]/2)]      # center of cold-pool
-        # 0 = k_max[i], 1 = (1-marg)*k_max[i], 2 = k_max[i+-10]
-        # (k_max[0,:] more narrow than k_max_arr[1,:])
         double [:,:] k_max_arr = np.zeros((3,Gr.dims.ng[0]))
         Py_ssize_t k_max = 0
-
-
 
 
     ''' (b) theta-anomaly'''
@@ -186,20 +181,14 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double theta_pert_
 
-        # thetas_t_c(RS.p0_half, RS.Tg, 0.0, 0.0, 0.0)
-
-
     # margin
     for i in xrange(Gr.dims.nlg[0]):
-        # ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         x = Gr.x_half[i + Gr.dims.indx_lo[0]]
         if np.abs(x-xc) <= (xstar + marg):
             z_max = (zstar+marg) * (np.cos( (x-xc) / (xstar+marg)*np.pi/2 )**2 )
             k_max = np.int(np.round(z_max / Gr.dims.dx[2]))
             k_max_arr[1,i] = k_max
-            # k_max_arr[1,i] = (1.-marg)*k_max
             if np.abs(x-xc) <= xstar:
-                # z_max = zstar * (np.cos( (x-xc) / (xstar-xc)*np.pi/2 )**2 )
                 z_max = zstar * (np.cos( (x-xc) / xstar*np.pi/2 )**2 )
                 k_max = np.int(np.round(z_max / Gr.dims.dx[2]))
                 k_max_arr[0,i] = k_max
@@ -221,13 +210,6 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
             imax = i + marg_i
             break
     ic_arr[0] = ic
-
-    # for i in xrange(imin, ic-marg_i):
-    #     k_max_arr[2,i] = k_max_arr[0, i+marg_i]
-    # for i in xrange(ic-marg_i, ic+marg_i):
-    #     k_max_arr[2,i] = k_max_arr[0, ic]
-    # for i in xrange(ic+marg_i, imax+1):
-    #     k_max_arr[2,i] = k_max_arr[0, i-marg_i]
 
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
@@ -365,8 +347,6 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t imin2 = imin1 + isep
         Py_ssize_t imax1 = imin1 + 2*istar + 2*marg_i
         Py_ssize_t imax2 = imax1 + isep
-        # k_max_arr[0,:] = k_max[i], k_max_arr[1,:] = k_max[i +- i_marg]
-        # (k_max[0,:] more narrow than k_max_arr[1,:])
         double [:,:] k_max_arr = np.zeros((2,Gr.dims.ng[0]), dtype=np.double)
         double k_max = 0
 
@@ -377,18 +357,10 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # if np.abs(i-ic1) <= (istar + marg_i):
             # !! important to take cos of a double number; if i is an integer, it's like np.int(cos(i))
             # cos(i/(istar+marg_i))**2 >> wider cos-function
-            # k_max = kstar * (np.cos(np.double(i - ic1) / (istar+marg_i) * np.pi / 2)) ** 2
-            # k_max = (kstar+marg_i) * (np.cos(np.double(i - ic1) / (istar+marg_i) * np.pi / 2)) ** 2
             k_max = (kstar+marg_i) * (np.cos( (Gr.x_half[i] - xc1) / (xstar+marg) * np.pi / 2)) ** 2
             k_max_arr[1, i] = np.int(np.round(k_max))
-            # if imin1 == 0:
-            #     imin1 = i
 
-            # if np.abs(i-ic1) <= istar:
             if np.abs(Gr.x_half[i]-xc1) <= xstar:
-                # if imin1 == 0:
-                #     imin1 = i
-                # k_max = kstar * (np.cos( np.double(i-ic1) / istar * np.pi / 2 ) )**2
                 k_max = kstar * (np.cos( (Gr.x_half[i]-xc1) / istar * np.pi / 2 ) )**2
                 k_max_arr[0,i] = np.int(np.round(k_max))
 
@@ -706,6 +678,9 @@ def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.
 
 
 
+
+
+
 # # def InitColdPoolDry_single_3D_asymm(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 # #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
 # #     Pa.root_print('')
@@ -876,7 +851,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
     # # for plotting
-    from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
+    #from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     cdef:
         PrognosticVariables.PrognosticVariables PV_ = PV
 
@@ -909,8 +884,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t irstar = np.int(np.round(rstar / Gr.dims.dx[0]))
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        # double marg = marg_i*Gr.dims.dx[0]  # width of margin
-        # Py_ssize_t marg_i = 5  # width of margin
         double marg = namelist['init']['marg']
         Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
         double [:] r = np.ndarray((2), dtype=np.double)
@@ -929,25 +902,21 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         # imax = imin + 2*istar + 2*marg_i
         # jmin = jc - jstar - marg_i
         # jmax = jmin + 2*jstar + 2*marg_i
-        Py_ssize_t sep = namelist['init']['sep']
-        Py_ssize_t isep = sep*irstar
+        double sep = namelist['init']['sep']
+        Py_ssize_t isep = np.int(np.round(sep/Gr.dims.dx[0]))
         Py_ssize_t jsep = 0
-        Py_ssize_t ic = np.int(namelist['init']['ic'])
+        #Py_ssize_t ic = np.int(namelist['init']['ic'])
+        Py_ssize_t ic =  np.int(np.round(Gr.dims.n[0]/2))
+        Py_ssize_t jc =  np.int(np.round(Gr.dims.n[1]/2))
         Py_ssize_t ic1 = ic - np.int(np.round(isep / 2))
-        Py_ssize_t jc1 = namelist['init']['jc']
-        # Py_ssize_t ic1 = namelist['init']['ic1']
-        # Py_ssize_t jc1 = namelist['init']['jc1']
+        #Py_ssize_t jc1 = np.int(namelist['init']['jc'])
+        Py_ssize_t jc1 = jc
         Py_ssize_t ic2 = ic1 + isep
         Py_ssize_t jc2 = jc1 + jsep
         Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2])
         Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2])
         double [:] xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]])
         double [:] yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]])
-        # double xc1 = Gr.x_half[ic1]         # center of cold-pool 1
-        # double yc1 = Gr.y_half[jc1]         # center of cold-pool 1
-        # double xc2 = Gr.x_half[ic1]       # center of cold-pool 2
-        # double yc2 = Gr.y_half[jc2]       # center of cold-pool 2
-        # Py_ssize_t ir
         # double [:,:,:] k_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.ng[0], Gr.dims.ng[1]), dtype=np.double)
         # double k_max = 0
@@ -974,7 +943,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
-
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2) # not MPI-compatible
             for n in range(2):
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
@@ -1032,20 +1000,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta_z[i, j, k] + theta_pert_, 0.0)
 
-
-    # for i in xrange(ic1 + irstar + 10):
-    #     for j in xrange(jc1 + irstar + 10):
-    #     #for j in xrange(Gr.dims.nlg[1]):
-    #         if k_max_arr[1, i, j] > 0:
-    #             for k in xrange(Gr.dims.nlg[2]):
-    #                 th = th_g
-    #                 if k <= k_max_arr[0, i, j]:
-    #                     th = th_g - dTh
-    #                 elif k <= k_max_arr[1, i, j]:
-    #                     # th = th_g - dTh
-    #                     th = th_g - dTh * np.sin((k - k_max_arr[1, i, j]) / (k_max_arr[1, i, j] - k_max_arr[0, i, j])) ** 2
-    #                 theta[i, j, k] = th
-    #                 theta[i+isep, j+jsep, k] = th
 
     # ''' plotting '''
     # j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
@@ -1280,6 +1234,54 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 
+def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+
+    #Generate reference profiles
+    RS.Pg = 1.0e5
+    RS.Tg = 300.0
+    RS.qtg = 0.0
+    #Set velocities for Galilean transformation
+    RS.u0 = 0.0
+    RS.v0 = 0.0
+
+    RS.initialize(Gr, Th, NS, Pa)
+
+    #Get the variable number for each of the velocity components
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk
+        double t
+        double dist
+
+    t_min = 9999.9
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = 0.0
+                PV.values[v_varshift + ijk] = 0.0
+                PV.values[w_varshift + ijk] = 0.0
+                # dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                # dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/8.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                dist  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 10.0)/1.2)**2.0)     # changed since VisualizationOutput defined in yz-plane
+                dist = fmin(dist,1.0)
+                t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
+
+    return
+
+
+
+
+
 # def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
 #
@@ -1480,6 +1482,7 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
                     ijk = ishift + jshift + k
                     PV.values[e_varshift + ijk] = 0.0
     return
+
 
 
 

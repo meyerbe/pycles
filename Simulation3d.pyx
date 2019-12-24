@@ -106,7 +106,7 @@ class Simulation3d:
         self.Th.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
         self.Micro.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
         self.SGS.initialize(self.Gr,self.PV,self.StatsIO, self.Pa)
-        self.Tr.initialize(self.Gr, self.PV,self.StatsIO, self.Pa)
+        self.Tr.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
         self.PV.initialize(self.Gr, self.StatsIO, self.Pa)
         self.Ke.initialize(self.Gr, self.StatsIO, self.Pa)
 
@@ -135,8 +135,6 @@ class Simulation3d:
             self.PV.init_from_restart(self.Gr, self.Restart)
             self.Sur.init_from_restart(self.Restart)
             self.StatsIO.last_output_time = self.Restart.restart_data['last_stats_output']
-            # self.Pa.root_print('Restart output times')
-            # self.Pa.root_print(str(self.Restart.restart_data['last_stats_output']) + ', ' + str(self.Restart.restart_data['last_condstats_output']) + ', ' + str(self.Restart.restart_data['last_vis_time']))
             self.CondStatsIO.last_output_time = self.Restart.restart_data['last_condstats_output']
             self.FieldsIO.last_output_time = self.Restart.restart_data['last_fields_output']
             self.Restart.last_restart_time = self.Restart.restart_data['last_restart_time']
@@ -192,7 +190,7 @@ class Simulation3d:
                 self.Ke.update(self.Gr,PV_)
                 self.Th.update(self.Gr,self.Ref,PV_,DV_)
                 self.Micro.update(self.Gr, self.Ref, self.Th, PV_, DV_, self.TS, self.Pa)
-                self.Tr.update(self.Gr, self.Ref, PV_, DV_, self.Pa)
+                self.Tr.update(self.Gr, self.Ref, PV_, DV_, self.TS, self.Pa)
                 self.SA.update(self.Gr,self.Ref,PV_, DV_,  self.Pa)
                 self.MA.update(self.Gr,self.Ref,PV_,self.Pa)
                 self.Sur.update(self.Gr, self.Ref,self.PV, self.DV,self.Pa,self.TS)
@@ -208,7 +206,7 @@ class Simulation3d:
                 self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa)
                 self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa)
                 self.Budg.update(self.Gr,self.Ra, self.Sur, self.TS, self.Pa)
-                self.Tr.update_cleanup(self.Gr, self.Ref, PV_, DV_, self.Pa)
+                self.Tr.update_cleanup(self.Gr, self.Ref, PV_, DV_, self.Pa, self.TS)
                 self.TS.update(self.Gr, self.PV, self.Pa)
                 PV_.Update_all_bcs(self.Gr, self.Pa)
                 self.Pr.update(self.Gr, self.Ref, self.DV, self.PV, self.Pa)
@@ -314,7 +312,7 @@ class Simulation3d:
                 self.SD.stats_io(self.Gr, self.Ref,self.PV, self.DV, self.StatsIO, self.Pa)
                 self.MD.stats_io(self.Gr, self.PV, self.DV, self.Ke, self.StatsIO, self.Pa)
                 self.Ke.stats_io(self.Gr,self.Ref,self.PV,self.StatsIO,self.Pa)
-                self.Tr.stats_io( self.Gr, self.StatsIO, self.Pa)
+                self.Tr.stats_io(self.Gr, self.PV, self.DV, self.TS, self.StatsIO, self.Pa)
                 self.Ra.stats_io(self.Gr, self.Ref, self.DV, self.StatsIO, self.Pa)
                 self.Budg.stats_io(self.Sur, self.StatsIO, self.Pa)
                 self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)
@@ -359,6 +357,7 @@ class Simulation3d:
 
 
     def force_io(self):
+        # output stats here
         # Pa.barrier()
         # output stats here
         # self.Pa.root_print('Sim.force_io')
@@ -387,7 +386,7 @@ class Simulation3d:
         self.SD.stats_io(self.Gr, self.Ref,self.PV, self.DV, self.StatsIO, self.Pa)
         self.MD.stats_io(self.Gr, self.PV, self.DV, self.Ke, self.StatsIO, self.Pa)
         self.Ke.stats_io(self.Gr, self.Ref, self.PV, self.StatsIO, self.Pa)
-        self.Tr.stats_io( self.Gr, self.StatsIO, self.Pa)
+        self.Tr.stats_io(self.Gr, self.PV, self.DV, self.TS, self.StatsIO, self.Pa)
         self.Ra.stats_io(self.Gr, self.Ref, self.DV, self.StatsIO, self.Pa)
         self.Budg.stats_io(self.Sur, self.StatsIO, self.Pa)
         self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)

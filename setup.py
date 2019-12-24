@@ -29,15 +29,13 @@ if sys.platform == 'darwin':
     extra_compile_args = []
     extra_compile_args += ['-O3', '-march=native', '-Wno-unused', '-Wno-#warnings','-fPIC']
     extra_objects=['./RRTMG/rrtmg_build/rrtmg_combined.o']
-    # netcdf_include = '/opt/local/include'
-    netcdf_include = get_netcdf_include()
-    # netcdf_lib = '/opt/local/lib'
-    netcdf_lib = os.path.join(get_netcdf_prefix(), 'lib')
-    # f_compiler = 'gfortran'
-    f_compiler = 'gfortran-mp-4.8'
-
+    # netcdf_include = get_netcdf_include()
+    netcdf_include = '/opt/local/include'
+    netcdf_lib = '/opt/local/lib'
+    # netcdf_lib = os.path.join(get_netcdf_prefix(), 'lib')
     # upstream: setup
     # f_compiler = 'gfortran'
+    f_compiler = 'gfortran-mp-4.8'
 
 # elif 'euler' in platform.node():
 elif 'eu' in platform.node():
@@ -63,6 +61,13 @@ elif (platform.machine()  == 'x86_64') and ('LD_LIBRARY_PATH' in os.environ):
     extensions = []
     extra_compile_args=[]
     extra_objects = ['./RRTMG/rrtmg_build/rrtmg_combined.o']
+    extra_compile_args+=['-std=c99', '-O3', '-march=native', '-Wno-unused',
+                         '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
+    extra_objects=['./RRTMG/rrtmg_build/rrtmg_combined.o']
+    netcdf_include = '/cluster/apps/netcdf/4.3.1/x86_64/gcc_4.8.2/openmpi_1.6.5/include'
+    netcdf_lib = '/cluster/apps/netcdf/4.3.1/x86_64/gcc_4.8.2/openmpi_1.6.5/lib'
+    netcdf_include = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/include'
+    netcdf_lib = '/share/apps/software/rhel6/software/netCDF/4.4.0-foss-2016a/lib'
     f_compiler = 'gfortran'
 
     # # Central @ Caltech

@@ -340,8 +340,8 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
                     for k in xrange(kmin, kmax):
                         ijk = ishift + jshift + k
                         PV.tendencies[
-                            s_shift + ijk] +=  self.heating_rate[ijk] / DV.values[ijk + t_shift] 
-                        self.dTdt_rad[ijk] = self.heating_rate[ijk] / cpm_c(PV.values[ijk + qt_shift]) 
+                            s_shift + ijk] +=  self.heating_rate[ijk] / DV.values[ijk + t_shift]
+                        self.dTdt_rad[ijk] = self.heating_rate[ijk] / cpm_c(PV.values[ijk + qt_shift])
 
         return
 
