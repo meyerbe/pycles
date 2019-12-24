@@ -46,11 +46,7 @@ cdef class Forcing:
             self.scheme = ForcingRico()
         elif casename == 'StableBubble':
             self.scheme = ForcingNone()
-<<<<<<< HEAD
-        elif casename == 'SaturatedBubble': 
-=======
         elif casename == 'SaturatedBubble':
->>>>>>> 41586439b0206325c7d77f964e0a7889f1881122
             self.scheme = ForcingNone()
         elif casename == 'Isdac':
             self.scheme = ForcingIsdac()
@@ -64,8 +60,6 @@ cdef class Forcing:
             self.scheme = ForcingCGILS(namelist, Pa)
         elif casename == 'ZGILS':
             self.scheme = ForcingZGILS(namelist, LH, Pa)
-<<<<<<< HEAD
-=======
         elif casename == 'DCBLSoares':
             self.scheme = ForcingSoares()
         elif casename == 'DCBLSoares_moist':
@@ -77,7 +71,6 @@ cdef class Forcing:
         elif casename == 'ColdPoolDry_single_3D_stable' or casename == 'ColdPoolDry_double_3D_stable' \
                 or casename == 'ColdPoolDry_triple_3D_stable':
             self.scheme = ForcingNone()
->>>>>>> 41586439b0206325c7d77f964e0a7889f1881122
         else:
             Pa.root_print('No forcing for casename: ' +  casename)
             Pa.root_print('Killing simulation now!!!')
@@ -565,7 +558,6 @@ cdef class ForcingRico:
 
         coriolis_force(&Gr.dims,&PV.values[u_shift],&PV.values[v_shift],&PV.tendencies[u_shift],
                        &PV.tendencies[v_shift],&self.ug[0], &self.vg[0],self.coriolis_param, RS.u0, RS.v0  )
-<<<<<<< HEAD
 
         return
 
@@ -582,24 +574,6 @@ cdef class ForcingIsdac:
 
         return
 
-=======
-
-        return
-
-    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
-                 NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
-
-        return
-
-
-cdef class ForcingIsdac:
-    def __init__(self):
-        self.divergence = 5e-6
-
-        return
-
->>>>>>> 41586439b0206325c7d77f964e0a7889f1881122
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
         self.initial_entropy = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
@@ -1914,8 +1888,6 @@ cdef class ForcingZGILS:
 
 
 
-<<<<<<< HEAD
-=======
 cdef class ForcingSoares:
     def __init__(self):
         return
@@ -1942,7 +1914,6 @@ cdef class ForcingSoares:
 
 
 
->>>>>>> 41586439b0206325c7d77f964e0a7889f1881122
 
 
 cdef extern from "thermodynamics_sa.h":
