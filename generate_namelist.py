@@ -297,10 +297,10 @@ def ColdPoolDry_3D(number):
     elif number == 'double':
         d = 10 * rstar
         # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
-        namelist['init']['sep'] = d
+        namelist['init']['sep'] = d     # separation of CPs
     elif number == 'triple':
         d = 10 * rstar
-        namelist['init']['d'] = d
+        namelist['init']['d'] = d       # separation of CPs in equilateral triangle
         namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
