@@ -13,7 +13,9 @@ def main():
     parser.add_argument('--zstar')
     parser.add_argument('--rstar')
     parser.add_argument('--dTh')
-
+    parser.add_argument('--dx')
+    parser.add_argument('--nprocx')
+    parser.add_argument('--nprocy')
     args = parser.parse_args()
 
     case_name = args.case_name
@@ -35,21 +37,36 @@ def main():
         else:
             dTh = 2.0
 
+        if args.dx:
+            dx = np.double(args.dx)
+        else:
+            dx = 100.0
+
+        if args.nprocx:
+            nprocx = np.int(args.nprocx)
+        else:
+            nprocx = 4
+
+        if args.nprocy:
+            nprocy = np.int(args.nprocy)
+        else:
+            nprocy = 4
+
     if case_name == 'ColdPoolDry_single_2D':
-        namelist = ColdPoolDry_2D('single', zstar, rstar, dTh)
+        namelist = ColdPoolDry_2D('single', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_double_2D':
-        namelist = ColdPoolDry_2D('double', zstar, rstar, dTh)
+        namelist = ColdPoolDry_2D('double', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_single_3D':
-        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh)
+        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh, dx, nprocx, nprocy)
     elif case_name == 'ColdPoolDry_double_3D':
-        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh)
+        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh, dx, nprocx, nprocy)
     elif case_name == 'ColdPoolDry_triple_3D':
-        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh)
+        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh, dx, nprocx, nprocy)
     elif case_name == 'Bomex':
         namelist = Bomex()
     else:
         print('Not a valid case name')
-        print('(REMEMBER: not all cases in generate_namelist_sbatch.py')
+        print('(REMEMBER: not all cases in generate_namelist_sbatch.py)')
         exit()
 
     if case_name[0:11] == 'ColdPoolDry':
@@ -60,7 +77,7 @@ def main():
 
 
 
-def ColdPoolDry_2D(number, zstar, rstar, dTh):
+def ColdPoolDry_2D(number, zstar, rstar, dTh, dx):
 
     namelist = {}
 
@@ -70,9 +87,9 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
     namelist['grid']['ny'] = 5
     namelist['grid']['nz'] = 150
     namelist['grid']['gw'] = 5
-    namelist['grid']['dx'] = 200.0
-    namelist['grid']['dy'] = 200.0
-    namelist['grid']['dz'] = 100.0
+    namelist['grid']['dx'] = dx#200.0
+    namelist['grid']['dy'] = dx#200.0
+    namelist['grid']['dz'] = dx#100.0
 
     namelist['init'] = {}
     # namelist['init']['dTh'] = 2.0      # temperature anomaly
@@ -158,7 +175,7 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
     namelist['surface']['scheme'] = 'none'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 20.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
@@ -171,7 +188,7 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh):
 
 
 
-def ColdPoolDry_3D(number, zstar, rstar, dTh):
+def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
 
     namelist = {}
 
@@ -180,13 +197,13 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     # single CP: Lx=Ly=20km, H=12km
     # double CP: Lx=Ly=30km, H=12km (for z=r=2km, dTh=3K, sep=4r=8km)
     # triple CP: Lx=Ly=40km, H=12km (for z=r=2km, dTh=3K, d=10r)
-    namelist['grid']['nx'] = 200
-    namelist['grid']['ny'] = 200
-    namelist['grid']['nz'] = 120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['nx'] = np.int(400*100./dx)#200            # width of Lx=20km sufficient for run2 (dTh=3K)
+    namelist['grid']['ny'] = np.int(400*100./dx)#200
+    namelist['grid']['nz'] = np.int(120*100./dx)#120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
-    namelist['grid']['dx'] = 100.0#50.0
-    namelist['grid']['dy'] = 100.0#50.0
-    namelist['grid']['dz'] = 100.0#50.0
+    namelist['grid']['dx'] = dx#50.0
+    namelist['grid']['dy'] = dx#50.0
+    namelist['grid']['dz'] = dx#50.0
 
     namelist['init'] = {}
     namelist['init']['dTh'] = dTh           # temperature anomaly
@@ -199,23 +216,22 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
     elif number == 'double':
         # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
-        namelist['init']['ic'] = namelist['grid']['nx'] / 2
-        namelist['init']['jc'] = namelist['grid']['ny'] / 2
-        # namelist['init']['ic1'] = namelist['grid']['nx'] / 3
-        # namelist['init']['jc1'] = namelist['grid']['ny'] / 2
-        namelist['init']['sep'] = 7
+        #namelist['init']['ic'] = np.int(namelist['grid']['nx'] / 2)
+        #namelist['init']['jc'] = np.int(namelist['grid']['ny'] / 2)
+        namelist['init']['sep'] = np.int(d)
     elif number == 'triple':
         # d: side length of equilateral triangle with 3 CPs at edges
         d = 10 * rstar
         namelist['init']['d'] = d
+        namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)      # point of 3-CP collision (ic, jc)
 
     namelist['surface'] = {}
     # schemes: 'none', 'bulk', 'const'
     namelist['surface']['scheme'] = 'none'
 
     namelist['mpi'] = {}
-    namelist['mpi']['nprocx'] = 1
-    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocx'] = nprocx#4
+    namelist['mpi']['nprocy'] = nprocy#4
     namelist['mpi']['nprocz'] = 1
 
     namelist['time_stepping'] = {}
@@ -261,7 +277,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
     namelist['restart']['output'] = True
     namelist['restart']['init_from'] = False
     namelist['restart']['input_path'] = './'
-    namelist['restart']['frequency'] = 300.0
+    namelist['restart']['frequency'] = 600.0
 
     namelist['conditional_stats'] = {}
 
@@ -288,7 +304,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh):
         namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 100.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = 'passive'
@@ -386,7 +402,7 @@ def Bomex():
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
     namelist['visualization'] = {}
-    namelist['visualization']['frequency'] = 1800.0
+    namelist['visualization']['frequency'] = 10000.0
 
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Bomex'
