@@ -45,6 +45,8 @@ def InitializationFactory(namelist):
             return InitColdPoolDry_triple_3D
         elif casename == 'ColdPoolDry_single_3D_stable':
             return InitColdPoolDry_single_3D
+        elif casename == 'ColdPoolDry_double_3D_stable':
+            return InitColdPoolDry_double_3D
         elif casename == 'ColdPoolDry_triple_3D_stable':
             return InitColdPoolDry_triple_3D
         elif casename == 'SullivanPatton':
@@ -801,6 +803,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('')
     Pa.root_print('Initialization: Double Dry Cold Pool (3D)')
     Pa.root_print('')
+    casename = namelist['meta']['casename']
     # set zero ground humidity, no horizontal wind at ground
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
@@ -828,8 +831,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t ishift, jshift
         Py_ssize_t ijk
         Py_ssize_t gw = Gr.dims.gw
-        # Py_ssize_t istride_2d = Gr.dims.nlg[1]
-
 
     # parameters
     cdef:
@@ -840,9 +841,9 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double marg = namelist['init']['marg']
         # Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
         double [:] r = np.ndarray((2), dtype=np.double)
-        double [:] r2 = np.ndarray((2), dtype=np.double)
-        double rstar2 = rstar**2
-        double rstar_marg2 = (rstar+marg)**2
+        # double [:] r2 = np.ndarray((2), dtype=np.double)
+        # double rstar2 = rstar**2
+        # double rstar_marg2 = (rstar+marg)**2
         Py_ssize_t n, nmin
 
     # geometry of cold pool
@@ -869,10 +870,38 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     cdef:
         double th
         double th_g = 300.0  # value from Soares Surface
+        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
         # qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double theta_pert_
+    # initialize background stratification
+    if casename[22:28] == 'stable':
+        Pa.root_print('initializing stable CP')
+        Nv = 5e-5
+        g = 9.81
+        for k in xrange(Gr.dims.nlg[2]):
+            if Gr.zl_half[k] <= 1000.:
+                theta_bg[k] = th_g
+            else:
+                theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+    else:
+        for k in xrange(Gr.dims.nlg[2]):
+            theta_bg[k] = th_g
+
+    Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
+    Pa.root_print('distance btw cps: sep='+str(sep)+'m, isep='+str(sep))
+
+    Pa.root_print('')
+    Pa.root_print('nx: ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
+    Pa.root_print('nxg: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
+    Pa.root_print('gw: ' + str(Gr.dims.gw))
+    Pa.root_print('Cold Pools:')
+    Pa.root_print('cp1: [' + str(ic1) + ', ' + str(jc1) + ']')
+    Pa.root_print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')
+    Pa.root_print('')
+
 
     ''' compute z_max '''
     # method here requires to define (ic1, jc1) as the CP center that is the closest to (0,0)
@@ -1061,18 +1090,18 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
     Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
-    Pa.root_print('distance btw cps: d='+str(d*Gr.dims.dx[0])+', id='+str(d))
+    Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
 
     Pa.root_print('')
     Pa.root_print('nx: ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
-    Pa.root_print('nyg: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
+    Pa.root_print('nxg: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
     Pa.root_print('gw: ' + str(Gr.dims.gw))
-    Pa.root_print('d: ' + str(d) + ', id: ' + str(i_d))
     Pa.root_print('Cold Pools:')
     Pa.root_print('cp1: [' + str(ic1) + ', ' + str(jc1) + ']')
     Pa.root_print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')
     Pa.root_print('cp3: [' + str(ic3) + ', ' + str(jc3) + ']')
     Pa.root_print('')
+
 
     ''' compute z_max '''
     for i in xrange(Gr.dims.nlg[0]):
