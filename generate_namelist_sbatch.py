@@ -15,6 +15,7 @@ def main():
     parser.add_argument('--sep')
     parser.add_argument('--dTh')
     parser.add_argument('--dx')
+    parser.add_argument('--nx')
     parser.add_argument('--nprocx')
     parser.add_argument('--nprocy')
     args = parser.parse_args()
@@ -48,6 +49,15 @@ def main():
         else:
             dx = 100.0
 
+        if args.nx:
+            nx = np.int(args.nx)
+        else:
+            nx = np.int(20.e3/dx)
+        if args.ny:
+            ny = np.int(args.ny)
+        else:
+            ny = nx
+
         if args.nprocx:
             nprocx = np.int(args.nprocx)
         else:
@@ -62,12 +72,12 @@ def main():
         namelist = ColdPoolDry_2D('single', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_double_2D':
         namelist = ColdPoolDry_2D('double', zstar, rstar, dTh, dx)
-    elif case_name == 'ColdPoolDry_single_3D':
-        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh, sep, dx, nprocx, nprocy)
-    elif case_name == 'ColdPoolDry_double_3D':
-        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh, sep, dx, nprocx, nprocy)
-    elif case_name == 'ColdPoolDry_triple_3D':
-        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh, sep, dx, nprocx, nprocy)
+    elif case_name[:21] == 'ColdPoolDry_single_3D':
+        namelist = ColdPoolDry_3D('single', case_name, zstar, rstar, dTh, sep, dx, nx, nx, nprocx, nprocy)
+    elif case_name[:21] == 'ColdPoolDry_double_3D':
+        namelist = ColdPoolDry_3D('double', case_name, zstar, rstar, dTh, sep, dx, nx, ny, nprocx, nprocy)
+    elif case_name[:21] == 'ColdPoolDry_triple_3D':
+        namelist = ColdPoolDry_3D('triple', case_name, zstar, rstar, dTh, sep, dx, nx, nx, nprocx, nprocy)
     elif case_name == 'Bomex':
         namelist = Bomex()
     else:
@@ -194,18 +204,18 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh, dx):
 
 
 
-def ColdPoolDry_3D(number, zstar, rstar, dTh, sep, dx, nprocx, nprocy):
+def ColdPoolDry_3D(number, case_name, zstar, rstar, dTh, sep, dx, nx, ny, nprocx, nprocy):
 
     namelist = {}
 
     namelist['grid'] = {}
     namelist['grid']['dims'] = 3
-    # single CP: Lx=Ly=20km, H=12km
+    # single CP: Lx=Ly=20km, H=12km (width of Lx=20km and height of 12km sufficient for run2 at dTh=3K (dTh3K_z1000_r1000))
     # double CP: Lx=Ly=30km, H=12km (for z=r=2km, dTh=3K, sep=4r=8km)
     # triple CP: Lx=Ly=40km, H=12km (for z=r=2km, dTh=3K, d=10r)
-    namelist['grid']['nx'] = np.int(400*100./dx)#200            # width of Lx=20km sufficient for run2 (dTh=3K)
-    namelist['grid']['ny'] = np.int(400*100./dx)#200
-    namelist['grid']['nz'] = np.int(120*100./dx)#120 #240       # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['nx'] = np.int(nx)#200
+    namelist['grid']['ny'] = np.int(ny)#200
+    namelist['grid']['nz'] = np.int(120*100./dx)#120
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = dx#50.0
     namelist['grid']['dy'] = dx#50.0
@@ -299,15 +309,16 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, sep, dx, nprocx, nprocy):
     namelist['fields_io']['diagnostic_fields'] = ['temperature']
 
     namelist['meta'] = {}
-    if number == 'single':
-        namelist['meta']['casename'] = 'ColdPoolDry_single_3D'
-        namelist['meta']['simname'] = 'ColdPoolDry_single_3D'
-    elif number == 'double':
-        namelist['meta']['casename'] = 'ColdPoolDry_double_3D'
-        namelist['meta']['simname'] = 'ColdPoolDry_double_3D'
-    elif number == 'triple':
-        namelist['meta']['casename'] = 'ColdPoolDry_triple_3D'
-        namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
+    namelist['meta'] = case_name
+    # if number == 'single':
+    #     namelist['meta']['casename'] = 'ColdPoolDry_single_3D'
+    #     namelist['meta']['simname'] = 'ColdPoolDry_single_3D'
+    # elif number == 'double':
+    #     namelist['meta']['casename'] = 'ColdPoolDry_double_3D'
+    #     namelist['meta']['simname'] = 'ColdPoolDry_double_3D'
+    # elif number == 'triple':
+    #     namelist['meta']['casename'] = 'ColdPoolDry_triple_3D'
+    #     namelist['meta']['simname'] = 'ColdPoolDry_triple_3D'
 
     namelist['visualization'] = {}
     namelist['visualization']['frequency'] = 10000.0
