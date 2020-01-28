@@ -12,6 +12,7 @@ def main():
     parser.add_argument('case_name')
     parser.add_argument('--zstar')
     parser.add_argument('--rstar')
+    parser.add_argument('--sep')
     parser.add_argument('--dTh')
     parser.add_argument('--dx')
     parser.add_argument('--nprocx')
@@ -37,6 +38,11 @@ def main():
         else:
             dTh = 2.0
 
+        if args.sep:
+            sep = np.double(args.sep)
+        else:
+            sep = 5*rstar
+
         if args.dx:
             dx = np.double(args.dx)
         else:
@@ -57,11 +63,11 @@ def main():
     elif case_name == 'ColdPoolDry_double_2D':
         namelist = ColdPoolDry_2D('double', zstar, rstar, dTh, dx)
     elif case_name == 'ColdPoolDry_single_3D':
-        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh, dx, nprocx, nprocy)
+        namelist = ColdPoolDry_3D('single', zstar, rstar, dTh, sep, dx, nprocx, nprocy)
     elif case_name == 'ColdPoolDry_double_3D':
-        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh, dx, nprocx, nprocy)
+        namelist = ColdPoolDry_3D('double', zstar, rstar, dTh, sep, dx, nprocx, nprocy)
     elif case_name == 'ColdPoolDry_triple_3D':
-        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh, dx, nprocx, nprocy)
+        namelist = ColdPoolDry_3D('triple', zstar, rstar, dTh, sep, dx, nprocx, nprocy)
     elif case_name == 'Bomex':
         namelist = Bomex()
     else:
@@ -188,7 +194,7 @@ def ColdPoolDry_2D(number, zstar, rstar, dTh, dx):
 
 
 
-def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
+def ColdPoolDry_3D(number, zstar, rstar, dTh, sep, dx, nprocx, nprocy):
 
     namelist = {}
 
@@ -218,11 +224,11 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
         # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
         #namelist['init']['ic'] = np.int(namelist['grid']['nx'] / 2)
         #namelist['init']['jc'] = np.int(namelist['grid']['ny'] / 2)
-        namelist['init']['sep'] = np.int(d)
+        namelist['init']['sep'] = np.int(sep)
     elif number == 'triple':
         # d: side length of equilateral triangle with 3 CPs at edges
-        d = 10 * rstar
-        namelist['init']['d'] = d
+        #d = 10 * rstar
+        namelist['init']['d'] = np.int(sep)
         namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)      # point of 3-CP collision (ic, jc)
 
     namelist['surface'] = {}
@@ -239,7 +245,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 3600.0
+    namelist['time_stepping']['t_max'] = 7200.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
@@ -268,7 +274,7 @@ def ColdPoolDry_3D(number, zstar, rstar, dTh, dx, nprocx, nprocy):
     namelist['damping']['scheme'] = 'Rayleigh' #'None'
     namelist['damping']['Rayleigh'] = {}
     namelist['damping']['Rayleigh']['gamma_r'] = 0.2
-    namelist['damping']['Rayleigh']['z_d'] = 600
+    namelist['damping']['Rayleigh']['z_d'] = 2000
 
     namelist['output'] = {}
     namelist['output']['output_root'] = './'
