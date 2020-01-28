@@ -847,6 +847,9 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         Py_ssize_t n, nmin
 
     # geometry of cold pool
+    # sep: separation btw. cold pools [m]
+    # configuration: ic2=ic1+sep, jc2=jc1
+    # point of collision: ic, jc
     cdef:
         double sep = namelist['init']['sep']
         Py_ssize_t isep = np.int(np.round(sep/Gr.dims.dx[0]))
@@ -910,10 +913,10 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
-            # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2) # not MPI-compatible
+            # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)      # not MPI-compatible
             for n in range(2):
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+                             (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
                 # r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
                 #          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
@@ -924,7 +927,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 if (r[nmin] <= rstar):
                     z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi/2 ) ) ** 2
                     z_max_arr[0, i, j] = z_max
-                    z_max_arr[0, i+isep, j+jsep] = z_max
+                    # z_max_arr[0, i+isep, j+jsep] = z_max
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
@@ -933,9 +936,11 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[w_varshift + ijk] = 0.0
 
                 if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    theta[i,j,k] = th_g - dTh
+                    # theta[i,j,k] = th_g - dTh
+                    theta[i,j,k] = theta_bg[k] - dTh
                 elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                    # th = th_g - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                    th = theta_bg[k] - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
                     theta[i, j, k] = th
 
                 # --- adding noise ---
@@ -1117,7 +1122,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 z_max = (zstar + marg) * ( np.cos( r[nmin]/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
                 if (r[nmin] <= rstar):
-                    z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi / 2 )) ** 2
+                    z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi/2 ) ) ** 2
                     z_max_arr[0, i, j] = z_max
 
             for k in xrange(Gr.dims.nlg[2]):
@@ -1141,7 +1146,7 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
 
 
-    # '''plotting'''
+    # ''' plotting '''
     # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     # cdef:
     #     PrognosticVariables.PrognosticVariables PV_ = PV
