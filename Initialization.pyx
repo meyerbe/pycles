@@ -461,7 +461,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # initialize background stratification
     if casename[22:28] == 'stable':
-        Pa.root_print('Initializing stable CP')
+        Pa.root_print('initializing stable CP')
         Nv2 = 5e-5  # Brunt-Vaisalla frequency [Nv2] = s^-2
         g = 9.81
         for k in xrange(Gr.dims.nlg[2]):
@@ -474,7 +474,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
-    Pa.root_print('theta_bg: '+str(theta_bg))
+    Pa.root_print('theta_bg: '+str(theta_bg[:]))
 
     # initialize Cold Pool
     for i in xrange(Gr.dims.nlg[0]):
@@ -930,7 +930,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             if (r[nmin] <= (rstar + marg)):
                 z_max = (zstar + marg) * ( np.cos( r[nmin]/(rstar + marg) * np.pi / 2 )) ** 2
                 z_max_arr[1, i, j] = z_max
-                z_max_arr[1, i+isep, j+jsep] = z_max
+                # z_max_arr[1, i+isep, j+jsep] = z_max
                 if (r[nmin] <= rstar):
                     z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi/2 ) ) ** 2
                     z_max_arr[0, i, j] = z_max
@@ -938,6 +938,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
+                theta[i, j, k] = theta_bg[k]
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
