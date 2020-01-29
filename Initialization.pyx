@@ -27,7 +27,7 @@ include 'parameters.pxi'
 
 def InitializationFactory(namelist):
         casename = namelist['meta']['casename']
-        print(casename)
+        print('Initialization Factory: ' + casename)
 
 
         if casename == 'ColdPoolDry_2D':
@@ -461,17 +461,20 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     # initialize background stratification
     if casename[22:28] == 'stable':
-        Pa.root_print('initializing stable CP')
+        Pa.root_print('Initializing stable CP')
         Nv2 = 5e-5  # Brunt-Vaisalla frequency [Nv2] = s^-2
         g = 9.81
         for k in xrange(Gr.dims.nlg[2]):
             if Gr.zl_half[k] <= 1000.:
                 theta_bg[k] = th_g
+                Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
             else:
+                Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv2/g*(Gr.zl_half[k]-1000.))) )
                 theta_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
+    Pa.root_print('theta_bg: '+str(theta_bg))
 
     # initialize Cold Pool
     for i in xrange(Gr.dims.nlg[0]):
@@ -886,11 +889,15 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         for k in xrange(Gr.dims.nlg[2]):
             if Gr.zl_half[k] <= 1000.:
                 theta_bg[k] = th_g
+                Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
             else:
                 theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+                Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv/g*(Gr.zl_half[k]-1000.))) )
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
+    Pa.root_print('theta_bg: '+str(theta_bg))
+
 
     Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
     Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
