@@ -323,6 +323,11 @@ cdef class SurfaceColdPools(SurfaceBase):
     cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
         Pa.root_print('Surface Cold Pool scheme: stats io')
         SurfaceBase.stats_io(self, Gr, NS, Pa)
+
+        # output 2D field of SHF
+        # self.shf
+
+
         return
 
 # SULLIVAN

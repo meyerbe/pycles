@@ -77,8 +77,8 @@ cdef class PrognosticVariables:
     cpdef initialize(self,Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
         self.values = np.zeros((self.nv*Gr.dims.npg),dtype=np.double,order='c')
         self.tendencies = np.zeros((self.nv*Gr.dims.npg),dtype=np.double,order='c')
-        # Pa.root_print('PV.name_index: ' + str(self.name_index.keys()))
 
+        # Pa.root_print('PV.name_index: ' + str(self.name_index.keys()))
         #Add prognostic variables to Statistics IO
         Pa.root_print('Setting up statistical output files for Prognostic Variables')
         for var_name in self.name_index.keys():
@@ -110,8 +110,6 @@ cdef class PrognosticVariables:
             double [:] tmp
 
         for var_name in self.name_index.keys():
-            Pa.root_print('Prognostic Variables: write profile: ' + var_name)
-
             var_shift = self.get_varshift(Gr,var_name)
 
             #Compute and write mean
@@ -152,10 +150,8 @@ cdef class PrognosticVariables:
 
     cpdef debug(self, Grid.Grid Gr, ReferenceState.ReferenceState RS ,NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
         '''
-
         This function is for debugging purpuses. It prints the maximum and minimum of each variable and their
         tendencies stored in the PrognosticVariables class.
-
         :param Gr:
         :param RS:
         :param NS:

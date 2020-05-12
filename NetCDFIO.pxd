@@ -43,10 +43,10 @@ cdef class NetCDFIO_Fields:
         public double last_output_time
         public double frequency
         public bint do_output
-
         # __
         # int count
         # __
+
 
     cpdef initialize(self, dict namelist, ParallelMPI.ParallelMPI Pa)
 

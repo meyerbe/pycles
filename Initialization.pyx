@@ -92,7 +92,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
                        ParallelMPI.ParallelMPI Pa, LatentHeat LH):
     Pa.root_print('')
-    Pa.root_print('Initialization: Dry Cold Pool (2D)')
+    Pa.root_print('Initialization: Single Dry Cold Pool (2D)')
     Pa.root_print('')
     # set zero ground humidity, no horizontal wind at ground
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
@@ -121,8 +121,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
-        # Py_ssize_t istride_2d = Gr.dims.nlg[1]
-        Py_ssize_t ij, ijk
+        Py_ssize_t ijk
         Py_ssize_t ic
         Py_ssize_t [:] ic_arr = np.ndarray((1))
 
@@ -130,7 +129,7 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     ''' one 2D cos2(x)-shaped compact coldpool at centre of domain'''
     cdef:
         double x
-        double xstar = 5000.0     # half-width of initial cold-pool [m]
+        double xstar = namelist['init']['r']    # half-width of initial cold-pool [m]
         double zstar = namelist['init']['h']
         int kstar = np.int(np.round(zstar / Gr.dims.dx[2]))       # initial height of cold-pool [m]
         double marg = 1000                                            # width of margin [m]
@@ -185,9 +184,9 @@ def InitColdPoolDry_2D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
             break
     ic_arr[0] = ic
 
+    # initialize Cold Pool
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        x = Gr.x_half[i + Gr.dims.indx_lo[0]]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
             for k in xrange(Gr.dims.nlg[2]):
@@ -302,7 +301,7 @@ def InitColdPoolDry_double_2D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
     cdef:
         double x
-        double xstar = 5000.0                               # half of the width of initial cold-pools [m]
+        double xstar = namelist['init']['r']                # width of initial cold-pools [m]
         double zstar = namelist['init']['h']                # initial height of cold-pools [m]
         int kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         Py_ssize_t istar = np.int(xstar/Gr.dims.dx[0])
@@ -524,116 +523,116 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 
-def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
-                                     ParallelMPI.ParallelMPI Pa, LatentHeat LH):
-    Pa.root_print('')
-    Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
-    Pa.root_print('')
-    # set zero ground humidity, no horizontal wind at ground
-
-    #Generate reference profiles
-    RS.Pg = 1.0e5
-    RS.Tg = 300.0
-    RS.qtg = 0.0
-    #Set velocities for Galilean transformation
-    RS.u0 = 0.0
-    RS.v0 = 0.0
-    RS.initialize(Gr, Th, NS, Pa)
-    Pa.root_print('finished RS.initialize')
-
-    #Get the variable number for each of the velocity components
-    cdef:
-        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-        Py_ssize_t i,j,k
-        Py_ssize_t ishift, jshift
-        Py_ssize_t ijk
-        Py_ssize_t gw = Gr.dims.gw
-
-    # parameters
-    cdef:
-        double dTh = namelist['init']['dTh']
-        double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
-        double zstar = namelist['init']['h']
-        Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-        double marg = namelist['init']['marg']
-        # Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
-        Py_ssize_t ic = np.int(namelist['init']['ic'])  # np.int(Gr.dims.n[0] / 2)
-        Py_ssize_t jc = np.int(namelist['init']['jc'])  # np.int(Gr.dims.n[1] / 2)
-        double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
-        double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
-        double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-        double z_max = 0
-        double r
-        double rstar_marg = (rstar+marg)
-
-    Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
-    Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
-
-    # theta anomaly
-    np.random.seed(Pa.rank)     # make Noise reproducable
-    cdef:
-        double th
-        double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
-        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
-        double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-        double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
-        double theta_pert_
-
-
-    # crate background profile
-    Nv = 5e-5
-    g = 9.81
-    for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <= 1000.:
-            theta_bg[k] = th_g
-        else:
-            theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
-
-    # Cold Pool
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = j * Gr.dims.nlg[2]
-
-            r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
-                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
-            if r <= rstar:
-                z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
-                z_max_arr[0, i, j] = z_max
-            if r <= rstar_marg:
-                z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
-                z_max_arr[1, i, j] = z_max
-
-            for k in xrange(Gr.dims.nlg[2]):
-                ijk = ishift + jshift + k
-                theta[i, j, k] = theta_bg[k]
-                PV.values[u_varshift + ijk] = 0.0
-                PV.values[v_varshift + ijk] = 0.0
-                PV.values[w_varshift + ijk] = 0.0
-
-                if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    theta[i,j,k] = theta[i,j,k] - dTh
-                elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    th = dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-                    theta[i, j, k] = theta[i,j,k] - th
-
-                if k <= kstar + 2:
-                    theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
-                else:
-                    theta_pert_ = 0.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
-
-
-    # ''' Initialize passive tracer phi '''
-    Pa.root_print('initialize passive tracer phi')
-    init_tracer(namelist, Gr, PV, Pa, z_max_arr, np.asarray(ic), np.asarray(jc))
-    Pa.root_print('Initialization: finished initialization')
-
-    return
+# def InitColdPoolDry_single_3D_stable(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+#                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+#                                      ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+#     Pa.root_print('')
+#     Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
+#     Pa.root_print('')
+#     # set zero ground humidity, no horizontal wind at ground
+#
+#     #Generate reference profiles
+#     RS.Pg = 1.0e5
+#     RS.Tg = 300.0
+#     RS.qtg = 0.0
+#     #Set velocities for Galilean transformation
+#     RS.u0 = 0.0
+#     RS.v0 = 0.0
+#     RS.initialize(Gr, Th, NS, Pa)
+#     Pa.root_print('finished RS.initialize')
+#
+#     #Get the variable number for each of the velocity components
+#     cdef:
+#         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+#         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+#         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+#         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+#         Py_ssize_t i,j,k
+#         Py_ssize_t ishift, jshift
+#         Py_ssize_t ijk
+#         Py_ssize_t gw = Gr.dims.gw
+#
+#     # parameters
+#     cdef:
+#         double dTh = namelist['init']['dTh']
+#         double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
+#         double zstar = namelist['init']['h']
+#         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+#         double marg = namelist['init']['marg']
+#         # Py_ssize_t marg_i = np.int(marg/np.round(Gr.dims.dx[0]))  # width of margin
+#         Py_ssize_t ic = np.int(namelist['init']['ic'])  # np.int(Gr.dims.n[0] / 2)
+#         Py_ssize_t jc = np.int(namelist['init']['jc'])  # np.int(Gr.dims.n[1] / 2)
+#         double xc = Gr.x_half[ic + Gr.dims.gw]       # center of cold-pool
+#         double yc = Gr.y_half[jc + Gr.dims.gw]       # center of cold-pool
+#         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+#         double z_max = 0
+#         double r
+#         double rstar_marg = (rstar+marg)
+#
+#     Pa.root_print('ic, jc: '+str(ic)+', '+str(jc))
+#     Pa.root_print('xc, yc: '+str(xc)+', '+str(yc))
+#
+#     # theta anomaly
+#     np.random.seed(Pa.rank)     # make Noise reproducable
+#     cdef:
+#         double th
+#         double th_g = 300.0  # temperature for neutrally stratified background (value from Soares Surface)
+#         double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+#         double [:,:,:] theta = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+#         double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+#         double theta_pert_
+#
+#
+#     # crate background profile
+#     Nv = 5e-5
+#     g = 9.81
+#     for k in xrange(Gr.dims.nlg[2]):
+#         if Gr.zl_half[k] <= 1000.:
+#             theta_bg[k] = th_g
+#         else:
+#             theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+#
+#     # Cold Pool
+#     for i in xrange(Gr.dims.nlg[0]):
+#         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+#         for j in xrange(Gr.dims.nlg[1]):
+#             jshift = j * Gr.dims.nlg[2]
+#
+#             r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+#                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+#             if r <= rstar:
+#                 z_max = zstar * ( np.cos( r/rstar * np.pi/2 ) ) ** 2
+#                 z_max_arr[0, i, j] = z_max
+#             if r <= rstar_marg:
+#                 z_max = (zstar + marg) * ( np.cos( r/(rstar + marg) * np.pi / 2 )) ** 2
+#                 z_max_arr[1, i, j] = z_max
+#
+#             for k in xrange(Gr.dims.nlg[2]):
+#                 ijk = ishift + jshift + k
+#                 theta[i, j, k] = theta_bg[k]
+#                 PV.values[u_varshift + ijk] = 0.0
+#                 PV.values[v_varshift + ijk] = 0.0
+#                 PV.values[w_varshift + ijk] = 0.0
+#
+#                 if Gr.z_half[k] <= z_max_arr[0,i,j]:
+#                     theta[i,j,k] = theta[i,j,k] - dTh
+#                 elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+#                     th = dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+#                     theta[i, j, k] = theta[i,j,k] - th
+#
+#                 if k <= kstar + 2:
+#                     theta_pert_ = (theta_pert[ijk] - 0.5) * 0.1
+#                 else:
+#                     theta_pert_ = 0.0
+#                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
+#
+#
+#     # ''' Initialize passive tracer phi '''
+#     Pa.root_print('initialize passive tracer phi')
+#     init_tracer(namelist, Gr, PV, Pa, z_max_arr, np.asarray(ic), np.asarray(jc))
+#     Pa.root_print('Initialization: finished initialization')
+#
+#     return
 
 
 
@@ -811,7 +810,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
     # # for plotting
-    #from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
+    # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     cdef:
         PrognosticVariables.PrognosticVariables PV_ = PV
 
@@ -912,7 +911,6 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')
     Pa.root_print('')
 
-
     ''' compute z_max '''
     # method here requires to define (ic1, jc1) as the CP center that is the closest to (0,0)
     #   (i.e., ic1<=ic2, jc1<=jc2 etc.)
@@ -923,9 +921,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
             # r = np.sqrt((Gr.x_half[i]-xc1)**2 + (Gr.y_half[j]-yc1)**2)      # not MPI-compatible
             for n in range(2):
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
-                             (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
-                # r2[n] = ( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
-                #          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
             if (r[nmin] <= (rstar + marg)):
                 z_max = (zstar + marg) * ( np.cos( r[nmin]/(rstar + marg) * np.pi / 2 )) ** 2
@@ -965,6 +961,10 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                     theta_pert_ = 0.0
                 PV.values[s_varshift + ijk] = entropy_from_thetas_c(theta[i, j, k] + theta_pert_, 0.0)
 
+    ''' Initialize passive tracer phi '''
+    Pa.root_print('initialize passive tracer phi')
+    init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
+    Pa.root_print('Initialization: finished initialization')
 
     # ''' plotting '''
     # j0 = np.int(np.floor(Gr.dims.ng[1] / 2))
@@ -982,10 +982,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # #plot_var_image(var_name, var1[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'double_3D')
     # del var1
 
-    ''' Initialize passive tracer phi '''
-    Pa.root_print('initialize passive tracer phi')
-    init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
-    Pa.root_print('Initialization: finished initialization')
+
     return
 
 
@@ -1037,20 +1034,6 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # a: height of the equilateral triangle
     # configuration: ic1 = ic2, ic3 = ic1+a; jc
     cdef:
-        # # OLD configuration
-        # Py_ssize_t d = np.int(np.round(10*irstar))
-        # # Py_ssize_t d = np.int(np.round(Gr.dims.ng[1]/2))
-        # Py_ssize_t dhalf = np.int(np.round(d/2))
-        # Py_ssize_t a = np.int(np.round(d*np.sin(60.0/360.0*2*np.pi)))    # sin(60 degree) = np.sqrt(3)/2
-        # Py_ssize_t ic = np.int(np.round(Gr.dims.ng[0]/2))
-        # Py_ssize_t jc = np.int(np.round(Gr.dims.ng[1]/2))
-        # Py_ssize_t ic1 = ic - np.int(np.round(a/2))
-        # Py_ssize_t ic2 = ic1
-        # Py_ssize_t ic3 = ic + np.int(np.round(a/2))
-        # Py_ssize_t jc1 = jc - dhalf
-        # Py_ssize_t jc2 = jc + dhalf
-        # Py_ssize_t jc3 = jc
-
         # NEW configuration
         double d = namelist['init']['d']
         Py_ssize_t i_d = np.int(np.round(d/Gr.dims.dx[0]))
@@ -1106,9 +1089,10 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
 
     Pa.root_print('')
-    Pa.root_print('nx: ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
-    Pa.root_print('nxg: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
+    Pa.root_print('nx, ny:   ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
+    Pa.root_print('nxg, nyp: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
     Pa.root_print('gw: ' + str(Gr.dims.gw))
+    Pa.root_print('d: ' + str(d) + ', id: ' + str(i_d))
     Pa.root_print('Cold Pools:')
     Pa.root_print('cp1: [' + str(ic1) + ', ' + str(jc1) + ']')
     Pa.root_print('cp2: [' + str(ic2) + ', ' + str(jc2) + ']')
@@ -1501,7 +1485,7 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
             thetal[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
         elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:            # 11.15 K / km
             thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
-        elif Gr.zl_half[k] > 2000.0:                                    # 3.65 K / km
+        elif Gr.zl_half[k] > 2000.0:                                      # 3.65 K / km
             thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
 
         # Set qt profile
@@ -3185,194 +3169,6 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #
 #
 #
-# def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
-#                        DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
-#
-#     casename = nml['meta']['casename']
-#     if casename == 'SMOKE':
-#         PV.add_variable('smoke', 'kg/kg', 'smoke', 'radiatively active smoke', "sym", "scalar", Pa)
-#         return
-#     return
-#
-#
-# def thetal_mpace(p_, t_, ql_):
-#     return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(2.26e6*ql_)/(cpd*263.0))
-#
-# def thetal_isdac(p_, t_, ql_, qt_):
-#     rl_ = ql_ / (1 - qt_)
-#     #return (p_tilde/p_)**(Rd/cpd)*(t_ - 2.26e6 * rl_ / cpd)
-#     return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(rl_*2.501e6) / (t_*cpd))
-#
-# def sat_adjst(p_, thetal_, qt_, Th):
-#
-#     """
-#     Use saturation adjustment scheme to compute temperature and ql given thetal and qt.
-#     :param p_: pressure [Pa]
-#     :param thetal_: liquid water potential temperature  [K]
-#     :param qt_:  total water specific humidity
-#     :return: t_2, ql_2
-#     """
-#
-#     #Compute temperature
-#     t_1 = thetal_ * (p_/p_tilde)**(Rd/cpd)
-#     #Compute saturation vapor pressure
-#     pv_star_1 = Th.get_pv_star(t_1)
-#     #Compute saturation mixing ratio
-#     qs_1 = qv_star_c(p_,qt_,pv_star_1)
-#
-#     if qt_ <= qs_1:
-#         #If not saturated return temperature and ql = 0.0
-#         return t_1, 0.0
-#     else:
-#         ql_1 = qt_ - qs_1
-#         # f_1 = thetal_ - thetal_mpace(p_,t_1,ql_1)
-#         f_1 = thetal_ - thetal_isdac(p_,t_1,ql_1,qt_)
-#         t_2 = t_1 + 2.501e6*ql_1/cpd
-#         pv_star_2 = Th.get_pv_star(t_2)
-#         qs_2 = qv_star_c(p_,qt_,pv_star_2)
-#         ql_2 = qt_ - qs_2
-#
-#         while fabs(t_2 - t_1) >= 1e-9:
-#             pv_star_2 = Th.get_pv_star(t_2)
-#             qs_2 = qv_star_c(p_,qt_,pv_star_2)
-#             ql_2 = qt_ - qs_2
-#             # f_2 = thetal_ - thetal_mpace(p_, t_2, ql_2)
-#             f_2 = thetal_ - thetal_isdac(p_, t_2, ql_2, qt_)
-#             t_n = t_2 - f_2 * (t_2 - t_1)/(f_2 - f_1)
-#             t_1 = t_2
-#             t_2 = t_n
-#             f_1 = f_2
-#
-#     return t_2, ql_2
-
-
-
-def qv_star_rh(p0, rh, pv):
-    val = eps_v*pv/(p0-pv)/(1 + rh*eps_v*pv/(p0-pv))
-    return val
-
-def qv_unsat(p0, pv):
-    val = 1.0/(eps_vi * (p0 - pv)/pv + 1.0)
-    return val
-
-from scipy.interpolate import pchip
-def interp_pchip(z_out, z_in, v_in, pchip_type=True):
-    if pchip_type:
-        p = pchip(z_in, v_in, extrapolate=True)
-        return p(z_out)
-    else:
-        return np.interp(z_out, z_in, v_in)
-
-
-def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
-                ParallelMPI.ParallelMPI Pa, z_max_arr, ic_arr, jc_arr):
-    ''' Initialize passive tracer phi '''
-    try:
-        use_tracers = namelist['tracers']['use_tracers']
-    except:
-        use_tracers = False
-
-    try:
-        phi_number = namelist['tracers']['number']
-    except:
-        phi_number = 1
-
-    try:
-        kmax_tracer = namelist['tracers']['kmax']
-    except:
-        kmax_tracer = 10
-
-    try:
-        kmin_tracer = namelist['tracers']['kmin']
-    except:
-        kmin_tracer = 0
-
-    cdef:
-        Py_ssize_t i, j, k
-        Py_ssize_t ishift, jshift, ijk
-        Py_ssize_t var_shift
-        Py_ssize_t kmin = kmin_tracer + Gr.dims.gw
-        Py_ssize_t kmax = kmax_tracer + Gr.dims.gw
-        Py_ssize_t dk = 50
-
-    if use_tracers == 'passive':
-        Pa.root_print('initializing passive tracer phi, smooth profile, kmax: ' + str(kmax_tracer) + ', dk: ' + str(dk))
-        var_shift = PV.get_varshift(Gr, 'phi')
-        for i in xrange(Gr.dims.nlg[0]):
-            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-            for j in xrange(Gr.dims.nlg[1]):
-                jshift = j * Gr.dims.nlg[2]
-                for k in xrange(Gr.dims.nlg[2]):
-                    ijk = ishift + jshift + k
-                    if k > kmin and k <= kmax:
-                        PV.values[var_shift + ijk] = 1.0
-                    elif k > kmax and k < (kmax + dk):
-                        PV.values[var_shift + ijk] = 0.5*( 1+np.cos((k-kmax)/np.double(dk)*np.pi) )
-                    else:
-                        PV.values[var_shift + ijk] = 0.0
-
-    elif use_tracers == 'surface':
-        Pa.root_print('Initalization: Surface Tracers')
-        # kmax = 0
-        k0 = 0
-        Pa.root_print('initializing passive tracer phi at surface' )
-        var_shift = PV.get_varshift(Gr, 'phi')
-        i_max = Gr.dims.nlg[0]-1
-        j_max = Gr.dims.nlg[1]-1
-        k_max = Gr.dims.nlg[2]-1
-        ijk_min = var_shift
-        ijk_max = var_shift + i_max * Gr.dims.nlg[1] * Gr.dims.nlg[2] + j_max * Gr.dims.nlg[2] + k_max
-        PV.values[var_shift:] = 0.0
-        for i in xrange(Gr.dims.nlg[0]):
-            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-            for j in xrange(Gr.dims.nlg[1]):
-                ijk = ishift + jshift + k0
-                PV.values[var_shift + ijk] = 1.0
-                for k in xrange(k0+1,Gr.dims.nlg[2]):
-                    jshift = j * Gr.dims.nlg[2]
-                    ijk = ishift + jshift + k
-                    PV.values[var_shift + ijk] = 0.0
-
-
-
-
-
-    elif use_tracers == 'coldpool':
-        Pa.root_print('Initalization: Cold Pool Tracers')
-
-        dk = np.int(kmax/phi_number)
-        krange = np.arange(0, kmax+1, dk)
-        k0 = 0
-
-        for nv in range(phi_number):
-            var_shift = PV.get_varshift(Gr, 'phi'+str(nv))
-            k1 = krange(nv+1)
-
-            Pa.root_print('initializing passive tracer at levels (cold pool)' )
-
-            i_max = Gr.dims.nlg[0]-1
-            j_max = Gr.dims.nlg[1]-1
-            ijk_min = var_shift
-            ijk_max = var_shift + i_max * Gr.dims.nlg[1] * Gr.dims.nlg[2] + j_max * Gr.dims.nlg[2] + k1
-            PV.values[var_shift:] = 0.0
-
-            for i in xrange(Gr.dims.nlg[0]):
-                ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-                for j in xrange(Gr.dims.nlg[1]):
-                    jshift = j * Gr.dims.nlg[2]
-                    ijk = ishift + jshift + k0
-                    PV.values[var_shift + ijk] = 1.0
-                    for k in xrange(k0,k1):
-                        ijk = ishift + jshift + k
-                        PV.values[var_shift + ijk] = 0.0
-            k0 = k1
-
-
-
-    return
-
-
-
 def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
                        DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
 
@@ -3390,6 +3186,7 @@ def thetal_isdac(p_, t_, ql_, qt_):
     rl_ = ql_ / (1 - qt_)
     #return (p_tilde/p_)**(Rd/cpd)*(t_ - 2.26e6 * rl_ / cpd)
     return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(rl_*2.501e6) / (t_*cpd))
+
 
 def sat_adjst(p_, thetal_, qt_, Th):
 
@@ -3433,9 +3230,11 @@ def sat_adjst(p_, thetal_, qt_, Th):
 
     return t_2, ql_2
 
+
 def qv_star_rh(p0, rh, pv):
     val = eps_v*pv/(p0-pv)/(1 + rh*eps_v*pv/(p0-pv))
     return val
+
 
 def qv_unsat(p0, pv):
     val = 1.0/(eps_vi * (p0 - pv)/pv + 1.0)
@@ -3448,6 +3247,7 @@ def interp_pchip(z_out, z_in, v_in, pchip_type=True):
         return p(z_out)
     else:
         return np.interp(z_out, z_in, v_in)
+
 
 
 def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
@@ -3521,10 +3321,36 @@ def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables 
 
     elif use_tracers == 'coldpool':
         Pa.root_print('Initalization: Cold Pool Tracers')
+
+        dk = np.int(kmax/phi_number)
+        krange = np.arange(0, kmax+1, dk)
+        k0 = 0
+
         for nv in range(phi_number):
             var_shift = PV.get_varshift(Gr, 'phi'+str(nv))
+            k1 = krange(nv+1)
 
+            Pa.root_print('initializing passive tracer at levels (cold pool)' )
+
+            i_max = Gr.dims.nlg[0]-1
+            j_max = Gr.dims.nlg[1]-1
+            ijk_min = var_shift
+            ijk_max = var_shift + i_max * Gr.dims.nlg[1] * Gr.dims.nlg[2] + j_max * Gr.dims.nlg[2] + k1
+            PV.values[var_shift:] = 0.0
+
+            for i in xrange(Gr.dims.nlg[0]):
+                ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+                for j in xrange(Gr.dims.nlg[1]):
+                    jshift = j * Gr.dims.nlg[2]
+                    ijk = ishift + jshift + k0
+                    PV.values[var_shift + ijk] = 1.0
+                    for k in xrange(k0,k1):
+                        ijk = ishift + jshift + k
+                        PV.values[var_shift + ijk] = 0.0
+            k0 = k1
 
 
 
     return
+
+

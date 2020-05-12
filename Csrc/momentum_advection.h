@@ -19,7 +19,6 @@ void compute_advective_tendencies_m(struct DimStruct *dims, double* restrict rho
                                 double* restrict vel_advected, double* restrict vel_advecting,
                                 double* restrict tendency, ssize_t d_advected, ssize_t d_advecting, int scheme){
 
-
     switch(scheme){
         case 2:
             second_order_m(dims, rho0, rho0_half, alpha0, alpha0_half, vel_advected, vel_advecting,

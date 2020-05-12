@@ -4,6 +4,7 @@ import pprint
 from sys import exit
 import uuid
 import ast
+import numpy as np
 
 
 def main():
@@ -286,7 +287,7 @@ def ColdPoolDry_3D(number):
 
     namelist['init'] = {}
     rstar = 1000.0
-    namelist['init']['dTh'] = 2.0           # temperature anomaly
+    namelist['init']['dTh'] = 3.0           # temperature anomaly
     namelist['init']['shape'] = 1           # shape of temperature anomaly: 1 = cos2-shape
     namelist['init']['h'] = 2000.0          # initial height of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
@@ -301,6 +302,7 @@ def ColdPoolDry_3D(number):
     elif number == 'triple':
         d = 10 * rstar
         namelist['init']['d'] = d       # separation of CPs in equilateral triangle
+        # (ic, jc): point of collision
         namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
