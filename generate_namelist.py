@@ -416,10 +416,10 @@ def ColdPoolMoist_3D(number):
     namelist['init'] = {}
     rstar = 2000.0
     namelist['init']['dTh'] = 5.0           # temperature anomaly
-    namelist['init']['shape'] = 1           # shape of temperature anomaly: 1 = cos2-shape
+    namelist['init']['dqt'] = 2.e-3         # moisture anomaly [kg/kg]
     namelist['init']['h'] = 1000.0          # initial height of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
-    namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
+    namelist['init']['marg'] = 200.         # width or margin (transition for temeprature anomaly)
     if number == 'single':
         namelist['init']['ic'] = namelist['grid']['nx'] / 2
         namelist['init']['jc'] = namelist['grid']['ny'] / 2
