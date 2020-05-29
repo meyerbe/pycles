@@ -1219,57 +1219,53 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
         Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
     if casename == 'ColdPoolMoist_single_3D':
-        cdef:
-            Py_ssize_t ncp = 1
-            Py_ssize_t ic1 = ic
-            Py_ssize_t jc1 = jc
-            Py_ssize_t [:] ic_arr = np.asarray([ic1])
-            Py_ssize_t [:] jc_arr = np.asarray([jc1])
-            double [:] xc = np.asarray([Gr.x_half[ic1 + gw]])
-            double [:] yc = np.asarray([Gr.y_half[jc1 + gw]])
+        ncp = 1
+        ic1 = ic
+        jc1 = jc
+        ic_arr = np.asarray([ic1], dtype=np.int)
+        jc_arr = np.asarray([jc1], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.int)
+        yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.int)
     elif casename == 'ColdPoolMoist_double_3D':
         # geometry of cold pool
         # sep: separation btw. cold pools [m]
         # configuration: ic2=ic1+sep, jc2=jc1
         # point of collision: ic, jc
-        cdef:
-            Py_ssize_t ncp = 2
-            double d = namelist['init']['sep']
-            Py_ssize_t i_d = np.int(np.round(d/Gr.dims.dx[0]))
-            Py_ssize_t idhalf = np.int(np.round(i_d/2))
-            # point of 2-CP collision (ic, jc)
-            Py_ssize_t ic1 = ic - idhalf
-            Py_ssize_t jc1 = jc
-            Py_ssize_t ic2 = ic + idhalf
-            Py_ssize_t jc2 = jc
-            Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2])
-            Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2])
-            double [:] xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]])
-            double [:] yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]])
+        ncp = 2
+        d = namelist['init']['sep']
+        i_d = np.int(np.round(d/Gr.dims.dx[0]))
+        idhalf = np.int(np.round(i_d/2))
+        # point of 2-CP collision (ic, jc)
+        ic1 = ic - idhalf
+        jc1 = jc
+        ic2 = ic + idhalf
+        jc2 = jc
+        ic_arr = np.asarray([ic1,ic2], dtype=np.int)
+        jc_arr = np.asarray([jc1,jc2], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]], dtype=np.int)
+        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]], dtype=np.int)
     elif casename == 'ColdPoolMoist_triple_3D':
-        pass
         # geometry of cold pool: equilateral triangle with center in middle of domain
         # d: side length of the triangle
         # a: height of the equilateral triangle
         # configuration: ic1 = ic2, ic3 = ic1+a; jc
-        cdef:
-            Py_ssize_t ncp = 3
-            double d = namelist['init']['d']
-            Py_ssize_t i_d = np.int(np.round(d/Gr.dims.dx[0]))
-            Py_ssize_t idhalf = np.int(np.round(i_d/2))
-            Py_ssize_t a = np.int(np.round(i_d*np.sin(60.0/360.0*2*np.pi)))     # sin(60 degree) = np.sqrt(3)/2
-            Py_ssize_t r_int = np.int(np.round(np.sqrt(3.)/6*i_d))              # radius of inscribed circle
-            # point of 3-CP collision (ic, jc)
-            Py_ssize_t ic1 = ic - r_int
-            Py_ssize_t ic2 = ic1
-            Py_ssize_t ic3 = ic + (a - r_int)
-            Py_ssize_t jc1 = jc - idhalf
-            Py_ssize_t jc2 = jc + idhalf
-            Py_ssize_t jc3 = jc
-            Py_ssize_t [:] ic_arr = np.asarray([ic1,ic2,ic3])
-            Py_ssize_t [:] jc_arr = np.asarray([jc1,jc2,jc3])
-            double [:] xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]])
-            double [:] yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]])
+        ncp = 3
+        d = namelist['init']['d']
+        i_d = np.int(np.round(d/Gr.dims.dx[0]))
+        idhalf = np.int(np.round(i_d/2))
+        a = np.int(np.round(i_d*np.sin(60.0/360.0*2*np.pi)))     # sin(60 degree) = np.sqrt(3)/2
+        r_int = np.int(np.round(np.sqrt(3.)/6*i_d))              # radius of inscribed circle
+        # point of 3-CP collision (ic, jc)
+        ic1 = ic - r_int
+        ic2 = ic1
+        ic3 = ic + (a - r_int)
+        jc1 = jc - idhalf
+        jc2 = jc + idhalf
+        jc3 = jc
+        ic_arr = np.asarray([ic1,ic2,ic3], dtype=np.int)
+        jc_arr = np.asarray([jc1,jc2,jc3], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]], dtype=np.int)
+        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]], dtype=np.int)
 
     cdef:
         double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
