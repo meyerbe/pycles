@@ -58,11 +58,23 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
                     return SurfaceColdPools(LH)
                 elif namelist['surface']['scheme'] == 'const':
                     return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
-                # if namelist['surface']['scheme'] == 'none':
                 else:
                     return SurfaceNone()
             except:
-                Par.root_print('nml surface scheme: none')
+                Par.root_print('nml surface scheme not defined')
+                return SurfaceNone()
+        elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' \
+                or casename == 'ColdPoolMoist_triple_3D':
+            try:
+                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
+                if namelist['surface']['scheme'] == 'bulk':
+                    return SurfaceColdPools(LH)
+                elif namelist['surface']['scheme'] == 'bomex':
+                    return SurfaceBomex(LH)
+                else:
+                    return SurfaceNone()
+            except:
+                Par.root_print('nml surface scheme not defined')
                 return SurfaceNone()
         elif casename == 'Bomex':
             return SurfaceBomex(LH)

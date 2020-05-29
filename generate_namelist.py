@@ -508,8 +508,8 @@ def ColdPoolMoist_3D(number):
         namelist['meta']['simname'] = 'ColdPoolMoist_triple'
 
     namelist['surface'] = {}
-    # schemes: 'none', 'bulk', 'const'
-    namelist['surface']['scheme'] = 'none'
+    # schemes: 'none', 'bulk', 'bomex'
+    namelist['surface']['scheme'] = 'bomex'
 
     namelist['visualization'] = {}
     namelist['visualization']['frequency'] = 10000.0
