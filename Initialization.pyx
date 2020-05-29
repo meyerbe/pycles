@@ -1369,7 +1369,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
                     temp = (thetal[i,j,k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k] + qt_pert[ijk]
                 else:
-                    temp = (thetal[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    temp = (thetal[i,j,k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k]
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
