@@ -295,8 +295,7 @@ def ColdPoolDry_3D(number):
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
     namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
     if number == 'single':
-        namelist['init']['ic'] = namelist['grid']['nx'] / 2
-        namelist['init']['jc'] = namelist['grid']['ny'] / 2
+        pass
     elif number == 'double':
         d = 10 * rstar
         # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
@@ -305,7 +304,8 @@ def ColdPoolDry_3D(number):
         d = 10 * rstar
         namelist['init']['d'] = d       # separation of CPs in equilateral triangle
         # (ic, jc): point of collision
-        namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
+    namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
+    namelist['init']['jc'] = np.int(np.double(namelist['grid']['ny']) / 2)
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
     namelist['mpi']['nprocy'] = 1
@@ -421,8 +421,7 @@ def ColdPoolMoist_3D(number):
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
     namelist['init']['marg'] = 200.         # width or margin (transition for temeprature anomaly)
     if number == 'single':
-        namelist['init']['ic'] = namelist['grid']['nx'] / 2
-        namelist['init']['jc'] = namelist['grid']['ny'] / 2
+        pass
     elif number == 'double':
         d = 10 * rstar
         # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
@@ -431,7 +430,8 @@ def ColdPoolMoist_3D(number):
         d = 10 * rstar
         namelist['init']['d'] = d       # separation of CPs in equilateral triangle
         # (ic, jc): point of collision
-        namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
+    namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
+    namelist['init']['jc'] = np.int(np.double(namelist['grid']['ny']) / 2)
     namelist['mpi'] = {}
     namelist['mpi']['nprocx'] = 1
     namelist['mpi']['nprocy'] = 1
