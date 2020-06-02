@@ -499,13 +499,13 @@ def ColdPoolMoist_3D(number):
     namelist['meta'] = {}
     if number == 'single':
         namelist['meta']['casename'] = 'ColdPoolMoist_single_3D'
-        namelist['meta']['simname'] = 'ColdPoolMoist_single'
+        namelist['meta']['simname'] = 'ColdPoolMoist_single_3D'
     elif number == 'double':
         namelist['meta']['casename'] = 'ColdPoolMoist_double_3D'
-        namelist['meta']['simname'] = 'ColdPoolMoist_double'
+        namelist['meta']['simname'] = 'ColdPoolMoist_double_3D'
     elif number == 'triple':
         namelist['meta']['casename'] = 'ColdPoolMoist_triple_3D'
-        namelist['meta']['simname'] = 'ColdPoolMoist_triple'
+        namelist['meta']['simname'] = 'ColdPoolMoist_triple_3D'
 
     namelist['surface'] = {}
     # schemes: 'none', 'bulk', 'bomex'
