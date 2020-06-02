@@ -7,7 +7,7 @@
 #import pylab as plt
 
 import netCDF4 as nc
-import numpy as np
+import numpy as npx
 cimport numpy as np
 from scipy.interpolate import PchipInterpolator,pchip_interpolate
 cimport ParallelMPI
@@ -49,6 +49,8 @@ def InitializationFactory(namelist):
             return InitColdPoolDry_double_3D
         elif casename == 'ColdPoolDry_triple_3D_stable':
             return InitColdPoolDry_triple_3D
+        elif casename == 'ColdPoolMoist_single_3D':
+            return InitColdPoolMoist_3D
         elif casename == 'SullivanPatton':
             return InitSullivanPatton
         # elif casename == 'StableBubble':
@@ -1457,53 +1459,7 @@ def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariab
 
 
 
-# def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-#                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH):
-#
-#     #Generate reference profiles
-#     RS.Pg = 1.0e5
-#     RS.Tg = 300.0
-#     RS.qtg = 0.0
-#     #Set velocities for Galilean transformation
-#     RS.u0 = 0.0
-#     RS.v0 = 0.0
-#
-#     RS.initialize(Gr, Th, NS, Pa)
-#
-#     #Get the variable number for each of the velocity components
-#     cdef:
-#         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-#         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-#         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-#         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-#         Py_ssize_t i,j,k
-#         Py_ssize_t ishift, jshift
-#         Py_ssize_t ijk
-#         double t
-#         double dist
-#
-#     t_min = 9999.9
-#     for i in xrange(Gr.dims.nlg[0]):
-#         ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#         for j in xrange(Gr.dims.nlg[1]):
-#             jshift = j * Gr.dims.nlg[2]
-#             for k in xrange(Gr.dims.nlg[2]):
-#                 ijk = ishift + jshift + k
-#                 PV.values[u_varshift + ijk] = 0.0
-#                 PV.values[v_varshift + ijk] = 0.0
-#                 PV.values[w_varshift + ijk] = 0.0
-#                 # dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
-#                 # dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/8.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
-#                 dist  = np.sqrt(((Gr.y_half[j + Gr.dims.indx_lo[1]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 10.0)/1.2)**2.0)     # changed since VisualizationOutput defined in yz-plane
-#                 dist = fmin(dist,1.0)
-#                 t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
-#                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
-#
-#     return
-#
-#
-#
-#
+
 # def InitSaturatedBubble(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat LH ):
 #
@@ -3589,5 +3545,3 @@ def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables 
 
 
     return
-
-
