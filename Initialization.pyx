@@ -7,7 +7,7 @@
 #import pylab as plt
 
 import netCDF4 as nc
-import numpy as npx
+import numpy as np
 cimport numpy as np
 from scipy.interpolate import PchipInterpolator,pchip_interpolate
 cimport ParallelMPI
