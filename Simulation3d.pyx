@@ -203,7 +203,7 @@ class Simulation3d:
                 # self.debug_tend('MD')
                 #_
 
-                self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa)
+                self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.TS, self.Pa)
                 self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa)
                 self.Budg.update(self.Gr,self.Ra, self.Sur, self.TS, self.Pa)
                 self.Tr.update_cleanup(self.Gr, self.Ref, PV_, DV_, self.Pa, self.TS)
