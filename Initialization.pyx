@@ -955,6 +955,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.int)
         yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.int)
         d = 0
+        i_d = 0
     elif casename == 'ColdPoolMoist_double_3D':
         # geometry of cold pool
         # sep: separation btw. cold pools [m]
@@ -1136,177 +1137,199 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
 
 
-# def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-#             ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
-#                               ParallelMPI.ParallelMPI Pa, LatentHeat LH):
-#     # initial background profiles adopted from Bomex
-#     Pa.root_print('')
-#     Pa.root_print('Initialization: Cold Pool Cabauw')
-#     Pa.root_print('')
-#     casename = namelist['meta']['casename']
-#     # set zero ground humidity, no horizontal wind at ground
-#     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
-#
-#     #Generate reference profiles
-#     RS.Pg = 1.0e5       #Pressure at ground
-#     RS.Tg = 300.0       #Temperature at ground
-#     RS.qtg = 0.02245    #Total water mixing ratio at surface (BOMEX)
-#     # RS.qtg = 0.01 / (1+0.01)    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
-#     #Set velocities for Galilean transformation
-#     RS.u0 = 0.0
-#     RS.v0 = 0.0
-#     RS.initialize(Gr, Th, NS, Pa)
-#
-#     #Get the variable number for each of the velocity components
-#     cdef:
-#         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-#         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-#         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-#         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-#         Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
-#         Py_ssize_t i,j,k
-#         Py_ssize_t ishift, jshift
-#         Py_ssize_t ijk
-#         Py_ssize_t gw = Gr.dims.gw
-#
-#     # parameters
-#     casename = namelist['meta']['casename']
-#     # cdef:
-#     #     double dTh = namelist['init']['dTh']
-#     #     double dqt = namelist['init']['dqt']
-#     #     double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
-#     #     double zstar = namelist['init']['h']
-#     #     Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
-#     #     double marg = namelist['init']['marg']
-#     #     double [:] r = np.ndarray((3), dtype=np.double)
-#     #     Py_ssize_t n, nmin
-#     cdef:
-#         Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
-#         Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
-#         Py_ssize_t nt = 10          # length of forcing
-#
-#     if casename == 'ColdPoolCabauw':
-#         ncp = 1
-#         ic1 = ic
-#         jc1 = jc
-#         ic_arr = np.asarray([ic1], dtype=np.int)
-#         jc_arr = np.asarray([jc1], dtype=np.int)
-#         xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.int)
-#         yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.int)
-#
-#
-#     # ''' >>> to forcing '''
-#     # # path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input'
-#     # # filename = 'precipitation_test1.nc'
-#     # path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input/precipitation_test1.nc'
-#     # root = nc.Dataset(path_data, 'r')
-#     # nt = root.variables['nt'][:]
-#     # precip_ = root.variables['precipitation']#[:,:,:]
-#     # root.close()
-#     #
-#     # cdef:
-#     #     # input fields from radar:
-#     #     # - CP_area: boolean field defining area where cooling is applied (nt, nx, ny)
-#     #     # - precip: 2D-field rain intensity (nt, nx, ny)
-#     #     # - dTdt: 2D-field cooling (from rain intensity) (nt, nx, ny)
-#     #     # - dqdt: 2D-field moistening (from rain intensity) (nt, nx, ny)
-#     #     double z_BL = 1000.
-#     #     bool [:,:,:] CP_area = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
-#     #     double [:,:,:] precip = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
-#     #     double [:,:,:] dTdt = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
-#     #     double [:,:,:] dqdt = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
-#     # precip[:,:,:] = precip_[:,:,:]
-#
-#
-#     # initialize background and include perturbations
-#     np.random.seed(Pa.rank)     # make Noise reproducable
-#     cdef:
-#         # double temp
-#         double th_g = 300.0  # value from Soares Surface
-#         double [:] thetal_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
-#         double [:,:,:] thetal = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-#         double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
-#         double qt_
-#         double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
-#         double [:,:,:] qt = np.empty(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-#         double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
-#
-#     # initialize background stratification (BOMEX)
-#     for k in xrange(Gr.dims.nlg[2]):
-#         if Gr.zl_half[k] <= 520:
-#             thetal_bg[k] = 298.7
-#             qt_bg[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
-#         if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-#             thetal_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
-#             qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-#         if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
-#             thetal_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
-#             qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
-#         if Gr.zl_half[k] > 2000.0:
-#             thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
-#             qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
-#
-#     Pa.root_print('')
-#     Pa.root_print('nx, ny:   ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
-#     # Pa.root_print('nxg, nyp: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
-#     Pa.root_print('gw: ' + str(Gr.dims.gw))
-#     Pa.root_print('')
-#
-#
-#     # ''' compute z_max '''
-#     for i in xrange(Gr.dims.nlg[0]):
-#         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#         for j in xrange(Gr.dims.nlg[1]):
-#             jshift = j * Gr.dims.nlg[2]
-#             for k in xrange(Gr.dims.nlg[2]):
-#                 ijk = ishift + jshift + k
-#                 PV.values[u_varshift + ijk] = 0.0
-#                 PV.values[v_varshift + ijk] = 0.0
-#                 PV.values[w_varshift + ijk] = 0.0
-#
-#                 # thetal[i, j, k] = thetal_bg[k]
-#                 # qt[i, j, k] = qt_bg[k]
-#
-#                 # --- adding noise ---
-#                 if Gr.zl_half[k] <= 1600.0:     # height from Bomex
-#                     temp = (thetal_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
-#                     qt_ = qt_bg[k] + qt_pert[ijk]
-#                 else:
-#                     temp = thetal_bg[k] * exner_c(RS.p0_half[k])
-#                     qt_ = qt_bg[k]
-#                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
-#                 PV.values[qt_varshift + ijk] = qt_
-#
-#     #
-#     # # ''' plotting '''
-#     # # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
-#     # # cdef:
-#     # #     PrognosticVariables.PrognosticVariables PV_ = PV
-#     # #     Py_ssize_t var_shift
-#     # #
-#     # # var_name = 'theta'
-#     # # # from Init_plot import plot_imshow_alongy
-#     # # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-#     # # # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-#     # #
-#     # # var_name = 's'
-#     # # var_shift = PV_.get_varshift(Gr, var_name)
-#     # # var1 = PV_.get_variable_array(var_name, Gr)
-#     # # # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-#     # # del var1
-#     #
-#     # # from Init_plot import plot_imshow
-#     # # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-#     # # plot_imshow('theta', theta[gw:-gw,gw:-gw,gw:-gw], ic1, ic2, ic3, jc1, jc2, jc3)
-#     #
-#     #     # plot_k_array(ic1, jc1, ic2, jc2, z_max_arr, ir_arr, ir_arr_marg, dx, dy)
-#     #
-#     # ''' Initialize passive tracer phi '''
-#     # Pa.root_print('initialize passive tracer phi')
-#     # init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
-#     # Pa.root_print('Initialization: finished initialization')
-#
-#     return
+def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+            ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                              ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+    # initial background profiles adopted from Bomex
+    Pa.root_print('')
+    Pa.root_print('Initialization: Cold Pool Cabauw')
+    Pa.root_print('')
+    casename = namelist['meta']['casename']
+    # set zero ground humidity, no horizontal wind at ground
+    # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
+
+    #Generate reference profiles
+    # RS.Tg = 300.0       # Temperature at ground (BOMEX)
+    # RS.qtg = 0.02245    # Total water mixing ratio at surface (BOMEX)
+    RS.Pg = 1.014e5       # Pressure at ground (Essen, 27.8.2019)
+    RS.Tg = 304.          # (Essen, 27.8.2019)
+    RS.qtg = 12.19e-3     # Total water mixing ratio at surface (Essen, 27.8.2019)
+    # RS.qtg = 0.01 / (1+0.01)    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
+    #Set velocities for Galilean transformation
+    RS.u0 = 0.0
+    RS.v0 = 0.0
+    RS.initialize(Gr, Th, NS, Pa)
+
+    #Get the variable number for each of the velocity components
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk
+        Py_ssize_t gw = Gr.dims.gw
+
+    # cold pool parameters
+    casename = namelist['meta']['casename']
+    # cdef:
+    #     double dTh = namelist['init']['dTh']
+    #     double dqt = namelist['init']['dqt']
+    #     double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
+    #     double zstar = namelist['init']['h']
+    #     Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+    #     double marg = namelist['init']['marg']
+    #     double [:] r = np.ndarray((3), dtype=np.double)
+    #     Py_ssize_t n, nmin
+    cdef:
+        Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
+        Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
+        Py_ssize_t nt = 10          # length of forcing
+
+    if casename == 'ColdPoolCabauw':
+        ncp = 1
+        ic1 = ic
+        jc1 = jc
+        ic_arr = np.asarray([ic1], dtype=np.int)
+        jc_arr = np.asarray([jc1], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.int)
+        yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.int)
+
+    # ''' >>> to forcing '''
+    # # path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input'
+    # # filename = 'precipitation_test1.nc'
+    # path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input/precipitation_test1.nc'
+    # root = nc.Dataset(path_data, 'r')
+    # nt = root.variables['nt'][:]
+    # precip_ = root.variables['precipitation']#[:,:,:]
+    # root.close()
+    #
+    # cdef:
+    #     # input fields from radar:
+    #     # - CP_area: boolean field defining area where cooling is applied (nt, nx, ny)
+    #     # - precip: 2D-field rain intensity (nt, nx, ny)
+    #     # - dTdt: 2D-field cooling (from rain intensity) (nt, nx, ny)
+    #     # - dqdt: 2D-field moistening (from rain intensity) (nt, nx, ny)
+    #     double z_BL = 1000.
+    #     bool [:,:,:] CP_area = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
+    #     double [:,:,:] precip = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
+    #     double [:,:,:] dTdt = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
+    #     double [:,:,:] dqdt = np.zeros((nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.bool)
+    # precip[:,:,:] = precip_[:,:,:]
+
+
+    # initialize background and include perturbations
+    np.random.seed(Pa.rank)     # make Noise reproducable
+    cdef:
+        # double temp
+        # double th_g = 300.0  # value from Soares Surface
+        double th_g = RS.Thg
+        # double [:] thetal_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:,:,:] thetal = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
+        double qt_
+        double qt_g = RS.qtg
+        double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:,:,:] qt = np.empty(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+
+    # initialize background stratification (BOMEX)
+    # for k in xrange(Gr.dims.nlg[2]):
+    #     if Gr.zl_half[k] <= 520:
+    #         thetal_bg[k] = 298.7
+    #         qt_bg[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
+    #     if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
+    #         thetal_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+    #         qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+    #     if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
+    #         thetal_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
+    #         qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+    #     if Gr.zl_half[k] > 2000.0:
+    #         thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
+    #         qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+
+    # initialize background stratification (2019/08/27, Essen, 12:00)
+    for k in xrange(Gr.dims.nlg[2]):
+        if Gr.zl_half[k] <= 136.:
+            theta_bg[k] = th_g
+            qt_bg[k] = qt_g
+        elif Gr.zl_half[k] > 136. and Gr.zl_half[k] <= 1551.:
+            theta_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        elif Gr.zl_half[k] > 1551. and Gr.zl_half[k] <= 1480.0:
+            theta_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
+            theta_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
+            qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+        elif Gr.zl_half[k] > 2000.0:
+            thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
+            qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+
+    Pa.root_print('')
+    Pa.root_print('nx, ny:   ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
+    # Pa.root_print('nxg, nyp: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
+    Pa.root_print('gw: ' + str(Gr.dims.gw))
+    Pa.root_print('')
+
+
+    # ''' compute z_max '''
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = 0.0
+                PV.values[v_varshift + ijk] = 0.0
+                PV.values[w_varshift + ijk] = 0.0
+
+                # thetal[i, j, k] = thetal_bg[k]
+                # qt[i, j, k] = qt_bg[k]
+
+                # --- adding noise ---
+                if Gr.zl_half[k] <= 1600.0:     # height from Bomex
+                    temp = (thetal_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    qt_ = qt_bg[k] + qt_pert[ijk]
+                else:
+                    temp = thetal_bg[k] * exner_c(RS.p0_half[k])
+                    qt_ = qt_bg[k]
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
+                PV.values[qt_varshift + ijk] = qt_
+
+    #
+    # # ''' plotting '''
+    # # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
+    # # cdef:
+    # #     PrognosticVariables.PrognosticVariables PV_ = PV
+    # #     Py_ssize_t var_shift
+    # #
+    # # var_name = 'theta'
+    # # # from Init_plot import plot_imshow_alongy
+    # # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # # # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # #
+    # # var_name = 's'
+    # # var_shift = PV_.get_varshift(Gr, var_name)
+    # # var1 = PV_.get_variable_array(var_name, Gr)
+    # # # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # # del var1
+    #
+    # # from Init_plot import plot_imshow
+    # # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # # plot_imshow('theta', theta[gw:-gw,gw:-gw,gw:-gw], ic1, ic2, ic3, jc1, jc2, jc3)
+    #
+    #     # plot_k_array(ic1, jc1, ic2, jc2, z_max_arr, ir_arr, ir_arr_marg, dx, dy)
+    #
+    # ''' Initialize passive tracer phi '''
+    # Pa.root_print('initialize passive tracer phi')
+    # init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
+    # Pa.root_print('Initialization: finished initialization')
+
+    return
 
 
 
