@@ -48,7 +48,7 @@ def main():
         namelist = SullivanPatton()
     elif case_name == 'Bomex':
         namelist = Bomex()
-    elif case_name == 'Gabls':
+    elif case_name == 'Gabls':   # GEWEX Atmospheric Boundary Layer Study (GABLS) (dry)
         namelist = Gabls()
     elif case_name == 'DYCOMS_RF01':
         namelist = DYCOMS_RF01()
@@ -56,15 +56,15 @@ def main():
         namelist = DYCOMS_RF02()
     elif case_name == 'SMOKE':
         namelist = SMOKE()
-    elif case_name == 'Rico':
+    elif case_name == 'Rico':   # Rico = Rain in Cumulus Over the Ocean
         namelist = Rico()
-    elif case_name == 'Isdac':
+    elif case_name == 'Isdac':  # Arctic
         namelist = Isdac()
     elif case_name == 'IsdacCC':
         namelist = IsdacCC()
-    elif case_name == 'Mpace':
+    elif case_name == 'Mpace':  # Mixed Phase Arctic Cloud Experiment (MPACE)
         namelist = Mpace()
-    elif case_name == 'Sheba':
+    elif case_name == 'Sheba':  # arctic
         namelist = Sheba()
     elif case_name == 'CGILS_S6':
         namelist = CGILS_S6(is_p2, is_ctl_omega)
@@ -1058,6 +1058,7 @@ def DYCOMS_RF02():
 
     return namelist
 
+
 def SMOKE():
 
     '''
@@ -1149,6 +1150,7 @@ def SMOKE():
 
     return namelist
 
+
 def Rico():     # Rico = Rain in Cumulus Over the Ocean
 
     namelist = {}
@@ -1187,8 +1189,6 @@ def Rico():     # Rico = Rain in Cumulus Over the Ocean
 
     namelist['microphysics']['SB_Liquid']['nu_droplet'] = 0
     namelist['microphysics']['SB_Liquid']['mu_rain'] = 1
-
-
 
     namelist['sgs'] = {}
     namelist['sgs']['scheme'] = 'Smagorinsky'
@@ -1236,7 +1236,6 @@ def Rico():     # Rico = Rain in Cumulus Over the Ocean
     namelist['conditional_stats']['classes'] = ['Spectra']
     namelist['conditional_stats']['frequency'] = 600.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
-
 
     return namelist
 
