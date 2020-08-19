@@ -50,114 +50,114 @@ class Simulation3d:
         return
 
     def initialize(self, namelist):
-        self.Pa = ParallelMPI.ParallelMPI(namelist)
-        self.Gr = Grid.Grid(namelist, self.Pa)
-        self.PV = PrognosticVariables.PrognosticVariables(self.Gr)
-        self.Ke = Kinematics.Kinematics()
-        self.DV = DiagnosticVariables.DiagnosticVariables()
-        self.Pr = PressureSolver.PressureSolver()
-        self.LH = LatentHeat(namelist, self.Pa)
-        self.Micro = MicrophysicsFactory(namelist, self.LH, self.Pa)
-        self.SA = ScalarAdvection.ScalarAdvection(namelist, self.LH, self.Pa)
-        self.MA = MomentumAdvection.MomentumAdvection(namelist, self.Pa)
-        self.SGS = SGS.SGS(namelist)
-        self.SD = ScalarDiffusion.ScalarDiffusion(namelist, self.LH, self.DV, self.Pa)
-        self.MD = MomentumDiffusion.MomentumDiffusion(self.DV, self.Pa)
-        self.Th = ThermodynamicsFactory(namelist, self.Micro, self.LH, self.Pa)
-        self.Ref = ReferenceState.ReferenceState(self.Gr)
-        self.Sur = SurfaceFactory(namelist, self.LH, self.Pa)
-        self.Fo = Forcing.Forcing(namelist, self.LH, self.Pa)
-        self.Ra = RadiationFactory(namelist,self.LH, self.Pa)
-        self.Budg = SurfaceBudgetFactory(namelist)
-        self.StatsIO = NetCDFIO.NetCDFIO_Stats()
-        self.FieldsIO = NetCDFIO.NetCDFIO_Fields()
-        self.CondStatsIO = NetCDFIO.NetCDFIO_CondStats()
-        self.Restart = Restart.Restart(namelist, self.Pa)
-        self.VO = VisualizationOutput.VisualizationOutput(namelist, self.Pa)
-        self.Damping = Damping.Damping(namelist, self.Pa)
-        self.TS = TimeStepping.TimeStepping()
-        self.Tr = TracersFactory(namelist)
-        # __
-        # self.SN = StochasticNoise.StochasticNoise(namelist)
-        # uuid = str(namelist['meta']['uuid'])
-        # self.outpath = str(os.path.join(namelist['output']['output_root'] + 'Output.' + namelist['meta']['simname'] + '.' + uuid[-5:]))
-        # self.count = 0
-        # __
-
-        # Add new prognostic variables
-        self.PV.add_variable('u', 'm/s', 'u', 'u velocity component',"sym", "velocity", self.Pa)
-        self.PV.set_velocity_direction('u', 0, self.Pa)
-        self.PV.add_variable('v', 'm/s', 'v', 'v velocity component', "sym", "velocity", self.Pa)
-        self.PV.set_velocity_direction('v', 1, self.Pa)
-        self.PV.add_variable('w', 'm/s', 'w', 'w velocity component', "asym", "velocity", self.Pa)
-        self.PV.set_velocity_direction('w', 2, self.Pa)
-
-        AuxillaryVariables(namelist, self.PV, self.DV, self.Pa)
-
-
-        self.StatsIO.initialize(namelist, self.Gr, self.Pa)
-        self.FieldsIO.initialize(namelist, self.Pa)
-        self.CondStatsIO.initialize(namelist, self.Gr, self.Pa)
-        self.Aux = AuxiliaryStatistics(namelist)
-        self.CondStats = ConditionalStatistics(namelist)
-        self.Restart.initialize()
-
-        self.VO.initialize()
-        self.Th.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
-        self.Micro.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
-        self.SGS.initialize(self.Gr,self.PV,self.StatsIO, self.Pa)
-        self.Tr.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
-        self.PV.initialize(self.Gr, self.StatsIO, self.Pa)
-        self.Ke.initialize(self.Gr, self.StatsIO, self.Pa)
-
-        self.SA.initialize(self.Gr,self.PV, self.StatsIO, self.Pa)
-        self.MA.initialize(self.Gr,self.PV, self.StatsIO, self.Pa)
-        self.SD.initialize(self.Gr,self.PV,self.DV,self.StatsIO,self.Pa)
-        self.MD.initialize(self.Gr,self.PV,self.DV,self.StatsIO, self.Pa)
-
-        self.TS.initialize(namelist,self.PV,self.Pa)
-        # __
-        # self.SN.initialize(self.Pa)
-        # __
-        self.Sur.initialize(self.Gr, self.Ref,  self.StatsIO, self.Pa)
-
-        if self.Restart.is_restart_run:
-            self.Pa.root_print('This run is being restarted!')
-            try:
-                self.Restart.read(self.Pa)
-            except:
-                self.Pa.root_print('Could not read restart file')
-                self.Pa.kill()
-
-            self.TS.t = self.Restart.restart_data['TS']['t']
-            self.TS.dt = self.Restart.restart_data['TS']['dt']
-            self.Ref.init_from_restart(self.Gr, self.Restart)
-            self.PV.init_from_restart(self.Gr, self.Restart)
-            self.Sur.init_from_restart(self.Restart)
-            self.StatsIO.last_output_time = self.Restart.restart_data['last_stats_output']
-            self.CondStatsIO.last_output_time = self.Restart.restart_data['last_condstats_output']
-            self.FieldsIO.last_output_time = self.Restart.restart_data['last_fields_output']
-            self.Restart.last_restart_time = self.Restart.restart_data['last_restart_time']
-            self.VO.last_vis_time = self.Restart.restart_data['last_vis_time']
-            self.Restart.free_memory()
-        else:
-            self.Pa.root_print('This is not a restart run!')
-            SetInitialConditions = InitializationFactory(namelist)
-            SetInitialConditions(namelist,self.Gr, self.PV, self.Ref, self.Th, self.StatsIO, self.Pa, self.LH)
-            del SetInitialConditions
-        self.Pr.initialize(namelist, self.Gr, self.Ref, self.DV, self.Pa)
-        self.DV.initialize(self.Gr, self.StatsIO, self.Pa)
-        self.Fo.initialize(self.Gr, self.Ref, self.Th, self.StatsIO, self.Pa)
-        self.Ra.initialize(self.Gr, self.StatsIO,self.Pa)
-        self.Budg.initialize(self.Gr, self.StatsIO,self.Pa)
-        self.Damping.initialize(self.Gr, self.Ref)
-        self.Aux.initialize(namelist, self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
-        self.CondStats.initialize(namelist, self.Gr, self.PV, self.DV, self.CondStatsIO, self.Pa)
-
-        self.Pa.root_print('Initialization completed!')
-        #__
-        # self.check_nans('Finished Initialization: ')
-        #__
+        # self.Pa = ParallelMPI.ParallelMPI(namelist)
+        # self.Gr = Grid.Grid(namelist, self.Pa)
+        # self.PV = PrognosticVariables.PrognosticVariables(self.Gr)
+        # self.Ke = Kinematics.Kinematics()
+        # self.DV = DiagnosticVariables.DiagnosticVariables()
+        # self.Pr = PressureSolver.PressureSolver()
+        # self.LH = LatentHeat(namelist, self.Pa)
+        # self.Micro = MicrophysicsFactory(namelist, self.LH, self.Pa)
+        # self.SA = ScalarAdvection.ScalarAdvection(namelist, self.LH, self.Pa)
+        # self.MA = MomentumAdvection.MomentumAdvection(namelist, self.Pa)
+        # self.SGS = SGS.SGS(namelist)
+        # self.SD = ScalarDiffusion.ScalarDiffusion(namelist, self.LH, self.DV, self.Pa)
+        # self.MD = MomentumDiffusion.MomentumDiffusion(self.DV, self.Pa)
+        # self.Th = ThermodynamicsFactory(namelist, self.Micro, self.LH, self.Pa)
+        # self.Ref = ReferenceState.ReferenceState(self.Gr)
+        # self.Sur = SurfaceFactory(namelist, self.LH, self.Pa)
+        # self.Fo = Forcing.Forcing(namelist, self.LH, self.Pa)
+        # self.Ra = RadiationFactory(namelist,self.LH, self.Pa)
+        # self.Budg = SurfaceBudgetFactory(namelist)
+        # self.StatsIO = NetCDFIO.NetCDFIO_Stats()
+        # self.FieldsIO = NetCDFIO.NetCDFIO_Fields()
+        # self.CondStatsIO = NetCDFIO.NetCDFIO_CondStats()
+        # self.Restart = Restart.Restart(namelist, self.Pa)
+        # self.VO = VisualizationOutput.VisualizationOutput(namelist, self.Pa)
+        # self.Damping = Damping.Damping(namelist, self.Pa)
+        # self.TS = TimeStepping.TimeStepping()
+        # self.Tr = TracersFactory(namelist)
+        # # __
+        # # self.SN = StochasticNoise.StochasticNoise(namelist)
+        # # uuid = str(namelist['meta']['uuid'])
+        # # self.outpath = str(os.path.join(namelist['output']['output_root'] + 'Output.' + namelist['meta']['simname'] + '.' + uuid[-5:]))
+        # # self.count = 0
+        # # __
+        #
+        # # Add new prognostic variables
+        # self.PV.add_variable('u', 'm/s', 'u', 'u velocity component',"sym", "velocity", self.Pa)
+        # self.PV.set_velocity_direction('u', 0, self.Pa)
+        # self.PV.add_variable('v', 'm/s', 'v', 'v velocity component', "sym", "velocity", self.Pa)
+        # self.PV.set_velocity_direction('v', 1, self.Pa)
+        # self.PV.add_variable('w', 'm/s', 'w', 'w velocity component', "asym", "velocity", self.Pa)
+        # self.PV.set_velocity_direction('w', 2, self.Pa)
+        #
+        # AuxillaryVariables(namelist, self.PV, self.DV, self.Pa)
+        #
+        #
+        # self.StatsIO.initialize(namelist, self.Gr, self.Pa)
+        # self.FieldsIO.initialize(namelist, self.Pa)
+        # self.CondStatsIO.initialize(namelist, self.Gr, self.Pa)
+        # self.Aux = AuxiliaryStatistics(namelist)
+        # self.CondStats = ConditionalStatistics(namelist)
+        # self.Restart.initialize()
+        #
+        # self.VO.initialize()
+        # self.Th.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
+        # self.Micro.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
+        # self.SGS.initialize(self.Gr,self.PV,self.StatsIO, self.Pa)
+        # self.Tr.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
+        # self.PV.initialize(self.Gr, self.StatsIO, self.Pa)
+        # self.Ke.initialize(self.Gr, self.StatsIO, self.Pa)
+        #
+        # self.SA.initialize(self.Gr,self.PV, self.StatsIO, self.Pa)
+        # self.MA.initialize(self.Gr,self.PV, self.StatsIO, self.Pa)
+        # self.SD.initialize(self.Gr,self.PV,self.DV,self.StatsIO,self.Pa)
+        # self.MD.initialize(self.Gr,self.PV,self.DV,self.StatsIO, self.Pa)
+        #
+        # self.TS.initialize(namelist,self.PV,self.Pa)
+        # # __
+        # # self.SN.initialize(self.Pa)
+        # # __
+        # self.Sur.initialize(self.Gr, self.Ref,  self.StatsIO, self.Pa)
+        #
+        # if self.Restart.is_restart_run:
+        #     self.Pa.root_print('This run is being restarted!')
+        #     try:
+        #         self.Restart.read(self.Pa)
+        #     except:
+        #         self.Pa.root_print('Could not read restart file')
+        #         self.Pa.kill()
+        #
+        #     self.TS.t = self.Restart.restart_data['TS']['t']
+        #     self.TS.dt = self.Restart.restart_data['TS']['dt']
+        #     self.Ref.init_from_restart(self.Gr, self.Restart)
+        #     self.PV.init_from_restart(self.Gr, self.Restart)
+        #     self.Sur.init_from_restart(self.Restart)
+        #     self.StatsIO.last_output_time = self.Restart.restart_data['last_stats_output']
+        #     self.CondStatsIO.last_output_time = self.Restart.restart_data['last_condstats_output']
+        #     self.FieldsIO.last_output_time = self.Restart.restart_data['last_fields_output']
+        #     self.Restart.last_restart_time = self.Restart.restart_data['last_restart_time']
+        #     self.VO.last_vis_time = self.Restart.restart_data['last_vis_time']
+        #     self.Restart.free_memory()
+        # else:
+        #     self.Pa.root_print('This is not a restart run!')
+        #     SetInitialConditions = InitializationFactory(namelist)
+        #     SetInitialConditions(namelist,self.Gr, self.PV, self.Ref, self.Th, self.StatsIO, self.Pa, self.LH)
+        #     del SetInitialConditions
+        # self.Pr.initialize(namelist, self.Gr, self.Ref, self.DV, self.Pa)
+        # self.DV.initialize(self.Gr, self.StatsIO, self.Pa)
+        # self.Fo.initialize(self.Gr, self.Ref, self.Th, self.StatsIO, self.Pa)
+        # self.Ra.initialize(self.Gr, self.StatsIO,self.Pa)
+        # self.Budg.initialize(self.Gr, self.StatsIO,self.Pa)
+        # self.Damping.initialize(self.Gr, self.Ref)
+        # self.Aux.initialize(namelist, self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
+        # self.CondStats.initialize(namelist, self.Gr, self.PV, self.DV, self.CondStatsIO, self.Pa)
+        #
+        # self.Pa.root_print('Initialization completed!')
+        # #__
+        # # self.check_nans('Finished Initialization: ')
+        # #__
         return
 
 
