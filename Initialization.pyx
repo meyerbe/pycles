@@ -1057,17 +1057,20 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     Pa.root_print('gw: ' + str(Gr.dims.gw))
     Pa.root_print('d: ' + str(d) + ', id: ' + str(i_d))
     Pa.root_print('Cold Pools:')
+    Pa.root_print('ncp: ' + str(ncp))
     Pa.root_print('ic: ' + str(ic_arr))
     Pa.root_print('jc: ' + str(jc_arr))
     Pa.root_print('')
 
 
     ''' compute z_max '''
+
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
             for n in range(ncp):
+                Pa.root_print('n', n)
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
                              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
