@@ -1008,7 +1008,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         double th_g = 300.0  # value from Soares Surface
         double [:] thetal_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] thetal = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-        double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
+        double [:] thetal_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
         double qt_
         double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] qt = np.empty(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
@@ -1067,7 +1067,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
-            for n in range(3):
+            for n in range(ncp):
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
                              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
@@ -1095,7 +1095,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
                 # --- adding noise ---
                 if k <= kstar + 2:
-                    temp = (thetal[i,j,k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k] + qt_pert[ijk]
                 else:
                     temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
