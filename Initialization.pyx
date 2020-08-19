@@ -1266,7 +1266,7 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
             theta_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
             qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
         elif Gr.zl_half[k] > 2000.0:
-            thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
+            theta_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
             qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
 
     Pa.root_print('')
