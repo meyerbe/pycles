@@ -1984,89 +1984,89 @@ cdef class ForcingColdPoolCabauw:
         # what timestep is used to apply tendencies to prognostic variables?
         # ??? does Microphysics output some evaporation rate?
 
-        cdef:
-            double [:,:] p1
-            double [:,:] p2
-            double [:,:] precip_int
-            double [:,:] evap
-            double [:,:] dtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-            double [:,:] dqtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-            double dt = TS.dt
-            Py_ssize_t dA = Gr.dims.dx[0]*Gr.dims.dx[1]
-            double eta = self.eta
-            # double cpd = 1004.0
-            # double cpv = 1859.0
-            double rho_w = 997. #kg/m3
-
-        cdef:
-            Py_ssize_t gw = Gr.dims.gw
-            Py_ssize_t imin = Gr.dims.gw
-            Py_ssize_t jmin = Gr.dims.gw
-            Py_ssize_t kmin = Gr.dims.gw
-            Py_ssize_t imax = Gr.dims.nlg[0] - gw
-            Py_ssize_t jmax = Gr.dims.nlg[1] - gw
-            # Py_ssize_t kmax = Gr.dims.nlg[2] - gw
-            Py_ssize_t k_BL = np.int(self.z_BL / Gr.dims.dx[2])
-            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
-            Py_ssize_t jstride = Gr.dims.nlg[2]
-            Py_ssize_t ishift, jshift, ijk, i,j,k
-        cdef:
-            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
-            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
-            Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
-            Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
-
-        # apply forcing only in first timesteps
-
-        if TS.t < self.nt_ext*self.dt_ext:
-            # (1) find two precip files of timesteps t_i, t_i+1, s.t. t_i<=TS.t<t_i+1
-            # (2) linearly interpolate precip files to get precip[TS.t,x,y]
-            # (3) compute cooling and moistening (a) based on assumed constant evaporation, (b) LES output from evaporation
-            # (4) distribute the cooling and moistening in column V=z_cb*dx*dy
-            #       >> find cloud base z_cb from Tara radar
-            # (5) update dtdt, dqtdt and add to tendency
-            # self.count += 1
-
-            # (1) find two precip files of timesteps t_i, t_i+1, s.t. t_i<=TS.t<t_i+1
-            while TS.t < self.forcing_time[self.count]:
-                self.count+=1
-            root = nc.Dataset(self.path_data, 'r')
-            p1 = root.variables['precipitation'][self.count,:,:]
-            p2 = root.variables['precipitation'][self.count+1,:,:]
-            root.close()
-
-            # (2) linearly interpolate precip files to get precip[TS.t,x,y]
-            # precip_int: precipitation in timestep dt
-            # evap: amout of evaporated water in column
-            precip_int = (p1 + (p2-p1) * (TS.t-self.forcing_time[self.count])/self.dt_ext) # [mm/h]
-            evap = eta * precip_int*1e3*60 * dt * dA        # [m3 of water]
-
-            # (3) compute cooling and moistening (a) based on assumed constant evaporation, (b) LES output from evaporation
-            m_column = dA*np.sum(Ref.rho0[:k_BL])   # mass of air in cooled sub-cloud column
-            # m_column = 0.
-            # for k in range(k_BL):
-            #     m_column += dA*rho0[k]
-            #     # m_column = dA * sum_k \rho_0(k)
-            # for k in range(k_BL):
-            #     dtdt = Lv*evap*rho_w / (cpd*m_column)       # only evap is 2D field
-
-            # with nogil:
-            if 1 == 1:
-                for i in xrange(imin,imax):
-                    ishift = i*istride
-                    for j in xrange(jmin,jmax):
-                        jshift = j*jstride
-                        for k in xrange(kmin,k_BL):
-                            ijk = ishift + jshift + k
-                            dtdt[ijk] = Lv * evap[i,j,k] * rho_w / (cpd*m_column)       # only evap is 2D field
-                            # tend = (values[ijk+1] - values[ijk]) * dxi * subsidence[k]
-
-                            p0 = Ref.p0_half[k]
-                            qt = PV.values[qt_shift + ijk]
-                            qv = qt - DV.values[ql_shift + ijk]
-                            t  = DV.values[t_shift + ijk]
-                            PV.tendencies[s_shift + ijk] += s_tendency_c(p0,qt,qv,t, dqtdt[k], dtdt[k])
-                            PV.tendencies[qt_shift + ijk] += dqtdt[k]
+        # cdef:
+        #     double [:,:] p1
+        #     double [:,:] p2
+        #     double [:,:] precip_int
+        #     double [:,:] evap
+        #     double [:,:] dtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        #     double [:,:] dqtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        #     double dt = TS.dt
+        #     Py_ssize_t dA = Gr.dims.dx[0]*Gr.dims.dx[1]
+        #     double eta = self.eta
+        #     # double cpd = 1004.0
+        #     # double cpv = 1859.0
+        #     double rho_w = 997. #kg/m3
+        #
+        # cdef:
+        #     Py_ssize_t gw = Gr.dims.gw
+        #     Py_ssize_t imin = Gr.dims.gw
+        #     Py_ssize_t jmin = Gr.dims.gw
+        #     Py_ssize_t kmin = Gr.dims.gw
+        #     Py_ssize_t imax = Gr.dims.nlg[0] - gw
+        #     Py_ssize_t jmax = Gr.dims.nlg[1] - gw
+        #     # Py_ssize_t kmax = Gr.dims.nlg[2] - gw
+        #     Py_ssize_t k_BL = np.int(self.z_BL / Gr.dims.dx[2])
+        #     Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        #     Py_ssize_t jstride = Gr.dims.nlg[2]
+        #     Py_ssize_t ishift, jshift, ijk, i,j,k
+        # cdef:
+        #     Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+        #     Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+        #     Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
+        #     Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
+        #
+        # # apply forcing only in first timesteps
+        #
+        # if TS.t < self.nt_ext*self.dt_ext:
+        #     # (1) find two precip files of timesteps t_i, t_i+1, s.t. t_i<=TS.t<t_i+1
+        #     # (2) linearly interpolate precip files to get precip[TS.t,x,y]
+        #     # (3) compute cooling and moistening (a) based on assumed constant evaporation, (b) LES output from evaporation
+        #     # (4) distribute the cooling and moistening in column V=z_cb*dx*dy
+        #     #       >> find cloud base z_cb from Tara radar
+        #     # (5) update dtdt, dqtdt and add to tendency
+        #     # self.count += 1
+        #
+        #     # (1) find two precip files of timesteps t_i, t_i+1, s.t. t_i<=TS.t<t_i+1
+        #     while TS.t < self.forcing_time[self.count]:
+        #         self.count+=1
+        #     root = nc.Dataset(self.path_data, 'r')
+        #     p1 = root.variables['precipitation'][self.count,:,:]
+        #     p2 = root.variables['precipitation'][self.count+1,:,:]
+        #     root.close()
+        #
+        #     # (2) linearly interpolate precip files to get precip[TS.t,x,y]
+        #     # precip_int: precipitation in timestep dt
+        #     # evap: amout of evaporated water in column
+        #     precip_int = (p1 + (p2-p1) * (TS.t-self.forcing_time[self.count])/self.dt_ext) # [mm/h]
+        #     evap = eta * precip_int*1e3*60 * dt * dA        # [m3 of water]
+        #
+        #     # (3) compute cooling and moistening (a) based on assumed constant evaporation, (b) LES output from evaporation
+        #     m_column = dA*np.sum(Ref.rho0[:k_BL])   # mass of air in cooled sub-cloud column
+        #     # m_column = 0.
+        #     # for k in range(k_BL):
+        #     #     m_column += dA*rho0[k]
+        #     #     # m_column = dA * sum_k \rho_0(k)
+        #     # for k in range(k_BL):
+        #     #     dtdt = Lv*evap*rho_w / (cpd*m_column)       # only evap is 2D field
+        #
+        #     # with nogil:
+        #     if 1 == 1:
+        #         for i in xrange(imin,imax):
+        #             ishift = i*istride
+        #             for j in xrange(jmin,jmax):
+        #                 jshift = j*jstride
+        #                 for k in xrange(kmin,k_BL):
+        #                     ijk = ishift + jshift + k
+        #                     dtdt[ijk] = Lv * evap[i,j,k] * rho_w / (cpd*m_column)       # only evap is 2D field
+        #                     # tend = (values[ijk+1] - values[ijk]) * dxi * subsidence[k]
+        #
+        #                     p0 = Ref.p0_half[k]
+        #                     qt = PV.values[qt_shift + ijk]
+        #                     qv = qt - DV.values[ql_shift + ijk]
+        #                     t  = DV.values[t_shift + ijk]
+        #                     PV.tendencies[s_shift + ijk] += s_tendency_c(p0,qt,qv,t, dqtdt[k], dtdt[k])
+        #                     PV.tendencies[qt_shift + ijk] += dqtdt[k]
 
 
         return
