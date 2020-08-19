@@ -1292,10 +1292,10 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
                 # --- adding noise ---
                 if Gr.zl_half[k] <= 1600.0:     # height from Bomex
-                    temp = (thetal_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    temp = (theta_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt_bg[k] + qt_pert[ijk]
                 else:
-                    temp = thetal_bg[k] * exner_c(RS.p0_half[k])
+                    temp = theta_bg[k] * exner_c(RS.p0_half[k])
                     qt_ = qt_bg[k]
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
