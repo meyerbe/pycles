@@ -1070,7 +1070,6 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
             for n in range(ncp):
-                Pa.root_print('n', n)
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
                              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
@@ -1103,25 +1102,25 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
                 else:
                     temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k]
-                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
 
 
-    # ''' plotting '''
+    ''' plotting '''
     # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     # cdef:
     #     PrognosticVariables.PrognosticVariables PV_ = PV
     #     Py_ssize_t var_shift
-    #
+    
     # var_name = 'theta'
-    # # from Init_plot import plot_imshow_alongy
-    # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    # # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-    #
+    # from Init_plot import plot_imshow_alongy
+    # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+   
     # var_name = 's'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
-    # # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
     # del var1
 
     # from Init_plot import plot_imshow
