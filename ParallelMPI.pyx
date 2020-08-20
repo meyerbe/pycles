@@ -15,53 +15,53 @@ import cython
 from libc.math cimport fmin, fmax
 cdef class ParallelMPI:
     def __init__(self,namelist):
-        # '''
-        # Initializes the ParallelMPI class. Calls MPI init. Sets-up MPI cartesian topologies and sub-topologies.
-        # :param namelist: Namelist dictionary.
-        # :return:
-        # '''
-        #
-        # cdef:
-        #     int is_initialized
-        #     int ierr = 0
-        #
-        # #Check to see if MPI_Init has been called if not do so
-        # ierr = mpi.MPI_Initialized(&is_initialized)
-        # if not is_initialized:
-        #     from mpi4py import MPI
-        # self.comm_world =  mpi.MPI_COMM_WORLD
-        # ierr = mpi.MPI_Comm_rank(mpi.MPI_COMM_WORLD, &self.rank)
-        # ierr = mpi.MPI_Comm_size(mpi.MPI_COMM_WORLD, &self.size)
-        #
-        # cdef:
-        #     int [3] cart_dims
-        #     int [3] cyclic
-        #     int ndims = 3
-        #     int reorder = 1
-        #
-        # cart_dims[0] = namelist['mpi']['nprocx']
-        # cart_dims[1] = namelist['mpi']['nprocy']
-        # cart_dims[2] = namelist['mpi']['nprocz']
-        #
-        # #Check to make sure that cart dimensions are consistent with MPI global size
-        # if cart_dims[0] * cart_dims[1] * cart_dims[2] != self.size:
-        #     self.root_print('MPI global size: ' + str(self.size) +
-        #                     'does not equal nprocx * nprocy * nprocz: '
-        #                     + str(cart_dims[0] * cart_dims[1] * cart_dims[2]))
-        #     self.root_print('Killing simulation NOW!')
-        #     self.kill()
-        #
-        # cyclic[0] = 1
-        # cyclic[1] = 1
-        # cyclic[2] = 0
-        #
-        # #Create the cartesian world commmunicator
-        # ierr = mpi.MPI_Cart_create(self.comm_world,ndims, cart_dims, cyclic, reorder,&self.cart_comm_world)
-        # self.barrier()
-        #
-        # #Create the cartesian sub-communicators
-        # self.create_sub_communicators()
-        # self.barrier()
+        '''
+        Initializes the ParallelMPI class. Calls MPI init. Sets-up MPI cartesian topologies and sub-topologies.
+        :param namelist: Namelist dictionary.
+        :return:
+        '''
+        
+        cdef:
+            int is_initialized
+            int ierr = 0
+       
+        #Check to see if MPI_Init has been called if not do so
+        ierr = mpi.MPI_Initialized(&is_initialized)
+        if not is_initialized:
+            from mpi4py import MPI
+        self.comm_world =  mpi.MPI_COMM_WORLD
+        ierr = mpi.MPI_Comm_rank(mpi.MPI_COMM_WORLD, &self.rank)
+        ierr = mpi.MPI_Comm_size(mpi.MPI_COMM_WORLD, &self.size)
+        
+        cdef:
+            int [3] cart_dims
+            int [3] cyclic
+            int ndims = 3
+            int reorder = 1
+        
+        cart_dims[0] = namelist['mpi']['nprocx']
+        cart_dims[1] = namelist['mpi']['nprocy']
+        cart_dims[2] = namelist['mpi']['nprocz']
+        
+        #Check to make sure that cart dimensions are consistent with MPI global size
+        if cart_dims[0] * cart_dims[1] * cart_dims[2] != self.size:
+            self.root_print('MPI global size: ' + str(self.size) +
+                            'does not equal nprocx * nprocy * nprocz: '
+                            + str(cart_dims[0] * cart_dims[1] * cart_dims[2]))
+            self.root_print('Killing simulation NOW!')
+            self.kill()
+        
+        cyclic[0] = 1
+        cyclic[1] = 1
+        cyclic[2] = 0
+        
+        #Create the cartesian world commmunicator
+        ierr = mpi.MPI_Cart_create(self.comm_world,ndims, cart_dims, cyclic, reorder,&self.cart_comm_world)
+        self.barrier()
+        
+        #Create the cartesian sub-communicators
+        self.create_sub_communicators()
+        self.barrier()
 
         return
 
