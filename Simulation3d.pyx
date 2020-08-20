@@ -145,19 +145,19 @@ class Simulation3d:
             SetInitialConditions = InitializationFactory(namelist)
             SetInitialConditions(namelist,self.Gr, self.PV, self.Ref, self.Th, self.StatsIO, self.Pa, self.LH)
             del SetInitialConditions
-        # self.Pr.initialize(namelist, self.Gr, self.Ref, self.DV, self.Pa)
-        # self.DV.initialize(self.Gr, self.StatsIO, self.Pa)
-        # self.Fo.initialize(self.Gr, self.Ref, self.Th, self.StatsIO, self.Pa)
-        # self.Ra.initialize(self.Gr, self.StatsIO,self.Pa)
-        # self.Budg.initialize(self.Gr, self.StatsIO,self.Pa)
-        # self.Damping.initialize(self.Gr, self.Ref)
-        # self.Aux.initialize(namelist, self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
-        # self.CondStats.initialize(namelist, self.Gr, self.PV, self.DV, self.CondStatsIO, self.Pa)
-        #
-        # self.Pa.root_print('Initialization completed!')
-        # #__
-        # # self.check_nans('Finished Initialization: ')
-        # #__
+        self.Pr.initialize(namelist, self.Gr, self.Ref, self.DV, self.Pa)
+        self.DV.initialize(self.Gr, self.StatsIO, self.Pa)
+        self.Fo.initialize(self.Gr, self.Ref, self.Th, self.StatsIO, self.Pa)
+        self.Ra.initialize(self.Gr, self.StatsIO,self.Pa)
+        self.Budg.initialize(self.Gr, self.StatsIO,self.Pa)
+        self.Damping.initialize(self.Gr, self.Ref)
+        self.Aux.initialize(namelist, self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
+        self.CondStats.initialize(namelist, self.Gr, self.PV, self.DV, self.CondStatsIO, self.Pa)
+        
+        self.Pa.root_print('Initialization completed!')
+        #__
+        # self.check_nans('Finished Initialization: ')
+        #__
         return
 
 
