@@ -906,7 +906,6 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     Pa.root_print('')
     Pa.root_print('Initialization: Moist Cold Pool (3D)')
     Pa.root_print('')
-    casename = namelist['meta']['casename']
     # set zero ground humidity, no horizontal wind at ground
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
@@ -1047,8 +1046,13 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         if Gr.zl_half[k] > 2000.0:
             thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
             qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+        # Change units to kg/kg
+        qt_bg[k] /= 1000.0
+    #print('---- qt-profile: ', np.asarray(qt_bg[:20]))
 
+    Pa.root_print(casename)
     Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('                dTh='+str(dTh)+', dqt='+str(dqt))
     Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
     Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
     Pa.root_print('')
@@ -1102,16 +1106,23 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
                 else:
                     temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k]
+                #if k<20:
+                #    print('k, p0, temp, qt', k, RS.p0_half[k], temp, qt_)
+                #    print('entropy', Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0))
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
 
+    #''' testing '''
+    #cdef:
+    #    Py_ssize_t ijk_max = Gr.dims.nlg[0]*Gr.dims.nlg[1]*Gr.dims.nlg[2]
+    #print('------- s: ', np.asarray(PV.values[s_varshift:s_varshift+ijk_max]))
 
     ''' plotting '''
     # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     # cdef:
     #     PrognosticVariables.PrognosticVariables PV_ = PV
     #     Py_ssize_t var_shift
-    
+    #
     # var_name = 'theta'
     # from Init_plot import plot_imshow_alongy
     # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
@@ -1626,6 +1637,8 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         if Gr.zl_half[k] > 700.0:
             u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
+    
+    #print('---- qt-profile: ', np.asarray(qt[:20]))
     # --
     #plt.figure(figsize=(12,6))
     #plt.subplot(1,2,1)
