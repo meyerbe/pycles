@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 
@@ -906,7 +906,6 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     Pa.root_print('')
     Pa.root_print('Initialization: Moist Cold Pool (3D)')
     Pa.root_print('')
-    casename = namelist['meta']['casename']
     # set zero ground humidity, no horizontal wind at ground
     # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
@@ -1008,7 +1007,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         double th_g = 300.0  # value from Soares Surface
         double [:] thetal_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] thetal = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
-        double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
+        double [:] thetal_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
         double qt_
         double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] qt = np.empty(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
@@ -1047,8 +1046,13 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         if Gr.zl_half[k] > 2000.0:
             thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
             qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+        # Change units to kg/kg
+        qt_bg[k] /= 1000.0
+    #print('---- qt-profile: ', np.asarray(qt_bg[:20]))
 
+    Pa.root_print(casename)
     Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('                dTh='+str(dTh)+', dqt='+str(dqt))
     Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
     Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
     Pa.root_print('')
@@ -1057,6 +1061,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     Pa.root_print('gw: ' + str(Gr.dims.gw))
     Pa.root_print('d: ' + str(d) + ', id: ' + str(i_d))
     Pa.root_print('Cold Pools:')
+    Pa.root_print('ncp: ' + str(ncp))
     Pa.root_print('ic: ' + str(ic_arr))
     Pa.root_print('jc: ' + str(jc_arr))
     Pa.root_print('')
@@ -1067,7 +1072,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
             jshift = j * Gr.dims.nlg[2]
-            for n in range(3):
+            for n in range(ncp):
                 r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
                              (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
             nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
@@ -1095,30 +1100,34 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
                 # --- adding noise ---
                 if k <= kstar + 2:
-                    temp = (thetal[i,j,k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k] + qt_pert[ijk]
                 else:
                     temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
                     qt_ = qt[i,j,k]
-                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
 
+    #''' testing '''
+    #cdef:
+    #    Py_ssize_t ijk_max = Gr.dims.nlg[0]*Gr.dims.nlg[1]*Gr.dims.nlg[2]
+    #print('------- s: ', np.asarray(PV.values[s_varshift:s_varshift+ijk_max]))
 
-    # ''' plotting '''
+    ''' plotting '''
     # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     # cdef:
     #     PrognosticVariables.PrognosticVariables PV_ = PV
     #     Py_ssize_t var_shift
     #
     # var_name = 'theta'
-    # # from Init_plot import plot_imshow_alongy
-    # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
-    # # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-    #
+    # from Init_plot import plot_imshow_alongy
+    # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+
     # var_name = 's'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
-    # # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
     # del var1
 
     # from Init_plot import plot_imshow
@@ -1266,7 +1275,7 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
             theta_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
             qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
         elif Gr.zl_half[k] > 2000.0:
-            thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
+            theta_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
             qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
 
     Pa.root_print('')
@@ -1292,10 +1301,10 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
                 # --- adding noise ---
                 if Gr.zl_half[k] <= 1600.0:     # height from Bomex
-                    temp = (thetal_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    temp = (theta_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt_bg[k] + qt_pert[ijk]
                 else:
-                    temp = thetal_bg[k] * exner_c(RS.p0_half[k])
+                    temp = theta_bg[k] * exner_c(RS.p0_half[k])
                     qt_ = qt_bg[k]
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half, temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
@@ -1624,6 +1633,8 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         if Gr.zl_half[k] > 700.0:
             u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
+
+    #print('---- qt-profile: ', np.asarray(qt[:20]))
     # --
     #plt.figure(figsize=(12,6))
     #plt.subplot(1,2,1)
