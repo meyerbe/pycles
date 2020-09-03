@@ -49,7 +49,17 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
            return SurfaceSullivanPatton(LH)
         elif casename == 'ColdPoolDry_single_2D' or casename == 'ColdPoolDry_double_2D':
             # return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
-            return SurfaceColdPools(LH)
+            try:
+                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
+                if namelist['surface']['scheme'] == 'bulk':
+                    return SurfaceColdPools(LH)
+                elif namelist['surface']['scheme'] == 'const':
+                    return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+                else:
+                    return SurfaceNone()
+            except:
+                Par.root_print('nml surface scheme not defined')
+                return SurfaceNone()
         elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
                 or casename == 'ColdPoolDry_triple_3D':
             try:
@@ -68,14 +78,23 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
             try:
                 Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
                 if namelist['surface']['scheme'] == 'bulk':
+                    Par.root_print('Surface scheme: bulk')
                     return SurfaceColdPools(LH)
+                elif namelist['surface']['scheme'] == 'bulk_moist':
+                    Par.root_print('Surface scheme: bulk moist')
+                    return SurfaceColdPools_Moist(LH)
                 elif namelist['surface']['scheme'] == 'bomex':
+                    Par.root_print('Surface scheme: BOMEX')
                     return SurfaceBomex(LH)
                 else:
+                    Par.root_print('Surface scheme: none')
                     return SurfaceNone()
             except:
                 Par.root_print('nml surface scheme not defined')
                 return SurfaceNone()
+        elif casename == 'ColdPool_EUREKA':
+            Par.root_print('Surface scheme: BOMEX')
+            return SurfaceBomex(LH)
         elif casename == 'Bomex':
             return SurfaceBomex(LH)
         elif casename == 'Gabls':
@@ -341,6 +360,90 @@ cdef class SurfaceColdPools(SurfaceBase):
 
 
         return
+
+
+
+# COLD POOLS (adapted from Bomex scheme)
+cdef class SurfaceColdPools_Moist(SurfaceBase):
+    def __init__(self, LatentHeat LH):
+        print('calling Surface Scheme <Cold Pool Moist>')
+        self.L_fp = LH.L_fp
+        self.Lambda_fp = LH.Lambda_fp
+        self.dry_case = False
+        return
+
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+        SurfaceBase.initialize(self,Gr,Ref,NS,Pa)
+
+        self.theta_flux = 8.0e-3 # K m/s
+        self.qt_flux = np.add(self.qt_flux, 5.2e-5) # m/s
+        self.ustar_ = 0.28 #m/s
+
+        # self.theta_surface = 299.1 #K
+        # self.qt_surface = 22.45e-3 # kg/kg
+        # self.buoyancy_flux = g * ((self.theta_flux + (eps_vi-1.0)*(self.theta_surface*self.qt_flux[0]
+        #                                                            + self.qt_surface *self.theta_flux))
+        #                       /(self.theta_surface*(1.0 + (eps_vi-1)*self.qt_surface)))
+        return
+
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS):
+
+        if Pa.sub_z_rank != 0:
+            return
+
+
+        cdef :
+            Py_ssize_t i, j, ij, ijk
+            Py_ssize_t gw = Gr.dims.gw
+            Py_ssize_t imax = Gr.dims.nlg[0]
+            Py_ssize_t jmax = Gr.dims.nlg[1]
+            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            Py_ssize_t jstride = Gr.dims.nlg[2]
+            Py_ssize_t istride_2d = Gr.dims.nlg[1]
+            Py_ssize_t temp_shift = DV.get_varshift(Gr, 'temperature')
+            # Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t qv_shift = DV.get_varshift(Gr,'qv')
+
+
+        # Get the scalar flux
+        with nogil:
+            for i in xrange(imax):
+                for j in xrange(jmax):
+                    ijk = i * istride + j * jstride + gw
+                    ij = i * istride_2d + j
+                    self.friction_velocity[ij] = self.ustar_
+                    self.s_flux[ij] = entropyflux_from_thetaflux_qtflux(self.theta_flux, self.qt_flux[ij], Ref.p0_half[gw],
+                                                                        DV.values[temp_shift+ijk], PV.values[qt_shift+ijk], DV.values[qv_shift+ijk])
+
+        cdef:
+            Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
+            Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
+            double [:] windspeed = np.zeros(Gr.dims.nlg[0]*Gr.dims.nlg[1], dtype=np.double, order='c')
+
+        compute_windspeed(&Gr.dims, &PV.values[u_shift], &PV.values[v_shift], &windspeed[0], Ref.u0, Ref.v0, self.gustiness)
+
+        # Get the shear stresses
+        with nogil:
+            for i in xrange(1,imax-1):
+                for j in xrange(1,jmax-1):
+                    ijk = i * istride + j * jstride + gw
+                    ij = i * istride_2d + j
+                    # self.u_flux[ij] = -self.ustar_**2/interp_2(windspeed[ij], windspeed[ij+istride_2d]) * (PV.values[u_shift + ijk] + Ref.u0)
+                    # self.v_flux[ij] = -self.ustar_**2/interp_2(windspeed[ij], windspeed[ij+1]) * (PV.values[v_shift + ijk] + Ref.v0)
+
+        SurfaceBase.update(self, Gr, Ref, PV, DV, Pa, TS)
+
+        return
+
+
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        return
+
+
 
 # SULLIVAN
 cdef class SurfaceSullivanPatton(SurfaceBase):
@@ -1134,7 +1237,7 @@ cdef class SurfaceSoares(SurfaceBase):
     @cython.wraparound(False)   #Turn off numpy array wrap around indexing
     @cython.cdivision(True)
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):     # Sullivan
-        self.theta_surface = 300.0 # K
+        # self.theta_surface = 300.0 # K
         # self.qt_surface = 5.0e-3 # kg/kg
 
         self.theta_flux = 0.06 # K m/s
