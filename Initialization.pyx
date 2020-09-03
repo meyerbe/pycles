@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 
@@ -51,6 +51,10 @@ def InitializationFactory(namelist):
             return InitColdPoolDry_triple_3D
         elif casename == 'ColdPoolMoist_single_3D':
             return InitColdPoolMoist_3D
+        elif casename == 'ColdPool_EUREKA':
+            return InitColdPool_EUREKA
+        elif casename == 'ColdPoolCabauw':
+            return InitColdPoolCabauw
         elif casename == 'SullivanPatton':
             return InitSullivanPatton
         # elif casename == 'StableBubble':
@@ -408,9 +412,9 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     Pa.root_print('Initialization: Single Dry Cold Pool (3D)')
     Pa.root_print('')
     casename = namelist['meta']['casename']
-    # set zero ground humidity, no horizontal wind at ground
 
-    #Generate reference profiles
+    # Generate reference profiles
+    # set zero ground humidity, no horizontal wind at ground
     RS.Pg = 1.0e5
     RS.Tg = 300.0
     RS.qtg = 0.0
@@ -611,15 +615,15 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # initialize background stratification
     if casename[22:28] == 'stable':
         Pa.root_print('initializing stable CP')
-        Nv = 5e-5
+        Nv2 = 5e-5
         g = 9.81
         for k in xrange(Gr.dims.nlg[2]):
             if Gr.zl_half[k] <= 1000.:
                 theta_bg[k] = th_g
                 Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
             else:
-                theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
-                Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv/g*(Gr.zl_half[k]-1000.))) )
+                theta_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
+                Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv2/g*(Gr.zl_half[k]-1000.))) )
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
@@ -801,13 +805,13 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     # initialize background stratification
     if casename[22:28] == 'stable':
         Pa.root_print('initializing stable CP')
-        Nv = 5e-5
+        Nv2 = 5e-5
         g = 9.81
         for k in xrange(Gr.dims.nlg[2]):
             if Gr.zl_half[k] <= 1000.:
                 theta_bg[k] = th_g
             else:
-                theta_bg[k] = th_g * np.exp(Nv/g*(Gr.zl_half[k]-1000.))
+                theta_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
@@ -898,7 +902,6 @@ def InitColdPoolDry_triple_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
 
 
 
-
 def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
             ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
                               ParallelMPI.ParallelMPI Pa, LatentHeat LH):
@@ -906,17 +909,13 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     Pa.root_print('')
     Pa.root_print('Initialization: Moist Cold Pool (3D)')
     Pa.root_print('')
-    # set zero ground humidity, no horizontal wind at ground
-    # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
 
-    #Generate reference profiles
+    # Generate reference profiles
+    # set zero ground humidity, no horizontal wind at ground
     RS.Pg = 1.0e5       #Pressure at ground
     RS.Tg = 300.0       #Temperature at ground
     RS.qtg = 0.02245    #Total water mixing ratio at surface (BOMEX)
     # RS.qtg = 0.01 / (1+0.01)    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
-    #Set velocities for Galilean transformation
-    RS.u0 = 0.0
-    RS.v0 = 0.0
     RS.initialize(Gr, Th, NS, Pa)
 
     #Get the variable number for each of the velocity components
@@ -940,19 +939,19 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         double zstar = namelist['init']['h']
         Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
         double marg = namelist['init']['marg']
-        double [:] r = np.ndarray((3), dtype=np.double)
-        Py_ssize_t n, nmin
-    cdef:
+        Py_ssize_t ncp
         Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
         Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
+        double [:] xc
+        double [:] yc
     if casename == 'ColdPoolMoist_single_3D':
         ncp = 1
         ic1 = ic
         jc1 = jc
         ic_arr = np.asarray([ic1], dtype=np.int)
         jc_arr = np.asarray([jc1], dtype=np.int)
-        xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.int)
-        yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.double)
         d = 0
         i_d = 0
     elif casename == 'ColdPoolMoist_double_3D':
@@ -971,8 +970,8 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         jc2 = jc
         ic_arr = np.asarray([ic1,ic2], dtype=np.int)
         jc_arr = np.asarray([jc1,jc2], dtype=np.int)
-        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]], dtype=np.int)
-        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]], dtype=np.double)
     elif casename == 'ColdPoolMoist_triple_3D':
         # geometry of cold pool: equilateral triangle with center in middle of domain
         # d: side length of the triangle
@@ -993,11 +992,11 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         jc3 = jc
         ic_arr = np.asarray([ic1,ic2,ic3], dtype=np.int)
         jc_arr = np.asarray([jc1,jc2,jc3], dtype=np.int)
-        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]], dtype=np.int)
-        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]], dtype=np.double)
 
     cdef:
-        double [:,:,:] z_max_arr = np.zeros((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        double [:,:,:] z_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
         double z_max = 0
 
     # theta-anomaly
@@ -1012,62 +1011,77 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] qt = np.empty(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background wind
         # Grant
         double [:] rv_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')  # value from Grant, 2018
+        double [:] qv_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')  # value from Grant, 2018
         double [:] thetav_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
 
-    # # initialize background stratification (Grant, 2018)
-    # Nv2 = 5e-5
-    # g = 9.81
-    # for k in xrange(Gr.dims.nlg[2]):
-    #     if Gr.zl_half[k] <= 1000.:
-    #         thetav_bg[k] = 300.
-    #         rv_bg[k] = 10e-3
-    #     else:
-    #         thetav_bg[k] = 300. * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
-    #         rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)
-    # qv_bg = rv_bg / (1+rv_bg)
-    # qt_bg = qv_bg
+    # initialize background stratification (Grant, 2018; like stable CP Dry)
+    Nv2 = 5e-5
+    g = 9.81
+    for k in xrange(Gr.dims.nlg[2]):
+        u[k] = 0.0
+        if Gr.zl_half[k] <= 1000.:
+            thetav_bg[k] = th_g
+            rv_bg[k] = 10e-3
+            # Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
+        else:
+            thetav_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
+            rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)
+            # Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv2/g*(Gr.zl_half[k]-1000.))) )
+        qv_bg[k] = rv_bg[k] / (1+rv_bg[k])
+        qt_bg[k] = qv_bg[k]
+        thetal_bg[k] = thetav_bg[k] / (1.0 + 0.61*rv_bg[k])
     # # thetav[ijk] = theta_c(p0[k], temperature[ijk]) * (1.0 + 0.608 * qv[ijk] - ql[ijk] - qi[ijk]);
     # # theta_bg = thetav_bg / (1.0 + 0.608 * qv_bg - ql_bg - qi_bg)
-    # # thetal_bg = thetav_bg / (1.0 + 0.61*rv_bg - rl_bg)
+    # thetal_bg = thetav_bg / (1.0 + 0.61*rv_bg - rl_bg)
 
-    # initialize background stratification (BOMEX)
-    for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <= 520:
-            thetal_bg[k] = 298.7
-            qt_bg[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
-        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-            thetal_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
-            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
-            thetal_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
-            qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
-        if Gr.zl_half[k] > 2000.0:
-            thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
-            qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
-        # Change units to kg/kg
-        qt_bg[k] /= 1000.0
-    #print('---- qt-profile: ', np.asarray(qt_bg[:20]))
+    # # --
+    # plt.figure(figsize=(12,6))
+    # plt.subplot(1,2,1)
+    # plt.plot(thetav_bg,Gr.zl_half, label='th_v')
+    # plt.plot(thetal_bg,Gr.zl_half, label='th_l')
+    # plt.legend(loc='best')
+    # plt.xlabel('thetal_bg [K]')
+    # plt.ylabel('z [m]')
+    # plt.subplot(1,2,2)
+    # plt.plot(qt_bg,Gr.zl_half, label='qt')
+    # plt.plot(qv_bg,Gr.zl_half, '--', label='qv')
+    # plt.legend(loc='best')
+    # plt.xlabel('qt_bg [g/kg]')
+    # plt.ylabel('z [m]')
+    # plt.show()
+    # # --
 
+
+    # Set velocities for Galilean transformation
+    RS.v0 = 0.0
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+    #Pa.root_print('RS.u0: ' + str(RS.u0))
+
+    Pa.root_print('')
     Pa.root_print(casename)
-    Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('Initial settings: r*='+str(rstar)+', z*='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('   ir*='+str(np.int(rstar/Gr.dims.dx[0])))
     Pa.root_print('                dTh='+str(dTh)+', dqt='+str(dqt))
     Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
-    Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
-    Pa.root_print('')
-    Pa.root_print('nx, ny:   ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
-    Pa.root_print('nxg, nyp: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
-    Pa.root_print('gw: ' + str(Gr.dims.gw))
-    Pa.root_print('d: ' + str(d) + ', id: ' + str(i_d))
+    Pa.root_print('Grid: ')
+    Pa.root_print('   nx, ny:   ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
+    Pa.root_print('   nxg, nyp: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
+    Pa.root_print('   gw: ' + str(Gr.dims.gw))
     Pa.root_print('Cold Pools:')
-    Pa.root_print('ncp: ' + str(ncp))
-    Pa.root_print('ic: ' + str(ic_arr))
-    Pa.root_print('jc: ' + str(jc_arr))
+    Pa.root_print('   ncp: ' + str(ncp))
+    Pa.root_print('   ic: ' + str(ic_arr))
+    Pa.root_print('   jc: ' + str(jc_arr))
+    Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
+    Pa.root_print('   d: ' + str(d) + ', id: ' + str(i_d))
     Pa.root_print('')
-
 
     ''' compute z_max '''
+    cdef:
+        double [:] r = np.ndarray((ncp), dtype=np.double)
+        Py_ssize_t n, nmin
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
@@ -1085,38 +1099,399 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
-                PV.values[u_varshift + ijk] = 0.0
-                PV.values[v_varshift + ijk] = 0.0
+                PV.values[u_varshift + ijk] = u[k] - RS.u0
+                PV.values[v_varshift + ijk] = 0.0 - RS.v0
                 PV.values[w_varshift + ijk] = 0.0
 
                 thetal[i, j, k] = thetal_bg[k]
                 qt[i, j, k] = qt_bg[k]
-                if Gr.z_half[k] <= z_max_arr[0,i,j]:
-                    thetal[i,j,k] = thetal_bg[k] - dTh
-                    qt[i, j, k] = qt_bg[k] - dqt
-                elif Gr.z_half[k] <= z_max_arr[1,i,j]:
-                    thetal[i, j, k] = thetal_bg[k] - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
-                    qt[i,j,k] = qt_bg[k] - dqt * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                if z_max_arr[0,i,j] >= 0:
+                    if Gr.z_half[k] <= z_max_arr[0,i,j]:
+                        thetal[i,j,k] = thetal_bg[k] - dTh
+                        qt[i, j, k] = qt_bg[k] - dqt
+                    elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+                        thetal[i, j, k] = thetal_bg[k] - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                        qt[i,j,k] = qt_bg[k] - dqt * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
 
                 # --- adding noise ---
-                if k <= kstar + 2:
-                    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
-                    qt_ = qt[i,j,k] + qt_pert[ijk]
-                else:
-                    temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
-                    qt_ = qt[i,j,k]
-                #if k<20:
-                #    print('k, p0, temp, qt', k, RS.p0_half[k], temp, qt_)
-                #    print('entropy', Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0))
+                #if k <= kstar + 2:
+                #    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
+                #    qt_ = qt[i,j,k] + qt_pert[ijk]
+                #else:
+                #    temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
+                #    qt_ = qt[i,j,k]
+                temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
+                qt_ = qt[i,j,k]
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
 
-    #''' testing '''
-    #cdef:
-    #    Py_ssize_t ijk_max = Gr.dims.nlg[0]*Gr.dims.nlg[1]*Gr.dims.nlg[2]
-    #print('------- s: ', np.asarray(PV.values[s_varshift:s_varshift+ijk_max]))
+    ''' plotting '''
+    # # --
+    # plt.subplots(figsize=(14,6))
+    # plt.subplot(1,3,1)
+    # plt.plot([Gr.x_half[ic1+gw-6],Gr.x_half[ic1+gw-6]],[0,np.amax(z_max_arr)*1.1], ':', color='g', linewidth=.8)
+    # plt.plot([Gr.x_half[ic1+gw],Gr.x_half[ic1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=.8)
+    # plt.plot([Gr.x_half[10],Gr.x_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=.8, label='env')
+    # plt.plot(Gr.x_half[:],z_max_arr[0,:,jc1+gw+1], '--', color='.1')
+    # plt.plot(Gr.x_half[:],z_max_arr[0,:,jc1+gw], color='.1')
+    # plt.plot(Gr.x_half[:],z_max_arr[1,:,jc1+gw+1], '--', color='.5')
+    # plt.plot(Gr.x_half[:],z_max_arr[1,:,jc1+gw], color='.5')
+    # plt.xlabel('x [m]')
+    # plt.ylabel('zmax[:,yc] [m]')
+    # plt.grid('on')
+    # plt.subplot(1,3,2)
+    # plt.plot([Gr.y_half[jc1+gw],Gr.y_half[jc1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=.8)
+    # plt.plot([Gr.y_half[10],Gr.y_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=.8, label='env')
+    # plt.plot(Gr.y_half[:],z_max_arr[0,ic1+gw+1,:], '--', color='.1')
+    # plt.plot(Gr.y_half[:],z_max_arr[0,ic1+gw,:], color='.1')
+    # plt.plot(Gr.y_half[:],z_max_arr[1,ic1+gw+1,:], '--', color='.5')
+    # plt.plot(Gr.y_half[:],z_max_arr[1,ic1+gw,:], color='.5')
+    # plt.xlabel('y [m]')
+    # plt.ylabel('zmax[xc,:] [m]')
+    # plt.grid('on')
+    # plt.subplot(1,3,3)
+    # plt.plot(thetal[10,10,:],Gr.zl_half, color='b', label='th_l env')
+    # plt.plot(thetal[ic1+gw,jc1+gw,:],Gr.zl_half, color='r', label='th_l CP')
+    # plt.plot(thetal[ic1+gw-6,jc1+gw,:],Gr.zl_half, color='g', label='th_l CP')
+    # plt.ylim(0,Gr.zl_half[60])
+    # plt.legend(loc='best')
+    # plt.xlabel('th_l')
+    # plt.ylabel('z [m]')
+    # plt.grid('on')
+    # plt.subplots_adjust(bottom=0.2, right=.99, left=0.07, top=0.9, wspace=0.25)
+    # # plt.show()
+    #
+    # kmax = 50
+    # plt.subplots(figsize=(14,6))
+    # plt.subplot(1,3,1)
+    # plt.imshow(thetal[:,jc1+gw,:50], origin='low')
+    # plt.title('th_l')
+    # plt.xlabel('z [m]')
+    # plt.ylabel('x [m]')
+    # plt.subplot(1,3,2)
+    # # plt.imshow(thetal[:,jc1+gw,:], origin='low')
+    # plt.contourf(np.asarray(thetal[:,jc1+gw,:]).T, levels=np.linspace(np.amin(thetal),np.amax(thetal),5e1))
+    # # cf = ax.imshow(H[1:,1:], interpolation='nearest', origin='low')
+    # plt.colorbar()
+    # plt.title('th_l')
+    # plt.xlabel('x [m]')
+    # plt.ylabel('z [m]')
+    # plt.subplot(1,3,3)
+    # plt.contourf(np.asarray(qt[:,jc1+gw,:]).T, levels=np.linspace(0,np.amax(qt),5e1))
+    # plt.colorbar()
+    # plt.title('qt')
+    # plt.xlabel('x [m]')
+    # plt.ylabel('z [m]')
+    # plt.subplots_adjust(bottom=0.2, right=.98, left=0.05, top=0.9, wspace=0.25)
+    # plt.show()
+    # # --
+
+    # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
+    # cdef:
+    #     PrognosticVariables.PrognosticVariables PV_ = PV
+    #     Py_ssize_t var_shift
+    # var_name = 'theta'
+    # from Init_plot import plot_imshow_alongy
+    # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+
+    # var_name = 's'
+    # var_shift = PV_.get_varshift(Gr, var_name)
+    # var1 = PV_.get_variable_array(var_name, Gr)
+    # plot_imshow_alongy(var_name, var1[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
+    # del var1
+
+    # from Init_plot import plot_imshow
+    # # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
+    # plot_imshow('theta', theta[gw:-gw,gw:-gw,gw:-gw], ic1, ic2, ic3, jc1, jc2, jc3)
+
+
+    ''' Initialize passive tracer phi '''
+    Pa.root_print('initialize passive tracer phi')
+    init_tracer(namelist, Gr, PV, Pa, z_max_arr, ic_arr, jc_arr)
+    Pa.root_print('Initialization: finished initialization')
+
+    return
+
+
+def InitColdPool_EUREKA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+            ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS,
+                              ParallelMPI.ParallelMPI Pa, LatentHeat LH):
+    # initial background profiles adopted from Grant, 2018
+    Pa.root_print('')
+    Pa.root_print('Initialization: EUREKA Cold Pool (3D)')
+    Pa.root_print('')
+    # set zero ground humidity, no horizontal wind at ground
+    # ASSUME COLDPOOLS DON'T HAVE AN INITIAL HORIZONTAL VELOCITY
+
+    #Generate reference profiles
+    RS.Pg = 1.015e5       #Pressure at ground
+    RS.Tg = 300.0       #Temperature at ground
+    RS.qtg = 0.02245    #Total water mixing ratio at surface (BOMEX)
+    # RS.qtg = 0.01 / (1+0.01)    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
+    #Set velocities for Galilean transformation
+    # RS.u0 = 0.0
+    # RS.v0 = 0.0
+    RS.initialize(Gr, Th, NS, Pa)
+
+    #Get the variable number for each of the velocity components
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk
+        Py_ssize_t gw = Gr.dims.gw
+
+    # parameters
+    casename = namelist['meta']['casename']
+    cdef:
+        double dTh = namelist['init']['dTh']
+        double dqt = namelist['init']['dqt']
+        double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
+        double zstar = namelist['init']['h']
+        Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+        double marg = namelist['init']['marg']
+        Py_ssize_t ncp
+        Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
+        Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
+        double [:] xc
+        double [:] yc
+    if casename == 'ColdPool_EUREKA':
+        ncp = 1
+        ic1 = ic
+        jc1 = jc
+        ic_arr = np.asarray([ic1], dtype=np.int)
+        jc_arr = np.asarray([jc1], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.double)
+        d = 0
+        i_d = 0
+    elif casename == 'ColdPool_EUREKA_double':
+        # geometry of cold pool
+        # sep: separation btw. cold pools [m]
+        # configuration: ic2=ic1+sep, jc2=jc1
+        # point of collision: ic, jc
+        ncp = 2
+        d = namelist['init']['sep']
+        i_d = np.int(np.round(d/Gr.dims.dx[0]))
+        idhalf = np.int(np.round(i_d/2))
+        # point of 2-CP collision (ic, jc)
+        ic1 = ic - idhalf
+        jc1 = jc
+        ic2 = ic + idhalf
+        jc2 = jc
+        ic_arr = np.asarray([ic1,ic2], dtype=np.int)
+        jc_arr = np.asarray([jc1,jc2], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw]], dtype=np.double)
+    elif casename == 'ColdPool_EUREKA_triple':
+        # geometry of cold pool: equilateral triangle with center in middle of domain
+        # d: side length of the triangle
+        # a: height of the equilateral triangle
+        # configuration: ic1 = ic2, ic3 = ic1+a; jc
+        ncp = 3
+        d = namelist['init']['d']
+        i_d = np.int(np.round(d/Gr.dims.dx[0]))
+        idhalf = np.int(np.round(i_d/2))
+        a = np.int(np.round(i_d*np.sin(60.0/360.0*2*np.pi)))     # sin(60 degree) = np.sqrt(3)/2
+        r_int = np.int(np.round(np.sqrt(3.)/6*i_d))              # radius of inscribed circle
+        # point of 3-CP collision (ic, jc)
+        ic1 = ic - r_int
+        ic2 = ic1
+        ic3 = ic + (a - r_int)
+        jc1 = jc - idhalf
+        jc2 = jc + idhalf
+        jc3 = jc
+        ic_arr = np.asarray([ic1,ic2,ic3], dtype=np.int)
+        jc_arr = np.asarray([jc1,jc2,jc3], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]], dtype=np.double)
+
+    cdef:
+        double [:,:,:] z_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+        double z_max = 0
+
+    # theta-anomaly
+    np.random.seed(Pa.rank)     # make Noise reproducable
+    cdef:
+        double temp
+        double th_g = 300.0  # value from Soares Surface
+        double [:] thetal_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:,:,:] thetal = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] thetal_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
+        double qt_
+        double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:,:,:] qt = np.empty(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
+        double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background wind
+
+    # initialize background stratification (BOMEX)
+    for k in xrange(Gr.dims.nlg[2]):
+        if Gr.zl_half[k] <= 520:
+            thetal_bg[k] = 298.7
+            qt_bg[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
+        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
+            thetal_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
+            thetal_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
+            qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+        if Gr.zl_half[k] > 2000.0:
+            thetal_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
+            qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+        # Change units to kg/kg
+        qt_bg[k] /= 1000.0
+
+        # Set u profile
+        # Bomex
+        #if Gr.zl_half[k] <= 700.0:
+        #    u[k] = -8.75
+        #if Gr.zl_half[k] > 700.0:
+        #    u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
+        u[k] = -1e-9  # instable for u[k]=0.0
+
+
+    # Set velocities for Galilean transformation
+    RS.v0 = 0.0
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+
+    Pa.root_print(casename)
+    Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))
+    Pa.root_print('                dTh='+str(dTh)+', dqt='+str(dqt))
+    Pa.root_print('margin of Th-anomaly: marg='+str(marg)+'m')
+    Pa.root_print('distance btw cps: d='+str(d)+'m, id='+str(d))
+    Pa.root_print('')
+    Pa.root_print('nx, ny:   ' + str(Gr.dims.n[0]) + ', ' + str(Gr.dims.n[1]))
+    Pa.root_print('nxg, nyp: ' + str(Gr.dims.ng[0]) + ', ' + str(Gr.dims.ng[1]))
+    Pa.root_print('gw: ' + str(Gr.dims.gw))
+    Pa.root_print('d: ' + str(d) + ', id: ' + str(i_d))
+    Pa.root_print('Cold Pools:')
+    Pa.root_print('ncp: ' + str(ncp))
+    Pa.root_print('ic: ' + str(ic_arr))
+    Pa.root_print('jc: ' + str(jc_arr))
+    Pa.root_print('')
+
+    ''' compute z_max '''
+    cdef:
+        double [:] r = np.ndarray((ncp), dtype=np.double)
+        Py_ssize_t n, nmin
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+            for n in range(ncp):
+                r[n] = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc[n])**2 +
+                             (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc[n])**2 )
+            nmin = np.argmin(r)     # find closest CP to point (i,j); making use of having non-overlapping CPs
+            if (r[nmin] <= (rstar + marg)):
+                z_max = (zstar + marg) * ( np.cos( r[nmin]/(rstar + marg) * np.pi / 2 )) ** 2
+                z_max_arr[1, i, j] = z_max
+                if (r[nmin] <= rstar):
+                    z_max = zstar * ( np.cos( r[nmin]/rstar * np.pi/2 ) ) ** 2
+                    z_max_arr[0, i, j] = z_max
+
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = u[k] - RS.u0
+                PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                PV.values[w_varshift + ijk] = 0.0
+
+                thetal[i, j, k] = thetal_bg[k]
+                qt[i, j, k] = qt_bg[k]
+                if z_max_arr[0,i,j] >= 0.:
+                    if Gr.z_half[k] <= z_max_arr[0,i,j]:
+                        thetal[i,j,k] = thetal_bg[k] - dTh
+                        qt[i, j, k] = qt_bg[k] - dqt
+                    elif Gr.z_half[k] <= z_max_arr[1,i,j]:
+                        thetal[i, j, k] = thetal_bg[k] - dTh * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+                        qt[i,j,k] = qt_bg[k] - dqt * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
+
+                # --- adding noise ---
+                #if k <= kstar + 2:
+                #    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
+                #    qt_ = qt[i,j,k] + qt_pert[ijk]
+                #else:
+                #    temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
+                #    qt_ = qt[i,j,k]
+                temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
+                qt_ = qt[i,j,k]
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0)
+                PV.values[qt_varshift + ijk] = qt_
+
 
     ''' plotting '''
+    # # --
+    # plt.subplots(figsize=(14,5))
+    # plt.subplot(1,4,1)
+    # plt.plot([Gr.x_half[ic1+gw-6],Gr.x_half[ic1+gw-6]],[0,np.amax(z_max_arr)*1.1], ':', color='g', linewidth=.8)
+    # plt.plot([Gr.x_half[ic1+gw],Gr.x_half[ic1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=.8)
+    # plt.plot([Gr.x_half[10],Gr.x_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=.8, label='env')
+    # plt.plot(Gr.x_half[:],z_max_arr[0,:,jc1+gw+1], '--', color='.1')
+    # plt.plot(Gr.x_half[:],z_max_arr[0,:,jc1+gw], color='.1')
+    # plt.plot(Gr.x_half[:],z_max_arr[1,:,jc1+gw+1], '--', color='.5')
+    # plt.plot(Gr.x_half[:],z_max_arr[1,:,jc1+gw], color='.5')
+    # plt.xlabel('x [m]')
+    # plt.ylabel('zmax[:,yc] [m]')
+    # plt.grid('on')
+    # plt.subplot(1,4,2)
+    # plt.plot([Gr.y_half[jc1+gw],Gr.y_half[jc1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=.8)
+    # plt.plot([Gr.y_half[10],Gr.y_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=.8, label='env')
+    # plt.plot(Gr.y_half[:],z_max_arr[0,ic1+gw+1,:], '--', color='.1')
+    # plt.plot(Gr.y_half[:],z_max_arr[0,ic1+gw,:], color='.1')
+    # plt.plot(Gr.y_half[:],z_max_arr[1,ic1+gw+1,:], '--', color='.5')
+    # plt.plot(Gr.y_half[:],z_max_arr[1,ic1+gw,:], color='.5')
+    # plt.xlabel('y [m]')
+    # plt.ylabel('zmax[xc,:] [m]')
+    # plt.grid('on')
+    # plt.subplot(1,4,3)
+    # plt.plot(thetal[10,10,:],Gr.zl_half, color='b', label='th_l env')
+    # plt.plot(thetal[ic1+gw,jc1+gw,:],Gr.zl_half, color='r', label='th_l CP')
+    # plt.plot(thetal[ic1+gw-6,jc1+gw,:],Gr.zl_half, color='g', label='th_l CP')
+    # plt.ylim(0,Gr.zl_half[60])
+    # plt.legend(loc='best')
+    # plt.xlabel('th_l')
+    # plt.ylabel('z [m]')
+    # plt.grid('on')
+    # plt.subplot(1,4,4)
+    # plt.plot(qt[10,10,:],Gr.zl_half, color='b', label='qt env')
+    # plt.plot(qt[ic1+gw,jc1+gw,:],Gr.zl_half, color='r', label='qt CP')
+    # plt.plot(qt[ic1+gw-6,jc1+gw,:],Gr.zl_half, color='g', label='qt CP')
+    # plt.ylim(0,Gr.zl_half[60])
+    # plt.legend(loc='best')
+    # plt.xlabel('th_l')
+    # plt.ylabel('z [m]')
+    # plt.grid('on')
+    # plt.subplots_adjust(bottom=0.2, right=.99, left=0.07, top=0.9, wspace=0.25)
+    # plt.show()
+    #
+    # kmax = 50
+    # plt.subplots(figsize=(14,6))
+    # plt.subplot(1,3,1)
+    # plt.imshow(thetal[:,jc1+gw,:50], origin='low')
+    # plt.title('th_l')
+    # plt.xlabel('z [m]')
+    # plt.ylabel('x [m]')
+    # plt.subplot(1,3,2)
+    # # plt.imshow(thetal[:,jc1+gw,:], origin='low')
+    # plt.contourf(np.asarray(thetal[:,jc1+gw,:]).T, levels=np.linspace(np.amin(thetal),np.amax(thetal),5e1))
+    # # cf = ax.imshow(H[1:,1:], interpolation='nearest', origin='low')
+    # plt.colorbar()
+    # plt.title('th_l')
+    # plt.xlabel('x [m]')
+    # plt.ylabel('z [m]')
+    # plt.subplot(1,3,3)
+    # plt.contourf(np.asarray(qt[:,jc1+gw,:]).T, levels=np.linspace(0,np.amax(qt),5e1))
+    # plt.colorbar()
+    # plt.title('qt')
+    # plt.xlabel('x [m]')
+    # plt.ylabel('z [m]')
+    # plt.subplots_adjust(bottom=0.2, right=.98, left=0.05, top=0.9, wspace=0.25)
+    # plt.show()
+    # # --
     # from Init_plot import plot_k_profile_3D, plot_var_image, plot_imshow
     # cdef:
     #     PrognosticVariables.PrognosticVariables PV_ = PV
