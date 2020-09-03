@@ -431,8 +431,8 @@ cdef class SurfaceColdPools_Moist(SurfaceBase):
                 for j in xrange(1,jmax-1):
                     ijk = i * istride + j * jstride + gw
                     ij = i * istride_2d + j
-                    # self.u_flux[ij] = -self.ustar_**2/interp_2(windspeed[ij], windspeed[ij+istride_2d]) * (PV.values[u_shift + ijk] + Ref.u0)
-                    # self.v_flux[ij] = -self.ustar_**2/interp_2(windspeed[ij], windspeed[ij+1]) * (PV.values[v_shift + ijk] + Ref.v0)
+                    self.u_flux[ij] = -self.ustar_**2/interp_2(windspeed[ij], windspeed[ij+istride_2d]) * (PV.values[u_shift + ijk] + Ref.u0)
+                    self.v_flux[ij] = -self.ustar_**2/interp_2(windspeed[ij], windspeed[ij+1]) * (PV.values[v_shift + ijk] + Ref.v0)
 
         SurfaceBase.update(self, Gr, Ref, PV, DV, Pa, TS)
 
