@@ -1127,10 +1127,10 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
     ''' plotting '''
     # # --
-    # plt.subplots(figsize=(14,6))
-    # plt.subplot(1,3,1)
-    # plt.plot([Gr.x_half[ic1+gw-6],Gr.x_half[ic1+gw-6]],[0,np.amax(z_max_arr)*1.1], ':', color='g', linewidth=.8)
-    # plt.plot([Gr.x_half[ic1+gw],Gr.x_half[ic1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=.8)
+    # plt.subplots(figsize=(14,5))
+    # plt.subplot(1,4,1)
+    # plt.plot([Gr.x_half[ic1+gw-6],Gr.x_half[ic1+gw-6]],[0,np.amax(z_max_arr)*1.1], ':', color='g', linewidth=1.)
+    # plt.plot([Gr.x_half[ic1+gw],Gr.x_half[ic1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=1.)
     # plt.plot([Gr.x_half[10],Gr.x_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=.8, label='env')
     # plt.plot(Gr.x_half[:],z_max_arr[0,:,jc1+gw+1], '--', color='.1')
     # plt.plot(Gr.x_half[:],z_max_arr[0,:,jc1+gw], color='.1')
@@ -1139,9 +1139,9 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     # plt.xlabel('x [m]')
     # plt.ylabel('zmax[:,yc] [m]')
     # plt.grid('on')
-    # plt.subplot(1,3,2)
-    # plt.plot([Gr.y_half[jc1+gw],Gr.y_half[jc1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=.8)
-    # plt.plot([Gr.y_half[10],Gr.y_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=.8, label='env')
+    # plt.subplot(1,4,2)
+    # plt.plot([Gr.y_half[jc1+gw],Gr.y_half[jc1+gw]],[0,np.amax(z_max_arr)*1.1], ':', color='r', linewidth=1.)
+    # plt.plot([Gr.y_half[10],Gr.y_half[10]],[0,np.amax(z_max_arr)*1.1], '--', color='b', linewidth=1., label='env')
     # plt.plot(Gr.y_half[:],z_max_arr[0,ic1+gw+1,:], '--', color='.1')
     # plt.plot(Gr.y_half[:],z_max_arr[0,ic1+gw,:], color='.1')
     # plt.plot(Gr.y_half[:],z_max_arr[1,ic1+gw+1,:], '--', color='.5')
@@ -1149,7 +1149,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     # plt.xlabel('y [m]')
     # plt.ylabel('zmax[xc,:] [m]')
     # plt.grid('on')
-    # plt.subplot(1,3,3)
+    # plt.subplot(1,4,3)
     # plt.plot(thetal[10,10,:],Gr.zl_half, color='b', label='th_l env')
     # plt.plot(thetal[ic1+gw,jc1+gw,:],Gr.zl_half, color='r', label='th_l CP')
     # plt.plot(thetal[ic1+gw-6,jc1+gw,:],Gr.zl_half, color='g', label='th_l CP')
@@ -1158,8 +1158,17 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     # plt.xlabel('th_l')
     # plt.ylabel('z [m]')
     # plt.grid('on')
+    # plt.subplot(1,4,4)
+    # plt.plot(qt[10,10,:],Gr.zl_half, color='b', label='qt env')
+    # plt.plot(qt[ic1+gw,jc1+gw,:],Gr.zl_half, color='r', label='qt CP')
+    # plt.plot(qt[ic1+gw-6,jc1+gw,:],Gr.zl_half, color='g', label='qt CP')
+    # plt.ylim(0,Gr.zl_half[60])
+    # plt.legend(loc='best')
+    # plt.xlabel('qt')
+    # plt.ylabel('z [m]')
+    # plt.grid('on')
     # plt.subplots_adjust(bottom=0.2, right=.99, left=0.07, top=0.9, wspace=0.25)
-    # # plt.show()
+    # plt.show()
     #
     # kmax = 50
     # plt.subplots(figsize=(14,6))
@@ -2011,8 +2020,6 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         if Gr.zl_half[k] > 700.0:
             u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
-
-    #print('---- qt-profile: ', np.asarray(qt[:20]))
     # --
     #plt.figure(figsize=(12,6))
     #plt.subplot(1,2,1)
