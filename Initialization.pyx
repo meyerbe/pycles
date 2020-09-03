@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 
@@ -1068,7 +1068,6 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
 
     ''' compute z_max '''
-
     for i in xrange(Gr.dims.nlg[0]):
         ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
         for j in xrange(Gr.dims.nlg[1]):
@@ -1127,7 +1126,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     # from Init_plot import plot_imshow_alongy
     # plot_var_image(var_name, theta[:, :, :], j0, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:])
     # plot_imshow_alongy(var_name, theta[:, :, :], ic1, Gr.x_half[:], Gr.y_half[:], Gr.z_half[:], 'triple')
-   
+
     # var_name = 's'
     # var_shift = PV_.get_varshift(Gr, var_name)
     # var1 = PV_.get_variable_array(var_name, Gr)
@@ -1637,7 +1636,6 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         if Gr.zl_half[k] > 700.0:
             u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
-    
     #print('---- qt-profile: ', np.asarray(qt[:20]))
     # --
     #plt.figure(figsize=(12,6))
