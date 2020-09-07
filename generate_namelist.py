@@ -44,6 +44,10 @@ def main():
         namelist = ColdPoolDry_3D('triple')
     elif case_name == 'ColdPoolMoist_single_3D':
         namelist = ColdPoolMoist_3D('single')
+    elif case_name == 'ColdPoolMoist_double_3D':
+        namelist = ColdPoolMoist_3D('double')
+    elif case_name == 'ColdPoolMoist_triple_3D':
+        namelist = ColdPoolMoist_3D('triple')
     elif case_name == 'ColdPool_EUREKA':
         namelist = ColdPool_EUREKA('single')
     elif case_name == 'SullivanPatton':
@@ -493,7 +497,7 @@ def ColdPoolMoist_3D(number):
 
     namelist['fields_io'] = {}
     namelist['fields_io']['fields_dir'] = 'fields'
-    namelist['fields_io']['frequency'] = 60.0
+    namelist['fields_io']['frequency'] = 100.0
     # namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
     namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','theta']
     # namelist['fields_io']['diagnostic_fields'] = ['temperature', 'theta']
@@ -534,13 +538,13 @@ def ColdPool_EUREKA(number):
 
     namelist['grid'] = {}
     namelist['grid']['dims'] = 3
-    namelist['grid']['nx'] = 200
-    namelist['grid']['ny'] = 200
-    namelist['grid']['nz'] = 120        # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['nx'] = 64
+    namelist['grid']['ny'] = 64
+    namelist['grid']['nz'] = 75        
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = 100.0
     namelist['grid']['dy'] = 100.0
-    namelist['grid']['dz'] = 100.0
+    namelist['grid']['dz'] = 40.0
 
     namelist['init'] = {}
     rstar = 2000.0
