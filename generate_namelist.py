@@ -1792,12 +1792,6 @@ def CGILS_S6(is_p2,is_ctl_omega):
     namelist['microphysics']['SB_Liquid']['nu_droplet'] = 0
     namelist['microphysics']['SB_Liquid']['mu_rain'] = 1
 
-    namelist['radiation'] = {}
-    namelist['radiation']['RRTM'] = {}
-    namelist['radiation']['RRTM']['frequency'] = 90.0
-
-
-
     namelist['sgs'] = {}
     namelist['sgs']['scheme'] = 'Smagorinsky'
     namelist['sgs']['Smagorinsky'] ={}
