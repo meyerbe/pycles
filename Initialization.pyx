@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 
@@ -49,7 +49,8 @@ def InitializationFactory(namelist):
             return InitColdPoolDry_double_3D
         elif casename == 'ColdPoolDry_triple_3D_stable':
             return InitColdPoolDry_triple_3D
-        elif casename == 'ColdPoolMoist_single_3D':
+        elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' \
+                or casename == 'ColdPoolMoist_triple_3D':
             return InitColdPoolMoist_3D
         elif casename == 'ColdPool_EUREKA':
             return InitColdPool_EUREKA
@@ -1028,14 +1029,13 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
             # Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
         else:
             thetav_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
-            rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)
-            # Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv2/g*(Gr.zl_half[k]-1000.))) )
+            #rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)
+            rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/1200.)
         qv_bg[k] = rv_bg[k] / (1+rv_bg[k])
         qt_bg[k] = qv_bg[k]
         thetal_bg[k] = thetav_bg[k] / (1.0 + 0.61*rv_bg[k])
     # # thetav[ijk] = theta_c(p0[k], temperature[ijk]) * (1.0 + 0.608 * qv[ijk] - ql[ijk] - qi[ijk]);
     # # theta_bg = thetav_bg / (1.0 + 0.608 * qv_bg - ql_bg - qi_bg)
-    # thetal_bg = thetav_bg / (1.0 + 0.61*rv_bg - rl_bg)
 
     # # --
     # plt.figure(figsize=(12,6))
@@ -1114,14 +1114,14 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
                         qt[i,j,k] = qt_bg[k] - dqt * np.sin((Gr.z_half[k] - z_max_arr[1, i, j]) / (z_max_arr[0, i, j] - z_max_arr[1, i, j]) * np.pi/2) ** 2
 
                 # --- adding noise ---
-                #if k <= kstar + 2:
-                #    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
-                #    qt_ = qt[i,j,k] + qt_pert[ijk]
-                #else:
-                #    temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
-                #    qt_ = qt[i,j,k]
-                temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
-                qt_ = qt[i,j,k]
+                if k <= kstar + 2:
+                    temp = (thetal[i,j,k] + thetal_pert[ijk]) * exner_c(RS.p0_half[k])
+                    qt_ = qt[i,j,k] + qt_pert[ijk]
+                else:
+                    temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
+                    qt_ = qt[i,j,k]
+                # temp = thetal[i,j,k] * exner_c(RS.p0_half[k])
+                # qt_ = qt[i,j,k]
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
 
