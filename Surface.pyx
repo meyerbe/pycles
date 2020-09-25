@@ -311,8 +311,6 @@ cdef class SurfaceColdPools(SurfaceBase):
         Pa.root_print('Surface Cold Pool scheme: update')
         cdef double pv_star = pv_c(Ref.Pg, Ref.qtg, Ref.qtg)
         cdef double  pd_star = Ref.Pg - pv_star
-        # self.s_star = (1.0-Ref.qtg) * sd_c(pd_star, Ref.Tg) + Ref.qtg * sv_c(pv_star,Ref.Tg)
-        # self.s_star = sd_c(pd_star, Ref.Tg)
 
         if Pa.sub_z_rank != 0:
             return
@@ -369,7 +367,7 @@ cdef class SurfaceColdPools(SurfaceBase):
                     ustar_ = cm_sqrt * windspeed[ij]
                     self.friction_velocity[ij] = ustar_
 
-        # Pa.root_print('----- max qt_flux: ' + str(np.amax(self.qt_flux)))
+        Pa.root_print('----- max qt_flux: ' + str(np.amax(self.qt_flux)))
 
         SurfaceBase.update(self, Gr, Ref, PV, DV, Pa, TS)
 
