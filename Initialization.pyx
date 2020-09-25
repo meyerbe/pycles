@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 
@@ -1029,7 +1029,7 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
             # Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
         else:
             thetav_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
-            #rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)
+            #rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)  # RH increasing for z>5000m
             rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/1200.)
         qv_bg[k] = rv_bg[k] / (1+rv_bg[k])
         qt_bg[k] = qv_bg[k]
