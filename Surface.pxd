@@ -45,7 +45,7 @@ cdef class SurfaceColdPools(SurfaceBase):
     cdef:
         double cm
         double ch
-        # double cq
+        double cq
         double z0
         double gustiness
         double s_star

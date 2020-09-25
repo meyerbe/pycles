@@ -45,6 +45,7 @@ cdef extern from "entropies.h":
 
 def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         casename = namelist['meta']['casename']
+        Par.root_print('Surface Factory: ' + casename)
         if casename == 'SullivanPatton':
            return SurfaceSullivanPatton(LH)
         elif casename == 'ColdPoolDry_single_2D' or casename == 'ColdPoolDry_double_2D':
@@ -75,22 +76,25 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
                 return SurfaceNone()
         elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' \
                 or casename == 'ColdPoolMoist_triple_3D':
+            Par.root_print('Surface Factory: Cold Pool Moist')
             try:
-                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
-                if namelist['surface']['scheme'] == 'bulk':
-                    Par.root_print('Surface scheme: bulk')
-                    return SurfaceColdPools(LH)
-                elif namelist['surface']['scheme'] == 'bulk_moist':
-                    Par.root_print('Surface scheme: bulk moist')
-                    return SurfaceColdPools_Moist(LH)
-                elif namelist['surface']['scheme'] == 'bomex':
-                    Par.root_print('Surface scheme: BOMEX')
-                    return SurfaceBomex(LH)
-                else:
-                    Par.root_print('Surface scheme: none')
-                    return SurfaceNone()
+                scheme = namelist['surface']['scheme']
+                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'] + ' ('+scheme+')')
             except:
                 Par.root_print('nml surface scheme not defined')
+                scheme = 'none'
+            Par.root_print('nml surface scheme: ' + scheme)
+            if scheme == 'bulk':
+                Par.root_print('Surface scheme: bulk')
+                return SurfaceColdPools(LH)
+            elif scheme == 'cp_moist':
+                Par.root_print('Surface scheme: bulk moist')
+                return SurfaceColdPools_Moist(LH)
+            elif scheme == 'bomex':
+                Par.root_print('Surface scheme: BOMEX')
+                return SurfaceBomex(LH)
+            else:
+                Par.root_print('Surface scheme: none')
                 return SurfaceNone()
         elif casename == 'ColdPool_EUREKA':
             Par.root_print('Surface scheme: BOMEX')
@@ -143,7 +147,9 @@ cdef class SurfaceBase:
         self.b_flux = np.zeros(Gr.dims.nlg[0]*Gr.dims.nlg[1], dtype=np.double, order='c')
 
         # If not overridden in the specific case, set T_surface = Tg
+        # !!!! Reference state not yet initialised here !!!
         self.T_surface = Ref.Tg
+        Pa.root_print('Surface Base initialization: Ref.Tg='+str(Ref.Tg) +' (not yet initialized)')
 
         NS.add_ts('uw_surface_mean', Gr, Pa)
         NS.add_ts('vw_surface_mean', Gr, Pa)
@@ -277,7 +283,7 @@ cdef class SurfaceColdPools(SurfaceBase):
         # Rico case: C_D = 0.001229
         self.cm =0.001229       # bulk coefficient for momentum flux (from Rico-case)
         self.ch = 0.001094      # bulk coefficient for heat flux (from Rico-case)
-        # self.cq = 0.001133
+        self.cq = 0.001133
         self.z0 = 0.00015
         self.gustiness = 0.0
         self.L_fp = LH.L_fp
@@ -287,13 +293,17 @@ cdef class SurfaceColdPools(SurfaceBase):
 
 
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
-        Pa.root_print('Surface Cold Pool scheme: initialize')
+        Pa.root_print('Surface Cold Pool scheme: initialize (Ref.qtg='+str(Ref.qtg)+', Ref.Tg='+str(Ref.Tg)+')')
         SurfaceBase.initialize(self,Gr,Ref,NS,Pa)
+        # Problem: Reference State not yet initialized, so Ref.qtg=0 always
 
         self.cm = self.cm*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
         self.ch = self.ch*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
-        # self.cq = self.cq*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
-
+        #if Ref.qtg > 0.0:
+        #    self.cq = self.cq*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
+        #else:
+        #    self.cq = 0.
+        self.cq = self.cq*(log(20.0/self.z0)/log(Gr.zl_half[Gr.dims.gw]/self.z0))**2
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
@@ -302,8 +312,7 @@ cdef class SurfaceColdPools(SurfaceBase):
         cdef double pv_star = pv_c(Ref.Pg, Ref.qtg, Ref.qtg)
         cdef double  pd_star = Ref.Pg - pv_star
         # self.s_star = (1.0-Ref.qtg) * sd_c(pd_star, Ref.Tg) + Ref.qtg * sv_c(pv_star,Ref.Tg)
-        self.s_star = sd_c(pd_star, Ref.Tg)
-
+        # self.s_star = sd_c(pd_star, Ref.Tg)
 
         if Pa.sub_z_rank != 0:
             return
@@ -320,6 +329,7 @@ cdef class SurfaceColdPools(SurfaceBase):
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
             Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
             # Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t qt_shift
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
 
             double [:] windspeed = np.zeros(Gr.dims.nlg[0]*Gr.dims.nlg[1], dtype=np.double, order='c')
@@ -330,21 +340,36 @@ cdef class SurfaceColdPools(SurfaceBase):
 
         compute_windspeed(&Gr.dims, &PV.values[u_shift], &PV.values[v_shift], &windspeed[0],Ref.u0, Ref.v0,self.gustiness)
 
+        if 'qt' in PV.name_index.keys():
+            qt_flag = True
+            print('---------- qt in PV (qt_flag: ' + str(qt_flag) + ')')
+            qt_shift = PV.get_varshift(Gr, 'qt')
+            self.s_star = (1.0-Ref.qtg) * sd_c(pd_star, Ref.Tg) + Ref.qtg * sv_c(pv_star,Ref.Tg)
+            Pa.root_print('---- '+str(PV.values[qt_shift+0]))
+        else:
+            qt_flag = False
+            print('---------- qt NOT in PV (qt_flag: ' + str(qt_flag) + ')')
+            self.s_star = sd_c(pd_star, Ref.Tg)
+            self.cq = 0.
+
         with nogil:
             for i in xrange(gw, imax-gw):
                 for j in xrange(gw,jmax-gw):
                     ijk = i * istride + j * jstride + gw
                     ij = i * istride_2d + j
-                    theta_flux = -self.ch * windspeed[ij] * (DV.values[t_shift + ijk]*exner_c(Ref.p0_half[gw]) - theta_surface)
-
+                    # theta_flux = -self.ch * windspeed[ij] * (DV.values[t_shift + ijk]*exner_c(Ref.p0_half[gw]) - theta_surface)
                     self.s_flux[ij]  = -self.ch * windspeed[ij] * (PV.values[s_shift + ijk] - self.s_star)
-                    # self.qt_flux[ij] = -self.cq * windspeed[ij] * (PV.values[qt_shift + ijk] - Ref.qtg)
-                    # buoyancy_flux = g * ((theta_flux + (eps_vi-1.0)*(theta_surface*self.qt_flux[ij] + Ref.qtg * theta_flux))/(theta_surface*(1.0 + (eps_vi-1)*Ref.qtg)))
-                    buoyancy_flux = g * theta_flux/theta_surface
+                    if qt_flag:
+                        self.qt_flux[ij] = -self.cq * windspeed[ij] * (PV.values[qt_shift + ijk] - Ref.qtg)
+                        # buoyancy_flux = g * ((theta_flux + (eps_vi-1.0)*(theta_surface*self.qt_flux[ij] + Ref.qtg * theta_flux))/(theta_surface*(1.0 + (eps_vi-1)*Ref.qtg)))
+                    # else:
+                    #     buoyancy_flux = g * theta_flux/theta_surface
                     self.u_flux[ij]  = -self.cm * interp_2(windspeed[ij], windspeed[ij + istride_2d]) * (PV.values[u_shift + ijk] + Ref.u0)
                     self.v_flux[ij] = -self.cm * interp_2(windspeed[ij], windspeed[ij + 1])* (PV.values[v_shift + ijk] + Ref.v0)
                     ustar_ = cm_sqrt * windspeed[ij]
                     self.friction_velocity[ij] = ustar_
+
+        # Pa.root_print('----- max qt_flux: ' + str(np.amax(self.qt_flux)))
 
         SurfaceBase.update(self, Gr, Ref, PV, DV, Pa, TS)
 
