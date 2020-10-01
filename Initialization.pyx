@@ -911,12 +911,18 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     Pa.root_print('Initialization: Moist Cold Pool (3D)')
     Pa.root_print('')
 
+    cdef: # values of lowest atmospheric level
+        double th_g = 302.25  # value from Soares Surface
+        double rv_g = 0.01   # value from Grant, 2018 (10 g/kg)
+
     # Generate reference profiles
-    # set zero ground humidity, no horizontal wind at ground
     RS.Pg = 1.0e5       #Pressure at ground
     RS.Tg = 300.0       #Temperature at ground
-    RS.qtg = 0.02245    #Total water mixing ratio at surface (BOMEX)
-    # RS.qtg = 0.01 / (1+0.01)    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
+    # RS.qtg = 0.02245    #Total water mixing ratio at surface (BOMEX)
+    RS.qtg = rv_g / (1+rv_g)    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
+    # # Rico: saturation mixing ratio
+    # pvg = Th.get_pv_star(RS.Tg)
+    # RS.qtg = eps_v * pvg/(RS.Pg - pvg)   #Total water mixing ratio at surface = qsat
     RS.initialize(Gr, Th, NS, Pa)
 
     #Get the variable number for each of the velocity components
@@ -1004,7 +1010,6 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
     np.random.seed(Pa.rank)     # make Noise reproducable
     cdef:
         double temp
-        double th_g = 300.0  # value from Soares Surface
         double [:] thetal_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:,:,:] thetal = th_g * np.ones(shape=(Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]))
         double [:] thetal_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
@@ -1018,19 +1023,19 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         double [:] qv_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')  # value from Grant, 2018
         double [:] thetav_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
 
-    # initialize background stratification (Grant, 2018; like stable CP Dry)
+    # initialize background stratification (Grant, 2018; like stable CP Dry) and horizontal wind field
     Nv2 = 5e-5
     g = 9.81
     for k in xrange(Gr.dims.nlg[2]):
         u[k] = 0.0
         if Gr.zl_half[k] <= 1000.:
             thetav_bg[k] = th_g
-            rv_bg[k] = 10e-3
+            rv_bg[k] = rv_g
             # Pa.root_print('no strat.: k='+str(k)+', z='+str(Gr.zl_half[k]))
         else:
             thetav_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
             #rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/2000.)  # RH increasing for z>5000m
-            rv_bg[k] = 10e-3 * exp(-(Gr.zl_half[k]-1000.)/1200.)
+            rv_bg[k] = rv_g * exp(-(Gr.zl_half[k]-1000.)/1200.)
         qv_bg[k] = rv_bg[k] / (1+rv_bg[k])
         qt_bg[k] = qv_bg[k]
         thetal_bg[k] = thetav_bg[k] / (1.0 + 0.61*rv_bg[k])
