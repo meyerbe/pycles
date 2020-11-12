@@ -1576,6 +1576,104 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     RS.v0 = 0.0
     RS.initialize(Gr, Th, NS, Pa)
 
+    #Get the variable number for each of the velocity components
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk
+        Py_ssize_t gw = Gr.dims.gw
+
+    # (A) cold pool forcing
+    casename = namelist['meta']['casename']
+    cdef:
+        double dT = namelist['init']['dT']
+        # double dqt = namelist['init']['dqt']
+        double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
+        Py_ssize_t nt = 10          # length of forcing
+        # Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
+        # double marg = namelist['init']['marg']
+        # double [:] r = np.ndarray((3), dtype=np.double)
+        # Py_ssize_t n, nmin
+        Py_ssize_t ncp
+        Py_ssize_t ic = np.int(np.round(Gr.dims.n[0]/2))
+        Py_ssize_t jc = np.int(np.round(Gr.dims.n[1]/2))
+        # double [:] xc
+        # double [:] yc
+
+    # (1) generate forcing file 2D (or directly do in Forcing.pyx)
+    # Forcing:
+    # - compute dqt = dT*cpd*dV/Lv (dqt*Lv = dT*cp*dV)
+    # !!! using cpv?
+    #
+
+    # (B) environment
+    cdef:
+        double z_BL = 1000.
+        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background wind
+        double th_g = 298.7 # K
+        double qt_g = 16.3  # g/kg
+        double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
+        double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+        double qt_
+        double temp_
+
+
+    # ??? dry potential temperature ???
+
+    # initialize background and include perturbations
+    np.random.seed(Pa.rank)     # make Noise reproducable
+    # initialize background stratification (2019/08/27, Essen, 12:00)
+    for k in xrange(Gr.dims.nlg[2]):
+        if Gr.zl_half[k] <= 136.:
+            theta_bg[k] = th_g
+            qt_bg[k] = qt_g
+        elif Gr.zl_half[k] > 136. and Gr.zl_half[k] <= 1551.:
+            theta_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        elif Gr.zl_half[k] > 1551. and Gr.zl_half[k] <= 1480.0:
+            theta_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
+            theta_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
+            qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+        elif Gr.zl_half[k] > 2000.0:
+            theta_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
+            qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+        # Change units to kg/kg
+        qt_bg[k] /= 1000.0
+        u[k] = 0.
+
+    # Set velocities for Galilean transformation
+    RS.v0 = 0.0
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+
+    # (C) initialize PV (3D-field)
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = 0.0
+                PV.values[v_varshift + ijk] = 0.0
+                PV.values[w_varshift + ijk] = 0.0
+
+                # --- adding noise ---
+                if Gr.zl_half[k] <= 1550.0:
+                    temp_ = (theta_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    qt_ = qt_bg[k] + qt_pert[ijk]
+                else:
+                    temp_ = theta_bg[k] * exner_c(RS.p0_half[k])
+                    qt_ = qt_bg[k]
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp_, qt_, 0.0, 0.0)
+                PV.values[qt_varshift + ijk] = qt_
 
     return
 
