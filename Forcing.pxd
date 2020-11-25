@@ -259,7 +259,7 @@ cdef class ForcingZGILS:
 
 
 cdef class ForcingSoares:
-    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref,
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
                  TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa)
@@ -286,6 +286,30 @@ cdef class ForcingColdPoolCabauw:
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
                    NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
 
+
+
+cdef class ForcingColdPool_continuos:
+    cdef:
+        # double [:] ug
+        # double [:] vg
+        double dTdt
+        # double [:] dqtdt
+        double [:,:] dTdt_2d
+        # double [:,:] dqdt_2d
+        double rstar
+        double z_BL
+        double tau
+        # double [:] subsidence
+        # double coriolis_param
+        # Py_ssize_t momentum_subsidence
+        Py_ssize_t ic, jc
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                 TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa)
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                   NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
 
 
 

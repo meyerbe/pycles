@@ -71,6 +71,8 @@ cdef class Forcing:
             self.scheme = ForcingNone()
         elif casename == 'ColdPoolDry_single_3D_stable' or casename == 'ColdPoolDry_double_3D_stable' or casename == 'ColdPoolDry_triple_3D_stable':
             self.scheme = ForcingNone()
+        elif casename == 'ColdPool_single_contforcing' or casename == 'ColdPool_double_contforcing' or casename == 'ColdPool_triple_contforcing':
+            self.scheme = ForcingColdPool_continuos(namelist)
         elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' or casename == 'ColdPoolMoist_triple_3D':
             Pa.root_print('Forcing scheme: None')
             self.scheme = ForcingNone()
@@ -79,7 +81,7 @@ cdef class Forcing:
             self.scheme = ForcingBomex()
         elif casename == 'ColdPoolCabauw':
             Pa.root_print('Forcing scheme: Cold Pool Cabauw')
-            self.scheme = ForcingColdPoolCabauw()
+            self.scheme = ForcingColdPoolCabauw(namelist)
         else:
             Pa.root_print('No forcing for casename: ' +  casename)
             Pa.root_print('Killing simulation now!!!')
@@ -1913,7 +1915,7 @@ cdef class ForcingSoares:
     def __init__(self):
         return
 
-    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
         # self.ug = np.ones(Gr.dims.nlg[2],dtype=np.double, order='c') #m/s
         # self.vg = np.zeros(Gr.dims.nlg[2],dtype=np.double, order='c')  #m/s
         # self.coriolis_param = 0.0 #s^{-1}
@@ -1937,11 +1939,10 @@ cdef class ForcingSoares:
 
 
 cdef class ForcingColdPoolCabauw:
-    def __init__(self):
+    def __init__(self, namelist):
         # read in forcing file
-        # # path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input'
-        # # filename = 'precipitation_test1.nc'
-        self.path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input/precipitation_test1.nc'
+        # filename = 'precipitation_test1.nc'
+        # self.path_data = '/Users/bettinameyer/Dropbox/ClimatePhysics/Code/LES_ColdPool_Cabauw/radar_input/precipitation_test1.nc'
         root = nc.Dataset(self.path_data, 'r')
         self.nt_ext = root.variables['nt'][:]
         self.dt_ext = root.variables['dt'][:]
@@ -2082,6 +2083,164 @@ cdef class ForcingColdPoolCabauw:
 
         return
 
+
+
+
+
+cdef class ForcingColdPool_continuos:
+    def __init__(self, namelist):
+        self.rstar = namelist['init']['r']
+        self.dTdt = namelist['init']['dTdt']
+        #self.dqdt = namelist['init']['dTdt']
+        self.z_BL = 1000.
+        self.ic = namelist['init']['ic']
+        self.jc = namelist['init']['jc']
+        self.tau = namelist['init']['tau']      # period of applying forcing
+        return
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        cdef:
+            # input fields from radar:
+            # - CP_area: boolean field defining area where cooling is applied (nt, nx, ny)
+            # - precip: 2D-field rain intensity (nt, nx, ny)
+            # - dTdt: 2D-field cooling (from rain intensity) (nt, nx, ny)
+            # - dqdt: 2D-field moistening (from rain intensity) (nt, nx, ny)
+            # Py_ssize_t [:,:,:] CP_area = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]))
+            # for using type bool, set 'from libcpp cimport bool' at top of file
+            # double [:,:,:] precip = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            # double [:,:,:] dTdt_2d = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            # double [:,:,:] dqdt = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            double [:,:] dTdt_2d = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            double [:,:] dqtdt_2d = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            Py_ssize_t i, j, ishift, jshift
+            double xc, yc
+            double r, rstar
+            double dTdt = self.dTdt
+            Py_ssize_t gw = Gr.dims.gw
+
+        # self.k_BL = np.int(z_BL / Gr.dims.dx[2])
+        # root = nc.Dataset(self.path_data, 'r')
+        # self.precip[:,:,:] = root.variables['precipitation'][:,:,:]
+        # self.forcing_time = root.variables['time'][:]
+        # root.close()
+
+        ''' do same as CP initialisation to find circle within dTdt applied '''
+        # initialize Cold Pool
+        cdef:
+            Py_ssize_t ic = self.ic
+            Py_ssize_t jc = self.jc
+        # ic = np.int(np.double(Gr.dims.nlg[0])/2)
+        # jc = np.int(np.double(Gr.dims.nlg[1])/2)
+        xc = np.asarray([Gr.x_half[ic+gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc+gw]], dtype=np.double)
+        rstar = self.rstar
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                r = np.sqrt( (Gr.x_half[i + Gr.dims.indx_lo[0]] - xc)**2 +
+                         (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
+                if r <= rstar:
+                    dTdt_2d[i,j] = -dTdt
+
+        self.dTdt_2d = dTdt_2d
+        ## convert from cooling to moistening
+        #Lambda = LH.Lambda_fp(tg)
+        #L_fp = LH.L_fp(Ref.Tg, Lambda)
+        # self.dqdt_2d = dTdt_2d*cpd*dV/L
+        #self.dqdt_2d = dqtdt_2d
+
+        Pa.root_print('')
+        Pa.root_print('-------- Cabauw Forcing: missing correct representation of dqtdt; time dependence of forcing ---------')
+        Pa.root_print('dTdt_2d'+', '+str(np.amin(dTdt_2d))+', '+str(np.amax(dTdt_2d)))
+        Pa.root_print('')
+
+        plt.figure()
+        plt.imshow(dTdt_2d)
+        plt.plot(ic,jc,'or', markersize=5)
+        plt.savefig('./ColdPoolCabauw_dTdt.png')
+        plt.close()
+
+        return
+
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                 TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa):
+        # goal: update PV.tendencies (no update of PV.values) >> will be added to PV.values in Timestepping.update
+        # !!! no time variable >> added to all Forcing modules 'update'
+        # time variable: TS.t (actual timestep); TS.rk_step: integer, counting number of subtimesteps
+        # !!! Runge-Kutta sub-timestepping >> Forcing called in each rk_step (Sim, l.206)
+        # what timestep is used to apply tendencies to prognostic variables?
+        # ??? does Microphysics output some evaporation rate?
+
+        cdef:
+            Py_ssize_t gw = Gr.dims.gw
+            Py_ssize_t imax = Gr.dims.nlg[0] - gw
+            Py_ssize_t jmax = Gr.dims.nlg[1] - gw
+            #Py_ssize_t kmax = Gr.dims.nlg[2] - gw
+            Py_ssize_t kmax = np.int(self.z_BL/Gr.dims.dx[2])
+            Py_ssize_t i,j,k,ishift,jshift,ijk
+            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            Py_ssize_t jstride = Gr.dims.nlg[2]
+            Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
+            Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
+            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            #Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
+            # Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
+            #double qt, qv
+            double p0, t
+
+        cdef:
+            double [:,:] dTdt = self.dTdt_2d
+            double T_tend
+            ## double [:,:] dqtdt = self.dqtdt_2d
+            # double [:,:] dqtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            # double [:,:,:] s_aux = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
+            double [:,:,:] s_tend = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
+            double cp, T
+            double dt = TS.dt
+            double tau = self.tau
+
+        #Apply cooling/moistening source term
+        if TS.t < tau:
+            Pa.root_print('--- Forcing: applying cooling (T='+str(TS.t)+', dt='+ str(dt)+', tau='+str(tau)+')')
+            Pa.root_print('------- ' + str(np.amax(dTdt)))
+            with nogil:
+                for i in xrange(gw,imax):
+                    ishift = i * istride
+                    for j in xrange(gw,jmax):
+                        jshift = j * jstride
+                        for k in xrange(gw,kmax):
+                            ijk = ishift + jshift + k
+                            p0 = Ref.p0_half[k]
+                            cp = cpm_c(0.)
+                            # qt = PV.values[qt_shift + ijk]
+                            # qv = qt - DV.values[ql_shift + ijk]
+                            # cp = cpm_c(qt)
+                            T  = DV.values[t_shift + ijk]
+                            T_tend = dTdt[i,j]/3600.*dt     # [dTdt] = K/h >> dTdt/3600*TS.dt
+                            #s_aux[i,j,k] = s_tendency_c(p0, qt, qv, t, dqtdt[i,j], T_tend[i,j])
+                            #pv = pv_c(p0, qt, qv)
+                            #pd = pd_c(p0, qt, qv)
+                            s_tend[i,j,k] = cp * T_tend / T
+                            #s_tend[i,j] = cpm_c(qt) * dTdt[i,j] / T +  (sv_c(pv,T) - sd_c(pd,T)) * qt_tendency;
+                            PV.tendencies[s_shift + ijk] += s_tend[i,j,k]
+                            # PV.tendencies[s_shift + ijk] += s_tendency_c(p0, qt, qv, T, dqtdt[i,j], dTdt[i,j])
+                            # PV.tendencies[qt_shift + ijk] += dqtdt[i,j]
+            Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
+            Pa.root_print('T_tend min/max: ' + str(min_aux)+', '+str(max_aux))
+            Pa.root_print('time.dt: ' + str(dt))
+            #Pa.root_print(str(np.amin(dqtdt))+', '+str(np.amax(dqtdt))+', '+str(np.amin(dTdt))+', '+str(np.amax(dTdt)))
+
+        return
+
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                 NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        return
 
 
 
