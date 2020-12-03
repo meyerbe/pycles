@@ -273,12 +273,16 @@ cdef class ForcingColdPoolCabauw:
     cdef:
         # double [:] ug
         # double [:] vg
-        double [:] dtdt
+        double dTdt
         double [:] dqtdt
+        double [:,:] dTdt_2d
+        double [:,:] dqtdt_2d
+        double rstar
+        double z_BL
         # double [:] subsidence
         # double coriolis_param
-        Py_ssize_t momentum_subsidence
-    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+        # Py_ssize_t momentum_subsidence
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref,
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
                  TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa)
@@ -288,7 +292,7 @@ cdef class ForcingColdPoolCabauw:
 
 
 
-cdef class ForcingColdPool_continuos:
+cdef class ForcingColdPool_continuous:
     cdef:
         # double [:] ug
         # double [:] vg
@@ -299,9 +303,6 @@ cdef class ForcingColdPool_continuos:
         double rstar
         double z_BL
         double tau
-        # double [:] subsidence
-        # double coriolis_param
-        # Py_ssize_t momentum_subsidence
         Py_ssize_t ic, jc
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref,
