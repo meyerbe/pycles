@@ -8,6 +8,8 @@ cimport ParallelMPI
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 cimport Thermodynamics
 
+# from entropies cimport sv_c, sd_c, s_tendency_c
+
 cdef class Forcing:
     cdef:
         object scheme

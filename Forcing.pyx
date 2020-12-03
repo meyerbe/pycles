@@ -2291,9 +2291,10 @@ cdef class ForcingColdPool_continuous:
         if TS.t < tau:
             Pa.root_print('--- Forcing: applying cooling (T='+str(TS.t)+', dt='+ str(dt)+', tau='+str(tau)+')')
             Pa.root_print('------- dTdt: min='+str(np.amin(dTdt))+', max='+str(np.amax(dTdt)))
-            min_aux = 0.
-            max_aux = 0.
+            # min_aux = 0.
+            # max_aux = 0.
             with nogil:
+            # if 1 == 1:
                 for i in xrange(gw,imax):
                     ishift = i * istride
                     for j in xrange(gw,jmax):
@@ -2307,6 +2308,8 @@ cdef class ForcingColdPool_continuous:
                             # cp = cpm_c(qt)
                             T  = DV.values[t_shift + ijk]
                             T_tend = dTdt[i,j]/3600.*dt     # [dTdt] = K/h >> dTdt/3600*TS.dt
+                            # min_aux = np.minimum(min_aux, T_tend)
+                            # max_aux = np.maximum(max_aux, T_tend)
                             #s_aux[i,j,k] = s_tendency_c(p0, qt, qv, t, dqtdt[i,j], T_tend[i,j])
                             #pv = pv_c(p0, qt, qv)
                             #pd = pd_c(p0, qt, qv)
@@ -2315,10 +2318,10 @@ cdef class ForcingColdPool_continuous:
                             PV.tendencies[s_shift + ijk] += s_tend[i,j,k]
                             # PV.tendencies[s_shift + ijk] += s_tendency_c(p0, qt, qv, T, dqtdt[i,j], dTdt[i,j])
                             # PV.tendencies[qt_shift + ijk] += dqtdt[i,j]
-            min_aux = np.amin(T_tend)
-            max_aux = np.amax(T_tend)
+            # min_aux = np.amin(T_tend)
+            # max_aux = np.amax(T_tend)
             Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
-            Pa.root_print('T_tend min/max: ' + str(min_aux)+', '+str(max_aux))
+            # Pa.root_print('T_tend min/max: ' + str(min_aux)+', '+str(max_aux))
             Pa.root_print('time.dt: ' + str(dt))
             #Pa.root_print(str(np.amin(dqtdt))+', '+str(np.amax(dqtdt))+', '+str(np.amin(dTdt))+', '+str(np.amax(dTdt)))
 
