@@ -49,6 +49,8 @@ def InitializationFactory(namelist):
             return InitColdPoolDry_double_3D
         elif casename == 'ColdPoolDry_triple_3D_stable':
             return InitColdPoolDry_triple_3D
+        elif casename == 'ColdPool_single_contforcing':
+            return InitColdPoolDry_single_3D
         elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' \
                 or casename == 'ColdPoolMoist_triple_3D':
             return InitColdPoolMoist_3D
@@ -466,7 +468,8 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
         double theta_pert_
 
     # initialize background stratification
-    if casename[22:28] == 'stable':
+    if casename[22:28] == 'stable' or casename[-11:] == 'contforcing':
+    #if casename[22:28] == 'stable':
         Pa.root_print('initializing stable CP')
         Nv2 = 5e-5  # Brunt-Vaisalla frequency [Nv2] = s^-2
         g = 9.81
@@ -478,6 +481,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
                 Pa.root_print('stratification: k='+str(k)+', z='+str(Gr.zl_half[k])+', th_bg='+str(np.exp(Nv2/g*(Gr.zl_half[k]-1000.))) )
                 theta_bg[k] = th_g * np.exp(Nv2/g*(Gr.zl_half[k]-1000.))
     else:
+        Pa.root_print('initializing neutrally stratified CP')
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
     Pa.root_print('theta_bg: '+str(theta_bg[:]))
@@ -1576,6 +1580,13 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     RS.v0 = 0.0
     RS.initialize(Gr, Th, NS, Pa)
 
+    def thetal_cabauw(p_, t_, qt_, ql_, qi_):
+        # L = 2.26e6
+        Lambda = LH.Lambda_fp(t_)
+        L = LH.L_fp(t_, Lambda)
+        # return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(L*ql_)/(cpd*t_))
+        return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-L*(ql_/(1.0-qt_)+qi_/(1.0-qt_))/(cpd*t_))
+
     #Get the variable number for each of the velocity components
     cdef:
         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
@@ -1591,8 +1602,8 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     # (A) cold pool forcing
     casename = namelist['meta']['casename']
     cdef:
-        double dT = namelist['init']['dT']
-        # double dqt = namelist['init']['dqt']
+        double dTdt = namelist['init']['dTdt']
+        # double dqtdt = namelist['init']['dqtdt']
         double rstar = namelist['init']['r']    # half of the width of initial cold-pools [m]
         Py_ssize_t nt = 10          # length of forcing
         # Py_ssize_t kstar = np.int(np.round(zstar / Gr.dims.dx[2]))
@@ -1607,16 +1618,18 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
     # (1) generate forcing file 2D (or directly do in Forcing.pyx)
     # Forcing:
-    # - compute dqt = dT*cpd*dV/Lv (dqt*Lv = dT*cp*dV)
+    # - compute dqtdt = dTdt*cpd*dV/Lv (dqt*Lv = dTdt*cp*dV)
     # !!! using cpv?
     #
 
     # (B) environment
     cdef:
         double z_BL = 1000.
-        double [:] theta_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:] thl_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+        double [:] t_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background wind
+        # double t_g = 298.7 # K
         double th_g = 298.7 # K
         double qt_g = 16.3  # g/kg
         double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
@@ -1624,31 +1637,60 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         double qt_
         double temp_
 
-
     # ??? dry potential temperature ???
+    # cdef:
+    #     double thl_g2
+    #     double Lambda_ = LH.Lambda_fp(RS.Tg)
+    #     double pg_ = RS.Pg
+    #     double tg_ = RS.Tg
+    #     double lh_ = LH.L_fp(RS.Tg, Lambda_)
+    #Pa.root_print('xxxx ' + str(RS.Pg)+' '+str(RS.Tg)+' '+str(Lambda_)+' '+str(LH.L_fp(RS.Tg, Lambda_)))
+    #Pa.root_print('xxxx ' + str(pg_)+' '+str(tg_)+' '+str(Lambda_)+' '+str(LH.L_fp(tg_, Lambda_)))
+    #thl_g2 = thetali_c(pg_, tg_, 0., 0., 0., LH.L_fp(tg_, Lambda_))
+    #thetali_c(pg_, tg_, 0., 0., 0., LH.L_fp(tg_, Lambda_))
 
     # initialize background and include perturbations
     np.random.seed(Pa.rank)     # make Noise reproducable
     # initialize background stratification (2019/08/27, Essen, 12:00)
+    fit_z = [147, 4262, 8256, 10652, 12035]
+    fit_t = [302.95, 271.45, 242.35, 223.85, 216.75]
+    fit_q = [12.19, 0.59, 0.2, 0.07, 0.02]
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <= 136.:
-            theta_bg[k] = th_g
-            qt_bg[k] = qt_g
-        elif Gr.zl_half[k] > 136. and Gr.zl_half[k] <= 1551.:
-            theta_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
-            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-        elif Gr.zl_half[k] > 1551. and Gr.zl_half[k] <= 1480.0:
-            theta_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
-            qt_bg[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-        elif Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
-            theta_bg[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)    # 11.15 K / km
-            qt_bg[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
-        elif Gr.zl_half[k] > 2000.0:
-            theta_bg[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)   # 3.65 K / km
-            qt_bg[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
-        # Change units to kg/kg
-        qt_bg[k] /= 1000.0
+        if Gr.zl_half[k] <= fit_z[0]:
+            t_bg[k] = RS.Tg
+            #t_bg[k] = fit_t[0]
+            #thl_bg[k] = th_g
+            #qt_bg[k] = qt_g
+            qt_bg[k] = RS.qtg
+        elif Gr.zl_half[k] > fit_z[0] and Gr.zl_half[k] <= fit_z[1]:
+            delta_z = fit_z[1] - fit_z[0]
+            t_bg[k] = fit_t[0] + (Gr.z_half[k] - fit_z[0]) * (fit_t[1]-fit_t[0]) / delta_z
+            # thl_bg[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)   # 3.85 K / km
+            qt_bg[k] = fit_q[0] + (Gr.z_half[k] - fit_z[0])*(fit_q[1] - fit_q[0])/delta_z
+        elif Gr.zl_half[k] > fit_z[1] and Gr.zl_half[k] <= fit_z[2]:
+            delta_z = fit_z[2] - fit_z[1]
+            t_bg[k] = fit_t[1] + (Gr.z_half[k] - fit_z[1]) * (fit_t[2] - fit_t[1]) / delta_z
+            # thl_bg[k] = 298.7 + (z_half[k] - fit_z[1])  * (302.4 - 298.7)/delta_z   # 3.85 K / km
+            qt_bg[k] = fit_q[1] + (Gr.z_half[k] - fit_z[1])*(fit_q[2] - fit_q[1])/delta_z
+        elif Gr.zl_half[k] > fit_z[2] and Gr.zl_half[k] <= fit_z[3]:
+            delta_z = fit_z[3] - fit_z[2]
+            t_bg[k] = fit_t[2] + (Gr.z_half[k] - fit_z[2]) * (fit_t[3] - fit_t[2]) / delta_z
+            # thl_bg[k] = 302.4 + (z_half[k] - fit_z[2]) * (308.2 - 302.4)/delta_z    # 11.15 K / km
+            qt_bg[k] = fit_q[2] + (Gr.z_half[k] - fit_z[2]) * (fit_q[3] - fit_q[2])/delta_z
+        elif Gr.zl_half[k] > fit_z[3]:
+            delta_z = fit_z[4] - fit_z[3]
+            t_bg[k] = fit_t[3] + (Gr.z_half[k] - fit_z[3]) * (fit_t[4] - fit_t[3]) / delta_z
+            # thl_bg[k] = 308.2 + (z_half[k] - fit_z[2]) * (311.85 - 308.2)/delta_z   # 3.65 K / km
+            qt_bg[k] = fit_q[3] + (Gr.z_half[k] - fit_z[2]) * (fit_q[4] - fit_q[3])/delta_z
+        ## Change units to kg/kg
+        # qt_bg[k] /= 1000.0
         u[k] = 0.
+        Lambda = LH.Lambda_fp(t_bg[k])
+        # thl_bg[k] = thetal_cabauw(RS.Pg, t_bg[k], 0., 0., 0.)
+        thl_bg[k] = thetal_cabauw(RS.Pg, t_bg[k], qt_bg[k], 0., 0.)
+        # thetali_c from thermodynamic_functions gives error
+        # thl_bg[k] = thetali_c(RS.p0_half[k], t_bg[k], qt_bg[k], 0., 0., LH.L_fp(t_bg[k], Lambda))
+        # thl_bg[k] = thetali_c(RS.Pg, RS.Tg, RS.qtg, 0., 0., LH.L_fp(RS.Tg, Lambda))
 
     # Set velocities for Galilean transformation
     RS.v0 = 0.0
@@ -1667,13 +1709,21 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
                 # --- adding noise ---
                 if Gr.zl_half[k] <= 1550.0:
-                    temp_ = (theta_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
+                    temp_ = (thl_bg[k] + theta_pert[ijk]) * exner_c(RS.p0_half[k])
                     qt_ = qt_bg[k] + qt_pert[ijk]
                 else:
-                    temp_ = theta_bg[k] * exner_c(RS.p0_half[k])
+                    temp_ = thl_bg[k] * exner_c(RS.p0_half[k])
                     qt_ = qt_bg[k]
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k], temp_, qt_, 0.0, 0.0)
                 PV.values[qt_varshift + ijk] = qt_
+
+    fig, axis= plt.subplots(1, 3)
+    axis[0].plot(Gr.zl_half, t_bg)
+    axis[1].plot(Gr.zl_half, thl_bg)
+    axis[0].plot(Gr.zl_half, t_bg)
+    plt.savefig('./BM_files/Init_CP_Cabauw.png')
+    plt.close(fig)
+
 
     return
 
@@ -2099,139 +2149,139 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #
 #     return
 #
-# def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-#                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
-#
-#     """
-#     Initialize the DYCOMS_RF01 case described in
-#     Bjorn Stevens, Chin-Hoh Moeng, Andrew S. Ackerman, Christopher S. Bretherton, Andreas Chlond, Stephan de Roode,
-#     James Edwards, Jean-Christophe Golaz, Hongli Jiang, Marat Khairoutdinov, Michael P. Kirkpatrick, David C. Lewellen,
-#     Adrian Lock, Frank Müller, David E. Stevens, Eoin Whelan, and Ping Zhu, 2005: Evaluation of Large-Eddy Simulations
-#     via Observations of Nocturnal Marine Stratocumulus. Mon. Wea. Rev., 133, 1443–1462.
-#     doi: http://dx.doi.org/10.1175/MWR2930.1
-#     :param Gr: Grid cdef extension class
-#     :param PV: PrognosticVariables cdef extension class
-#     :param RS: ReferenceState cdef extension class
-#     :param Th: Thermodynamics class
-#     :return: None
-#     """
-#
-#     # Generate Reference Profiles
-#     RS.Pg = 1017.8 * 100.0
-#     RS.qtg = 9.0/1000.0
-#     RS.u0 = 7.0
-#     RS.v0 = -5.5
-#
-#     # Use an exner function with values for Rd, and cp given in Stevens 2004 to compute temperature given $\theta_l$
-#     RS.Tg = 289.0 * (RS.Pg/p_tilde)**(287.0/1015.0)
-#
-#     RS.initialize(Gr ,Th, NS, Pa)
-#
-#     #Set up $\tehta_l$ and $\qt$ profiles
-#     cdef:
-#         Py_ssize_t i
-#         Py_ssize_t j
-#         Py_ssize_t k
-#         Py_ssize_t ijk, ishift, jshift
-#         Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#         Py_ssize_t jstride = Gr.dims.nlg[2]
-#         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
-#         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
-#         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-#         Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
-#         Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
-#         double [:] thetal = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
-#         double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
-#         Py_ssize_t e_varshift
-#
-#     for k in xrange(Gr.dims.nlg[2]):
-#         if Gr.zl_half[k] <=840.0:
-#             thetal[k] = 289.0
-#             qt[k] = 9.0/1000.0
-#         if Gr.zl_half[k] > 840.0:
-#             thetal[k] = 297.5 + (Gr.zl_half[k] - 840.0)**(1.0/3.0)
-#             qt[k] = 1.5/1000.0
-#
-#     def compute_thetal(p_,T_,ql_):
-#         theta_ = T_ / (p_/p_tilde)**(287.0/1015.0)
-#         return theta_ * exp(-2.47e6 * ql_ / (1015.0 * T_))
-#
-#     def sat_adjst(p_,thetal_,qt_):
-#         '''
-#         Use saturation adjustment scheme to compute temperature and ql given thetal and qt.
-#         :param p: pressure [Pa]
-#         :param thetal: liquid water potential temperature  [K]
-#         :param qt:  total water specific humidity
-#         :return: T, ql
-#         '''
-#
-#         #Compute temperature
-#         t_1 = thetal_ * (p_/p_tilde)**(287.0/1015.0)
-#         #Compute saturation vapor pressure
-#         pv_star_1 = Th.get_pv_star(t_1)
-#         #Compute saturation mixing ratio
-#         qs_1 = qv_star_c(p_,qt_,pv_star_1)
-#
-#         if qt_ <= qs_1:
-#             #If not saturated return temperature and ql = 0.0
-#             return t_1, 0.0
-#         else:
-#             ql_1 = qt_ - qs_1
-#             f_1 = thetal_ - compute_thetal(p_,t_1,ql_1)
-#             t_2 = t_1 + 2.47e6*ql_1/1015.0
-#             pv_star_2 = Th.get_pv_star(t_2)
-#             qs_2 = qv_star_c(p_,qt_,pv_star_2)
-#             ql_2 = qt_ - qs_2
-#
-#             while fabs(t_2 - t_1) >= 1e-9:
-#                 pv_star_2 = Th.get_pv_star(t_2)
-#                 qs_2 = qv_star_c(p_,qt_,pv_star_2)
-#                 ql_2 = qt_ - qs_2
-#                 f_2 = thetal_ - compute_thetal(p_, t_2, ql_2)
-#                 t_n = t_2 - f_2 * (t_2 - t_1)/(f_2 - f_1)
-#                 t_1 = t_2
-#                 t_2 = t_n
-#                 f_1 = f_2
-#
-#             return t_2, ql_2
-#
-#     #Generate initial perturbations (here we are generating more than we need)
-#     np.random.seed(Pa.rank)
-#     cdef double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
-#     cdef double theta_pert_
-#
-#     for i in xrange(Gr.dims.nlg[0]):
-#         ishift = istride * i
-#         for j in xrange(Gr.dims.nlg[1]):
-#             jshift = jstride * j
-#             for k in xrange(Gr.dims.nlg[2]):
-#                 ijk = ishift + jshift + k
-#                 PV.values[ijk + u_varshift] = 0.0
-#                 PV.values[ijk + v_varshift] = 0.0
-#                 PV.values[ijk + w_varshift] = 0.0
-#                 PV.values[ijk + qt_varshift]  = qt[k]
-#
-#                 #Now set the entropy prognostic variable including a potential temperature perturbation
-#                 if Gr.zl_half[k] < 200.0:
-#                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
-#                 else:
-#                     theta_pert_ = 0.0
-#                 T,ql = sat_adjst(RS.p0_half[k],thetal[k] + theta_pert_,qt[k])
-#                 PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T, qt[k], ql, 0.0)
-#
-#
-#     if 'e' in PV.name_index:
-#         e_varshift = PV.get_varshift(Gr, 'e')
-#         for i in xrange(Gr.dims.nlg[0]):
-#             ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-#             for j in xrange(Gr.dims.nlg[1]):
-#                 jshift = j * Gr.dims.nlg[2]
-#                 for k in xrange(Gr.dims.nlg[2]):
-#                     ijk = ishift + jshift + k
-#                     if Gr.zl_half[k] < 200.0:
-#                         PV.values[e_varshift + ijk] = 0.0
-#
-#     return
+def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
+
+    """
+    Initialize the DYCOMS_RF01 case described in
+    Bjorn Stevens, Chin-Hoh Moeng, Andrew S. Ackerman, Christopher S. Bretherton, Andreas Chlond, Stephan de Roode,
+    James Edwards, Jean-Christophe Golaz, Hongli Jiang, Marat Khairoutdinov, Michael P. Kirkpatrick, David C. Lewellen,
+    Adrian Lock, Frank Müller, David E. Stevens, Eoin Whelan, and Ping Zhu, 2005: Evaluation of Large-Eddy Simulations
+    via Observations of Nocturnal Marine Stratocumulus. Mon. Wea. Rev., 133, 1443–1462.
+    doi: http://dx.doi.org/10.1175/MWR2930.1
+    :param Gr: Grid cdef extension class
+    :param PV: PrognosticVariables cdef extension class
+    :param RS: ReferenceState cdef extension class
+    :param Th: Thermodynamics class
+    :return: None
+    """
+
+    # Generate Reference Profiles
+    RS.Pg = 1017.8 * 100.0
+    RS.qtg = 9.0/1000.0
+    RS.u0 = 7.0
+    RS.v0 = -5.5
+
+    # Use an exner function with values for Rd, and cp given in Stevens 2004 to compute temperature given $\theta_l$
+    RS.Tg = 289.0 * (RS.Pg/p_tilde)**(287.0/1015.0)
+
+    RS.initialize(Gr ,Th, NS, Pa)
+
+    #Set up $\tehta_l$ and $\qt$ profiles
+    cdef:
+        Py_ssize_t i
+        Py_ssize_t j
+        Py_ssize_t k
+        Py_ssize_t ijk, ishift, jshift
+        Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        Py_ssize_t jstride = Gr.dims.nlg[2]
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        double [:] thetal = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        Py_ssize_t e_varshift
+
+    for k in xrange(Gr.dims.nlg[2]):
+        if Gr.zl_half[k] <=840.0:
+            thetal[k] = 289.0
+            qt[k] = 9.0/1000.0
+        if Gr.zl_half[k] > 840.0:
+            thetal[k] = 297.5 + (Gr.zl_half[k] - 840.0)**(1.0/3.0)
+            qt[k] = 1.5/1000.0
+
+    def compute_thetal(p_,T_,ql_):
+        theta_ = T_ / (p_/p_tilde)**(287.0/1015.0)
+        return theta_ * exp(-2.47e6 * ql_ / (1015.0 * T_))
+
+    def sat_adjst(p_,thetal_,qt_):
+        '''
+        Use saturation adjustment scheme to compute temperature and ql given thetal and qt.
+        :param p: pressure [Pa]
+        :param thetal: liquid water potential temperature  [K]
+        :param qt:  total water specific humidity
+        :return: T, ql
+        '''
+
+        #Compute temperature
+        t_1 = thetal_ * (p_/p_tilde)**(287.0/1015.0)
+        #Compute saturation vapor pressure
+        pv_star_1 = Th.get_pv_star(t_1)
+        #Compute saturation mixing ratio
+        qs_1 = qv_star_c(p_,qt_,pv_star_1)
+
+        if qt_ <= qs_1:
+            #If not saturated return temperature and ql = 0.0
+            return t_1, 0.0
+        else:
+            ql_1 = qt_ - qs_1
+            f_1 = thetal_ - compute_thetal(p_,t_1,ql_1)
+            t_2 = t_1 + 2.47e6*ql_1/1015.0
+            pv_star_2 = Th.get_pv_star(t_2)
+            qs_2 = qv_star_c(p_,qt_,pv_star_2)
+            ql_2 = qt_ - qs_2
+
+            while fabs(t_2 - t_1) >= 1e-9:
+                pv_star_2 = Th.get_pv_star(t_2)
+                qs_2 = qv_star_c(p_,qt_,pv_star_2)
+                ql_2 = qt_ - qs_2
+                f_2 = thetal_ - compute_thetal(p_, t_2, ql_2)
+                t_n = t_2 - f_2 * (t_2 - t_1)/(f_2 - f_1)
+                t_1 = t_2
+                t_2 = t_n
+                f_1 = f_2
+
+            return t_2, ql_2
+
+    #Generate initial perturbations (here we are generating more than we need)
+    np.random.seed(Pa.rank)
+    cdef double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
+    cdef double theta_pert_
+
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = istride * i
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = jstride * j
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[ijk + u_varshift] = 0.0
+                PV.values[ijk + v_varshift] = 0.0
+                PV.values[ijk + w_varshift] = 0.0
+                PV.values[ijk + qt_varshift]  = qt[k]
+
+                #Now set the entropy prognostic variable including a potential temperature perturbation
+                if Gr.zl_half[k] < 200.0:
+                    theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
+                else:
+                    theta_pert_ = 0.0
+                T,ql = sat_adjst(RS.p0_half[k],thetal[k] + theta_pert_,qt[k])
+                PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T, qt[k], ql, 0.0)
+
+
+    if 'e' in PV.name_index:
+        e_varshift = PV.get_varshift(Gr, 'e')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    if Gr.zl_half[k] < 200.0:
+                        PV.values[e_varshift + ijk] = 0.0
+
+    return
 #
 #
 #
@@ -3350,8 +3400,6 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #
 # def InitSoares(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa, LatentHeat La):
-# # def InitSullivanPatton(Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
-# #                        ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa ):
 #
 #     #Generate the reference profiles
 #     RS.Pg = 1.0e5     #Pressure at ground (Soares)
@@ -3650,7 +3698,6 @@ def thetal_isdac(p_, t_, ql_, qt_):
     #return (p_tilde/p_)**(Rd/cpd)*(t_ - 2.26e6 * rl_ / cpd)
     return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(rl_*2.501e6) / (t_*cpd))
 
-
 def sat_adjst(p_, thetal_, qt_, Th):
 
     """
@@ -3693,11 +3740,9 @@ def sat_adjst(p_, thetal_, qt_, Th):
 
     return t_2, ql_2
 
-
 def qv_star_rh(p0, rh, pv):
     val = eps_v*pv/(p0-pv)/(1 + rh*eps_v*pv/(p0-pv))
     return val
-
 
 def qv_unsat(p0, pv):
     val = 1.0/(eps_vi * (p0 - pv)/pv + 1.0)
