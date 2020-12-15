@@ -212,7 +212,7 @@ cdef class SurfaceBase:
             double dzi = 1.0/Gr.dims.dx[2]
             double tendency_factor = Ref.alpha0_half[gw]/Ref.alpha0[gw-1]*dzi
 
-        Pa.root_print('Surface Base Case: ' + str(self.dry_case))
+        Pa.root_print('Surface Base Case: dry_case=' + str(self.dry_case))
         if self.dry_case:
             # Pa.root_print('>> dry case')
             with nogil:
@@ -347,7 +347,6 @@ cdef class SurfaceColdPools(SurfaceBase):
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
             Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
-            # Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
             Py_ssize_t qt_shift
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
 
@@ -370,7 +369,8 @@ cdef class SurfaceColdPools(SurfaceBase):
         else:
             # qt_flag = False
             # print('---------- qt NOT in PV (qt_flag: ' + str(qt_flag) + ')')
-            self.s_star = sd_c(pd_star, Ref.Tg)
+            self.s_star = sd_c(Ref.Pg, Ref.Tg)
+            # self.s_star = sd_c(pd_star, Ref.Tg)
             self.cq = 0.
 
         with nogil:
