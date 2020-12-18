@@ -2020,11 +2020,11 @@ cdef class ForcingColdPoolCabauw:
         Pa.root_print('-------- Cabauw Forcing: missing correct representation of dqtdt; time dependence of forcing ---------')
         Pa.root_print('')
 
-        plt.figure()
-        plt.imshow(dTdt_2d)
-        plt.plot(ic,jc,'or', markersize=5)
-        plt.savefig('./ColdPoolCabauw_dTdt.png')
-        plt.close()
+        #plt.figure()
+        #plt.imshow(dTdt_2d)
+        #plt.plot(ic,jc,'or', markersize=5)
+        #plt.savefig('./ColdPoolCabauw_dTdt.png')
+        #plt.close()
 
         return
 
@@ -2240,11 +2240,11 @@ cdef class ForcingColdPool_continuous:
         Pa.root_print('dTdt_2d'+', '+str(np.amin(dTdt_2d))+', '+str(np.amax(dTdt_2d)))
         Pa.root_print('')
 
-        plt.figure()
-        plt.imshow(dTdt_2d)
-        plt.plot(ic,jc,'or', markersize=5)
-        plt.savefig('./ColdPoolCabauw_dTdt.png')
-        plt.close()
+        #plt.figure()
+        #plt.imshow(dTdt_2d)
+        #plt.plot(ic,jc,'or', markersize=5)
+        #plt.savefig('./ColdPoolCabauw_dTdt.png')
+        #plt.close()
 
         return
 
@@ -2321,7 +2321,7 @@ cdef class ForcingColdPool_continuous:
             # min_aux = np.amin(T_tend)
             # max_aux = np.amax(T_tend)
             Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
-            Pa.root_print('T_tend min/max: ' + str(min_aux)+', '+str(max_aux))
+            # Pa.root_print('T_tend min/max: ' + str(min_aux)+', '+str(max_aux))
             Pa.root_print('time.dt: ' + str(dt))
             #Pa.root_print(str(np.amin(dqtdt))+', '+str(np.amax(dqtdt))+', '+str(np.amin(dTdt))+', '+str(np.amax(dTdt)))
 

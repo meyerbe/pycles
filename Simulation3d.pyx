@@ -91,17 +91,17 @@ class Simulation3d:
         self.PV.set_velocity_direction('v', 1, self.Pa)
         self.PV.add_variable('w', 'm/s', 'w', 'w velocity component', "asym", "velocity", self.Pa)
         self.PV.set_velocity_direction('w', 2, self.Pa)
-        
+
         AuxillaryVariables(namelist, self.PV, self.DV, self.Pa)
-        
-        
+
+
         self.StatsIO.initialize(namelist, self.Gr, self.Pa)
         self.FieldsIO.initialize(namelist, self.Pa)
         self.CondStatsIO.initialize(namelist, self.Gr, self.Pa)
         self.Aux = AuxiliaryStatistics(namelist)
         self.CondStats = ConditionalStatistics(namelist)
         self.Restart.initialize()
-        
+
         self.VO.initialize()
         self.Th.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
         self.Micro.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
@@ -109,18 +109,18 @@ class Simulation3d:
         self.Tr.initialize(self.Gr, self.PV, self.DV, self.StatsIO, self.Pa)
         self.PV.initialize(self.Gr, self.StatsIO, self.Pa)
         self.Ke.initialize(self.Gr, self.StatsIO, self.Pa)
-        
+
         self.SA.initialize(self.Gr,self.PV, self.StatsIO, self.Pa)
         self.MA.initialize(self.Gr,self.PV, self.StatsIO, self.Pa)
         self.SD.initialize(self.Gr,self.PV,self.DV,self.StatsIO,self.Pa)
         self.MD.initialize(self.Gr,self.PV,self.DV,self.StatsIO, self.Pa)
-        
+
         self.TS.initialize(namelist,self.PV,self.Pa)
         # __
         # self.SN.initialize(self.Pa)
         # __
         self.Sur.initialize(self.Gr, self.Ref,  self.StatsIO, self.Pa)
-        
+
         if self.Restart.is_restart_run:
             self.Pa.root_print('This run is being restarted!')
             try:
@@ -128,7 +128,7 @@ class Simulation3d:
             except:
                 self.Pa.root_print('Could not read restart file')
                 self.Pa.kill()
-       
+
             self.TS.t = self.Restart.restart_data['TS']['t']
             self.TS.dt = self.Restart.restart_data['TS']['dt']
             self.Ref.init_from_restart(self.Gr, self.Restart)
