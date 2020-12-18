@@ -5,7 +5,6 @@
 #cython: cdivision=True
 
 cimport mpi4py.libmpi as mpi
-# cimport mpi4py.mpi_c as mpi
 cimport ParallelMPI
 cimport Restart
 cimport numpy as np
@@ -48,10 +47,26 @@ cdef class Grid:
         self.dims.dxi[2] = 1.0/self.dims.dx[2]
 
         #Get the grid dimensions and ghost points
-        self.dims.gw = namelist['grid']['gw']
+        self.dims.gw   = namelist['grid']['gw']
         self.dims.n[0] = namelist['grid']['nx']
         self.dims.n[1] = namelist['grid']['ny']
         self.dims.n[2] = namelist['grid']['nz']
+
+
+        #Determine if grid stretching is to be used
+        try:
+            self.stretch = namelist['grid']['stretch']
+        except:
+            pass
+
+        if self.stretch:
+            try:
+                self.stretch_scale = namelist['grid']['stretch_scale']
+            except:
+                self.stretch_scale = 8000.0 #[m]
+        else:
+            self.stretch_scale = 0.0
+
 
         #Compute the global and local dims
         self.compute_global_dims()
@@ -152,6 +167,15 @@ cdef class Grid:
         self.z_half = np.empty((self.dims.n[2]+2*self.dims.gw),dtype=np.double,order='c')
         self.z = np.empty((self.dims.n[2]+2*self.dims.gw),dtype=np.double,order='c')
 
+
+        cdef double zp_max = self.dims.n[2] * self.dims.dx[2]
+        if self.stretch:
+            beta =  1.0/ self.stretch_scale
+            self.dims.dx[2] = (1.0/beta) * np.log(zp_max * (np.exp(beta)-1) + 1)/self.dims.n[2]
+            self.dims.dxi[2] = 1.0/self.dims.dx[2]
+        else:
+            pass
+
         cdef int i, count = 0
         for i in xrange(-self.dims.gw,self.dims.n[2]+self.dims.gw,1):
             self.z[count] = (i + 1) * self.dims.dx[2]
@@ -182,6 +206,77 @@ cdef class Grid:
         #Extract just the local components of the height coordinate
         self.yl = self.extract_local_ghosted(self.y,1)
         self.yl_half = self.extract_local_ghosted(self.yl,1)
+
+        #Now set up the tranformation arrays
+
+        if self.stretch:
+            self.zp = (np.exp(beta * np.array(self.z)) - 1.0)/(np.exp(beta) - 1.0)
+            self.zp_half =(np.exp(beta * np.array(self.z_half)) - 1.0)/(np.exp(beta) - 1.0)
+
+            self.zpl = self.extract_local_ghosted(np.array(self.zp),2)
+            self.zpl_half = self.extract_local_ghosted(np.array(self.zp_half),2)
+
+            self.dims.zp_half_0 = self.zp_half[self.dims.gw]
+            self.dims.zp_0 = self.zp[self.dims.gw]
+
+            self.dzp = np.empty((self.dims.n[2]+2*self.dims.gw),dtype=np.double,order='c')
+            self.dzp_half = np.empty((self.dims.n[2]+2*self.dims.gw),dtype=np.double,order='c')
+        else:
+
+
+            self.zp = np.array(self.z)
+            self.zp_half = np.array(self.z_half)
+
+            self.zpl = self.extract_local_ghosted(np.array(self.zp),2)
+            self.zpl_half = self.extract_local_ghosted(np.array(self.zp_half),2)
+
+            self.dims.zp_half_0 = self.zp_half[self.dims.gw]
+            self.dims.zp_0 = self.zp[self.dims.gw]
+
+            self.dzp = np.empty((self.dims.n[2]+2*self.dims.gw),dtype=np.double,order='c')
+            self.dzp_half = np.empty((self.dims.n[2]+2*self.dims.gw),dtype=np.double,order='c')
+
+        cdef int k
+        for k in xrange(1,self.dims.n[2]+2*self.dims.gw-1):
+            self.dzp_half[k] = self.zp[k] - self.zp[k-1]
+            self.dzp[k] = self.zp_half[k+1] - self.zp_half[k]
+
+
+        self.dzpl = self.extract_local_ghosted(np.array(self.dzp),2)
+        self.dzpl_half = self.extract_local_ghosted(np.array(self.dzp_half),2)
+
+
+        if self.stretch:
+            self.met = beta * np.exp(beta * np.array(self.z))/(np.exp(beta) - 1.0)
+            self.met_half = beta * np.exp(beta * np.array(self.z_half))/(np.exp(beta) - 1.0)
+        else:
+            self.met = np.ones((self.dims.n[2]+2*self.dims.gw), dtype=np.double, order='c')
+            self.met_half = np.ones((self.dims.n[2]+2*self.dims.gw), dtype=np.double, order='c')
+
+        self.imet = 1.0/np.array(self.met)
+        self.imet_half = 1.0/np.array(self.met_half)
+
+        self.metl = self.extract_local_ghosted(np.array(self.met),2)
+        self.metl_half = self.extract_local_ghosted(np.array(self.met_half),2)
+
+        self.imetl = self.extract_local_ghosted(np.array(self.imet),2)
+        self.imetl_half = self.extract_local_ghosted(np.array(self.imet_half),2)
+
+        self.dims.dzpl = &self.dzpl[0]
+        self.dims.dzpl_half = &self.dzpl_half[0]
+
+        self.dims.met = &self.met[0]
+        self.dims.met_half = &self.met_half[0]
+
+        self.dims.imet = &self.imet[0]
+        self.dims.imet_half = &self.imet_half[0]
+
+        self.dims.metl = &self.metl[0]
+        self.dims.metl_half = &self.metl_half[0]
+
+        self.dims.imetl = &self.imetl[0]
+        self.dims.imetl_half = &self.imetl_half[0]
+
 
         return
 
