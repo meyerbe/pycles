@@ -31,8 +31,6 @@ cdef class UniformViscosity:
     cpdef stats_io(self, Grid.Grid Gr, DiagnosticVariables.DiagnosticVariables DV,
                    PrognosticVariables.PrognosticVariables PV, Kinematics.Kinematics Ke, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
 
-
-
 cdef class Smagorinsky:
     cdef:
         double cs
