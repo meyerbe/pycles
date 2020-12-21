@@ -24,8 +24,9 @@ from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 # import pylab as plt
 include 'parameters.pxi'
 from Initialization import sat_adjst, qv_unsat
-# import matplotlib.pyplot as plt
-import cPickle
+import matplotlib.pyplot as plt
+# import cPickle
+import pickle
 
 cdef class Forcing:
     def __init__(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):
@@ -1162,7 +1163,8 @@ cdef class ForcingSheba:
 
         #Original SHEBA forcing file from https://atmos.washington.edu/~roode/SHEBA.html
         fh = open('./SHEBAdata/SHEBA_forcing.pkl', 'r')
-        sheba_ec = cPickle.load(fh)
+        # sheba_ec = cPickle.load(fh)
+        sheba_ec = pickle.load(fh)
         fh.close()
 
         Pa.root_print('Finish reading in SHEBA forcing fields.')
@@ -2175,7 +2177,7 @@ cdef class ForcingColdPool_continuous:
     def __init__(self, namelist):
         self.rstar = namelist['init']['r']
         self.dTdt = namelist['init']['dTdt']
-        #self.dqdt = namelist['init']['dTdt']
+        # self.dqdt = namelist['init']['dqtdt']
         self.z_BL = 1000.
         self.ic = namelist['init']['ic']
         self.jc = namelist['init']['jc']
@@ -2202,6 +2204,7 @@ cdef class ForcingColdPool_continuous:
             double r, rstar
             double dTdt = self.dTdt
             Py_ssize_t gw = Gr.dims.gw
+            double dV = Gr.dims.dx[0]*Gr.dims.dx[1]*Gr.dims.dx[2]
 
         # self.k_BL = np.int(z_BL / Gr.dims.dx[2])
         # root = nc.Dataset(self.path_data, 'r')
@@ -2219,6 +2222,9 @@ cdef class ForcingColdPool_continuous:
         xc = np.asarray([Gr.x_half[ic+gw]], dtype=np.double)
         yc = np.asarray([Gr.y_half[jc+gw]], dtype=np.double)
         rstar = self.rstar
+        # Lambda = LH.Lambda_fp(Ref.Tg)
+        # L_fp = LH.L_fp(Ref.Tg, Lambda)
+        cdef double L = 2264.705  # [kJ/kg], at 100°C
         for i in xrange(Gr.dims.nlg[0]):
             ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
             for j in xrange(Gr.dims.nlg[1]):
@@ -2227,17 +2233,17 @@ cdef class ForcingColdPool_continuous:
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
                 if r <= rstar:
                     dTdt_2d[i,j] = -dTdt
+                    ## convert from cooling to moistening
+                    # dqtdt_2d[i,j] = -dTdt*cpd*dV/L_fp
+                    # dqtdt_2d[i,j] = -dTdt*cpd*dV/L
 
         self.dTdt_2d = dTdt_2d
-        ## convert from cooling to moistening
-        #Lambda = LH.Lambda_fp(tg)
-        #L_fp = LH.L_fp(Ref.Tg, Lambda)
-        # self.dqdt_2d = dTdt_2d*cpd*dV/L
-        #self.dqdt_2d = dqtdt_2d
+        # self.dqdt_2d = dqtdt_2d
 
         Pa.root_print('')
         Pa.root_print('-------- Cabauw Forcing: missing correct representation of dqtdt; time dependence of forcing ---------')
         Pa.root_print('dTdt_2d'+', '+str(np.amin(dTdt_2d))+', '+str(np.amax(dTdt_2d)))
+        Pa.root_print('!!!! latent heat taken for boiling temperature, adjust to temperature !!!!! (import LatentHeat Module from Thermodynamics)')
         Pa.root_print('')
 
         #plt.figure()
