@@ -522,7 +522,7 @@ def ColdPool_3D_contforcing(number):
 
     namelist['surface'] = {}
     # schemes: 'none', 'bulk', 'const'
-    namelist['surface']['scheme'] = 'none'
+    namelist['surface']['scheme'] = 'bulk'
 
     namelist['visualization'] = {}
     namelist['visualization']['frequency'] = 10000.0
