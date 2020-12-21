@@ -50,7 +50,8 @@ def InitializationFactory(namelist):
         elif casename == 'ColdPoolDry_triple_3D_stable':
             return InitColdPoolDry_triple_3D
         elif casename == 'ColdPool_single_contforcing':
-            return InitColdPoolDry_single_3D
+            # return InitColdPoolDry_single_3D
+            return InitColdPoolMoist_3D
         elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' \
                 or casename == 'ColdPoolMoist_triple_3D':
             return InitColdPoolMoist_3D
@@ -68,8 +69,8 @@ def InitializationFactory(namelist):
             return InitBomex
         # elif casename == 'Gabls':
         #     return InitGabls
-        # elif casename == 'DYCOMS_RF01':
-        #     return InitDYCOMS_RF01
+        elif casename == 'DYCOMS_RF01':
+            return InitDYCOMS_RF01
         # elif casename == 'DYCOMS_RF02':
         #     return InitDYCOMS_RF02
         # elif casename == 'SMOKE':
@@ -923,7 +924,8 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
 
     # Generate reference profiles
     RS.Pg = 1.0e5       #Pressure at ground
-    RS.Tg = 300.0       #Temperature at ground
+    # RS.Tg = 300.0       #Temperature at ground
+    RS.Tg = 298.15       #Temperature at ground
     # RS.qtg = 0.02245    #Total water mixing ratio at surface (BOMEX)
     RS.qtg = rv_g / (1+rv_g) + 0.0    # Total water mixing ratio at surface (Grant, 2018: rv=10g/kg for z<=1000m)
     # # Rico: saturation mixing ratio
@@ -1025,6 +1027,16 @@ def InitColdPoolMoist_3D(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVa
         jc_arr = np.asarray([jc1,jc2,jc3], dtype=np.int)
         xc = np.asarray([Gr.x_half[ic1 + gw], Gr.x_half[ic2 + gw], Gr.x_half[ic3 + gw]], dtype=np.double)
         yc = np.asarray([Gr.y_half[jc1 + gw], Gr.y_half[jc2 + gw], Gr.y_half[jc3 + gw]], dtype=np.double)
+    elif casename == 'ColdPool_single_contforcing':
+        ncp = 1
+        ic1 = ic
+        jc1 = jc
+        ic_arr = np.asarray([ic1], dtype=np.int)
+        jc_arr = np.asarray([jc1], dtype=np.int)
+        xc = np.asarray([Gr.x_half[ic1 + gw]], dtype=np.double)
+        yc = np.asarray([Gr.y_half[jc1 + gw]], dtype=np.double)
+        d = 0
+        i_d = 0
 
     cdef:
         double [:,:,:] z_max_arr = (-1)*np.ones((2, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
@@ -1580,6 +1592,8 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     RS.v0 = 0.0
     RS.initialize(Gr, Th, NS, Pa)
 
+    #Lambda = LH.Lambda_fp(t_)
+
     def thetal_cabauw(p_, t_, qt_, ql_, qi_):
         # L = 2.26e6
         Lambda = LH.Lambda_fp(t_)
@@ -1599,6 +1613,8 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         Py_ssize_t ijk
         Py_ssize_t gw = Gr.dims.gw
 
+    #thl_g = thetali_c(RS.Pg, RS.Tg, 0., 0., 0., LH.L_fp(RS.Tg, Lambda))    # working
+
     # (A) cold pool forcing
     casename = namelist['meta']['casename']
     cdef:
@@ -1616,6 +1632,8 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         # double [:] xc
         # double [:] yc
 
+    #thl_g = thetali_c(RS.Pg, RS.Tg, 0., 0., 0., LH.L_fp(RS.Tg, Lambda))    # working
+    #Pa.root_print('---------- L='+str(LH.L_fp(RS.Tg, Lambda)))
     # (1) generate forcing file 2D (or directly do in Forcing.pyx)
     # Forcing:
     # - compute dqtdt = dTdt*cpd*dV/Lv (dqt*Lv = dTdt*cp*dV)
@@ -1627,15 +1645,20 @@ def InitColdPoolCabauw(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
         double z_BL = 1000.
         double [:] thl_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
         double [:] t_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
-        double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
-        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background wind
-        # double t_g = 298.7 # K
         double th_g = 298.7 # K
         double qt_g = 16.3  # g/kg
-        double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
-        double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
         double qt_
         double temp_
+    #thl_g = thetali_c(RS.Pg, RS.Tg, 0., 0., 0., LH.L_fp(RS.Tg, Lambda))    # working
+    cdef:
+        double [:] qt_bg = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background stratification
+    #thl_g = thetali_c(RS.Pg, RS.Tg, 0., 0., 0., LH.L_fp(RS.Tg, Lambda))    # NOT working
+    cdef:
+        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')      # background wind
+        double [:] theta_pert = (np.random.random_sample(Gr.dims.npg)-0.5)*0.1
+        double [:] qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+    #thl_g = thetali_c(RS.Pg, RS.Tg, 0., 0., 0., LH.L_fp(RS.Tg, Lambda))    # NOT working
+
 
     # ??? dry potential temperature ???
     # cdef:
@@ -3675,11 +3698,11 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
 #     Pa.root_print('finished Initialization Soares_moist')
 #
 #     return
-#
-#
-#
-#
-#
+
+
+
+
+
 def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
                        DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
 
