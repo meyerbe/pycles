@@ -416,7 +416,7 @@ def ColdPool_3D_contforcing(number):
     namelist['grid']['dims'] = 3
     namelist['grid']['nx'] = 20
     namelist['grid']['ny'] = 20
-    namelist['grid']['nz'] = 100        # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['nz'] = 80        # height of 12km is sufficient (for dTh3K_z1000_r1000)
     namelist['grid']['gw'] = 5
     namelist['grid']['dx'] = 100.0
     namelist['grid']['dy'] = 100.0
@@ -424,13 +424,15 @@ def ColdPool_3D_contforcing(number):
 
     namelist['init'] = {}
     rstar = 1000.0
-    namelist['init']['dTh'] = 0.0           # temperature anomaly
+    namelist['init']['dTh'] = 0.0           # temperature anomaly at initialization
+    namelist['init']['dqt'] = 0.0           # moisture anomaly at initialization
     namelist['init']['h'] = 1000.0          # initial height of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
-    # namelist['init']['marg'] = 200.         # width or margin (transition for temeprature anomaly)
-    namelist['init']['dTdt'] = 1.0  # cooling [K/h]
+    namelist['init']['marg'] = 200.         # width of margin (for initial temperature anomaly)
+    namelist['init']['dTdt'] = 9.0          # cooling [K/h]
     # namelist['init']['dqtdt'] = 1.0  # moistening [K/h]
-    namelist['init']['evap'] = 0.2          # evaporation rate [-]
+    namelist['init']['tau'] = 600.          # duration of cooling [s]
+    # namelist['init']['evap'] = 0.2          # evaporation rate [-]
     # namelist['init']['eta'] = .2          # evaporation rate [-]
     if number == 'single':
         pass
@@ -454,13 +456,13 @@ def ColdPool_3D_contforcing(number):
     namelist['time_stepping']['cfl_limit'] = 0.3
     namelist['time_stepping']['dt_initial'] = 10.0
     namelist['time_stepping']['dt_max'] = 10.0
-    namelist['time_stepping']['t_max'] = 3600.0
+    namelist['time_stepping']['t_max'] = 60.0
 
     namelist['thermodynamics'] = {}
     namelist['thermodynamics']['latentheat'] = 'constant'
 
     namelist['microphysics'] = {}
-    namelist['microphysics']['scheme'] = 'None_Dry'
+    namelist['microphysics']['scheme'] = 'None_SA'
     namelist['microphysics']['phase_partitioning'] = 'liquid_only'
 
     namelist['sgs'] = {}
@@ -483,7 +485,7 @@ def ColdPool_3D_contforcing(number):
     namelist['damping']['scheme'] = 'Rayleigh' #'None'
     namelist['damping']['Rayleigh'] = {}
     namelist['damping']['Rayleigh']['gamma_r'] = 0.2
-    namelist['damping']['Rayleigh']['z_d'] = 600
+    namelist['damping']['Rayleigh']['z_d'] = 1000
 
     namelist['output'] = {}
     namelist['output']['output_root'] = './'
@@ -512,11 +514,11 @@ def ColdPool_3D_contforcing(number):
         namelist['meta']['casename'] = 'ColdPool_single_contforcing'
         namelist['meta']['simname'] = 'ColdPool_single_contforcing'
     elif number == 'double':
-        namelist['meta']['casename'] = 'ColdPool_single_contforcing'
-        namelist['meta']['simname'] = 'ColdPool_single_contforcing'
+        namelist['meta']['casename'] = 'ColdPool_double_contforcing'
+        namelist['meta']['simname'] = 'ColdPool_double_contforcing'
     elif number == 'triple':
-        namelist['meta']['casename'] = 'ColdPool_single_contforcing'
-        namelist['meta']['simname'] = 'ColdPool_single_contforcing'
+        namelist['meta']['casename'] = 'ColdPool_triple_contforcing'
+        namelist['meta']['simname'] = 'ColdPool_triple_contforcing'
 
     namelist['surface'] = {}
     # schemes: 'none', 'bulk', 'const'
@@ -1163,6 +1165,10 @@ def Bomex():
 
     namelist['initialization'] = {}
     namelist['initialization']['random_seed_factor'] = 1
+
+    # namelist['tracers'] = {}
+    # namelist['tracers']['use_tracers'] = True
+    # namelist['tracers']['scheme'] = 'PurityTracers'
 
     return namelist
 
@@ -2036,6 +2042,10 @@ def CGILS_S6(is_p2,is_ctl_omega):
 
     namelist['microphysics']['SB_Liquid']['nu_droplet'] = 0
     namelist['microphysics']['SB_Liquid']['mu_rain'] = 1
+
+    namelist['radiation'] = {}
+    namelist['radiation']['RRTM'] = {}
+    namelist['radiation']['RRTM']['frequency'] = 90.0
 
     namelist['sgs'] = {}
     namelist['sgs']['scheme'] = 'Smagorinsky'
