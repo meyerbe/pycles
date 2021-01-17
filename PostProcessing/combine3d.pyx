@@ -7,7 +7,7 @@ import cython
 #cpdef to_3d(double[:] f_data, int nl_0, int nl_1, int nl_2, int indx_lo_0,
 #            int indx_lo_1, int indx_lo_2, double[:, :, :] f_data_3d):
 cpdef to_3d(float[:] f_data, int nl_0, int nl_1, int nl_2, int indx_lo_0,
-            int indx_lo_1, int indx_lo_2, double[:, :, :] f_data_3d):
+            int indx_lo_1, int indx_lo_2, float[:, :, :] f_data_3d):
 
     cdef:
         int istride = nl_2 * nl_1
