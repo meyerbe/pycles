@@ -265,6 +265,8 @@ cdef class NetCDFIO_Stats:
             #root_grp.close()
         return
 
+
+
 cdef class NetCDFIO_Fields:
     def __init__(self):
         return
@@ -273,9 +275,6 @@ cdef class NetCDFIO_Fields:
     cpdef initialize(self, dict namelist, ParallelMPI.ParallelMPI Pa):
 
         self.last_output_time = 0.0
-        # __
-        # self.count = 0
-        # __
         self.uuid = str(namelist['meta']['uuid'])
         self.frequency = namelist['fields_io']['frequency']
 
@@ -302,11 +301,6 @@ cdef class NetCDFIO_Fields:
 
         new_dir = os.path.join(
             self.fields_path, str(int(self.last_output_time)))
-        # __
-        #new_dir = os.path.join(
-            #self.fields_path, str(int(self.last_output_time))+'_'+str(self.count))
-        # self.count += 1
-        # __
 
         if Pa.rank == 0 and not os.path.exists(new_dir):
             try:
@@ -432,7 +426,8 @@ cdef class NetCDFIO_Fields:
     cpdef add_field(self, name):
         rootgrp = nc.Dataset(self.path_plus_file, 'r+', format='NETCDF4')
         fieldgrp = rootgrp.groups['fields']
-        fieldgrp.createVariable(name, 'f8', ('nl'))
+        # fieldgrp.createVariable(name, 'f8', ('nl'))
+        fieldgrp.createVariable(name, 'f4', ('nl'))
         rootgrp.close()
         return
 

@@ -24,8 +24,9 @@ from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 # import pylab as plt
 include 'parameters.pxi'
 from Initialization import sat_adjst, qv_unsat
-# import matplotlib.pyplot as plt
-import cPickle
+import matplotlib.pyplot as plt
+# import cPickle
+import pickle
 
 cdef class Forcing:
     def __init__(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):
@@ -1162,7 +1163,8 @@ cdef class ForcingSheba:
 
         #Original SHEBA forcing file from https://atmos.washington.edu/~roode/SHEBA.html
         fh = open('./SHEBAdata/SHEBA_forcing.pkl', 'r')
-        sheba_ec = cPickle.load(fh)
+        # sheba_ec = cPickle.load(fh)
+        sheba_ec = pickle.load(fh)
         fh.close()
 
         Pa.root_print('Finish reading in SHEBA forcing fields.')
@@ -2175,11 +2177,12 @@ cdef class ForcingColdPool_continuous:
     def __init__(self, namelist):
         self.rstar = namelist['init']['r']
         self.dTdt = namelist['init']['dTdt']
-        #self.dqdt = namelist['init']['dTdt']
+        # self.dqdt = namelist['init']['dqtdt']   # moistening derived from cooling
+        # self.marg = namelist['init']['marg']
         self.z_BL = 1000.
         self.ic = namelist['init']['ic']
         self.jc = namelist['init']['jc']
-        self.tau = namelist['init']['tau']      # period of applying forcing
+        self.tau = namelist['init']['tau']        # period of applying forcing
         return
 
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
@@ -2194,7 +2197,6 @@ cdef class ForcingColdPool_continuous:
             # for using type bool, set 'from libcpp cimport bool' at top of file
             # double [:,:,:] precip = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
             # double [:,:,:] dTdt_2d = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
-            # double [:,:,:] dqdt = np.zeros((self.nt, Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
             double [:,:] dTdt_2d = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
             double [:,:] dqtdt_2d = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
             Py_ssize_t i, j, ishift, jshift
@@ -2214,11 +2216,15 @@ cdef class ForcingColdPool_continuous:
         cdef:
             Py_ssize_t ic = self.ic
             Py_ssize_t jc = self.jc
+            Py_ssize_t dx = Gr.dims.dx[0]
         # ic = np.int(np.double(Gr.dims.nlg[0])/2)
         # jc = np.int(np.double(Gr.dims.nlg[1])/2)
         xc = np.asarray([Gr.x_half[ic+gw]], dtype=np.double)
         yc = np.asarray([Gr.y_half[jc+gw]], dtype=np.double)
         rstar = self.rstar
+        # Lambda = LH.Lambda_fp(Ref.Tg)
+        # L_fp = LH.L_fp(Ref.Tg, Lambda)
+        cdef double L = 2264.705  # [kJ/kg], at 100°C
         for i in xrange(Gr.dims.nlg[0]):
             ishift = i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
             for j in xrange(Gr.dims.nlg[1]):
@@ -2227,17 +2233,23 @@ cdef class ForcingColdPool_continuous:
                          (Gr.y_half[j + Gr.dims.indx_lo[1]] - yc)**2 )
                 if r <= rstar:
                     dTdt_2d[i,j] = -dTdt
-
+                    # convert from cooling to moistening >> depending on height, due to temperature dependence of L
+                    # dqtdt_2d[i,j] = -dTdt*cpd/L_fp
+                    # dqtdt_2d[i,j] = -dTdt*cpd/L
+                    # self.dqdt_2d = dTdt_2d*cpd*dV/L
+                # elif r <= (rstar + dx):
+                #     dTdt_2d[i,j] = -dTdt*.5
+                # elif r <= (rstar + dx):
+                #     dTdt_2d[i,j] = -dTdt*2./3
+                # elif r <= (rstar + 2*dx):
+                #     dTdt_2d[i,j] = -dTdt*1./3
         self.dTdt_2d = dTdt_2d
-        ## convert from cooling to moistening
-        #Lambda = LH.Lambda_fp(tg)
-        #L_fp = LH.L_fp(Ref.Tg, Lambda)
-        # self.dqdt_2d = dTdt_2d*cpd*dV/L
         #self.dqdt_2d = dqtdt_2d
 
         Pa.root_print('')
         Pa.root_print('-------- Cabauw Forcing: missing correct representation of dqtdt; time dependence of forcing ---------')
         Pa.root_print('dTdt_2d'+', '+str(np.amin(dTdt_2d))+', '+str(np.amax(dTdt_2d)))
+        Pa.root_print('!!!! latent heat taken for boiling temperature, adjust to temperature !!!!! (import LatentHeat Module from Thermodynamics)')
         Pa.root_print('')
 
         # plt.figure()
@@ -2262,68 +2274,102 @@ cdef class ForcingColdPool_continuous:
             Py_ssize_t gw = Gr.dims.gw
             Py_ssize_t imax = Gr.dims.nlg[0] - gw
             Py_ssize_t jmax = Gr.dims.nlg[1] - gw
-            #Py_ssize_t kmax = Gr.dims.nlg[2] - gw
             Py_ssize_t kmax = np.int(self.z_BL/Gr.dims.dx[2])
             Py_ssize_t i,j,k,ishift,jshift,ijk
             Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
             Py_ssize_t jstride = Gr.dims.nlg[2]
-            Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
-            Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
+            # Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
+            # Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
             Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
-            #Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
-            # Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
-            #double qt, qv
-            double p0, t
+            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
+            double qt, qv
+            double p0
 
         cdef:
             double [:,:] dTdt = self.dTdt_2d
-            double T_tend
-            ## double [:,:] dqtdt = self.dqtdt_2d
-            # double [:,:] dqtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1]), dtype=np.double)
+            double T_tend, qt_tend
+            # double [:,:,:] dqtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
             # double [:,:,:] s_aux = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
-            double [:,:,:] s_tend = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
-            double cp, T
+            # double [:,:,:] s_tend = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
+            double s_tend
+            double cp, L, T
             double dt = TS.dt
             double tau = self.tau
+
+        # ''' latent heat '''
+        # def latent_heat(T):
+        #     return (2500.8 - .36*T + 0.0016*T**2 - 0.00006*T**3)  # [J/g]
 
         #Apply cooling/moistening source term
         if TS.t < tau:
             Pa.root_print('--- Forcing: applying cooling (T='+str(TS.t)+', dt='+ str(dt)+', tau='+str(tau)+')')
             Pa.root_print('------- dTdt: min='+str(np.amin(dTdt))+', max='+str(np.amax(dTdt)))
-            # min_aux = 0.
+            # min_auxT = 9999.
+            # max_auxT = 0.
+            # min_aux = 9999.
             # max_aux = 0.
+            # min_cp = 9999.
+            # max_cp = 0.
+            # min_L = 9999.
+            # max_L = 0.
             with nogil:
             # if 1 == 1:
                 for i in xrange(gw,imax):
                     ishift = i * istride
                     for j in xrange(gw,jmax):
                         jshift = j * jstride
+                        T_tend = dTdt[i,j]/3600.*dt     # [dTdt] = K/h >> dTdt/3600*TS.dt
+                        # min_auxT = np.minimum(min_auxT, T_tend)
+                        # max_auxT = np.maximum(max_auxT, T_tend)
                         for k in xrange(gw,kmax):
                             ijk = ishift + jshift + k
                             p0 = Ref.p0_half[k]
-                            cp = cpm_c(0.)
-                            # qt = PV.values[qt_shift + ijk]
-                            # qv = qt - DV.values[ql_shift + ijk]
-                            # cp = cpm_c(qt)
+                            qt = PV.values[qt_shift + ijk]
+                            qv = qt - DV.values[ql_shift + ijk]
                             T  = DV.values[t_shift + ijk]
-                            T_tend = dTdt[i,j]/3600.*dt     # [dTdt] = K/h >> dTdt/3600*TS.dt
-                            # min_aux = np.minimum(min_aux, T_tend)
-                            # max_aux = np.maximum(max_aux, T_tend)
-                            #s_aux[i,j,k] = s_tendency_c(p0, qt, qv, t, dqtdt[i,j], T_tend[i,j])
-                            #pv = pv_c(p0, qt, qv)
-                            #pd = pd_c(p0, qt, qv)
-                            s_tend[i,j,k] = cp * T_tend / T
-                            #s_tend[i,j] = cpm_c(qt) * dTdt[i,j] / T +  (sv_c(pv,T) - sd_c(pd,T)) * qt_tendency;
-                            PV.tendencies[s_shift + ijk] += s_tend[i,j,k]
+                            # cp = cpm_c(0.)
+                            cp = cpm_c(qt)                                              # [cp] = J/(kg K)
+                            L = (2500.8 - .36*T + 0.0016*T**2 - 0.00006*T**3)*1.e3      # [L] = J/kg
+                            # print('L = '+str(L), 'cp='+str(cp), 'qt='+str(qt))
+                            # min_cp = np.minimum(min_cp, cp)
+                            # max_cp = np.maximum(max_cp, cp)
+                            # min_L = np.minimum(min_L, L)
+                            # max_L = np.maximum(max_L, L)
+                            qt_tend = -T_tend*cp/L
+                            # dqtdt[i,j,k] = -T_tend*cp/L
+                            # min_aux = np.minimum(min_aux, dqtdt[i,j,k])
+                            # max_aux = np.maximum(max_aux, dqtdt[i,j,k])
+
+                            # s_aux[i,j,k] = s_tendency_c(p0, qt, qv, t, dqtdt[i,j], T_tend[i,j])
+                            # s_tend[i,j,k] = cp * T_tend / T
+                            pv = pv_c(p0, qt, qv)
+                            pd = pd_c(p0, qt, qv)
+                            s_tend = cp * T_tend / T +  (sv_c(pv,T) - sd_c(pd,T)) * qt_tend
+                            # s_tend[i,j,k] = cp * T_tend / T +  (sv_c(pv,T) - sd_c(pd,T)) * qt_tend
+                            PV.tendencies[s_shift + ijk] += s_tend
+                            # PV.tendencies[s_shift + ijk] += s_tend[i,j,k]
                             # PV.tendencies[s_shift + ijk] += s_tendency_c(p0, qt, qv, T, dqtdt[i,j], dTdt[i,j])
-                            # PV.tendencies[qt_shift + ijk] += dqtdt[i,j]
-            # min_aux = np.amin(T_tend)
-            # max_aux = np.amax(T_tend)
+                            # PV.tendencies[qt_shift + ijk] += dqtdt[i,j,k]
+                            PV.tendencies[qt_shift + ijk] += qt_tend
             Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
-            # Pa.root_print('T_tend min/max: ' + str(min_aux)+', '+str(max_aux))
+            # Pa.root_print('T_tend min/max: ' + str(min_auxT)+', '+str(max_auxT))
             Pa.root_print('time.dt: ' + str(dt))
             #Pa.root_print(str(np.amin(dqtdt))+', '+str(np.amax(dqtdt))+', '+str(np.amin(dTdt))+', '+str(np.amax(dTdt)))
+            # print('L, cp, dqtdt', min_cp, max_cp, min_L, max_L, min_aux, max_aux)
+            # print('dTdt', min_auxT, max_auxT)
+
+            # fig, [ax0, ax1, ax2, ax3] = plt.subplots(1, 4, figsize=(12,3))
+            # cf = ax0.contourf(dTdt.T)
+            # plt.colorbar(cf, ax=ax0, shrink=.5)
+            # cf = ax1.contourf(np.asarray(dqtdt[:,:,kmax-2]).T)
+            # plt.colorbar(cf, ax=ax1)
+            # cf = ax2.contourf(np.asarray(dqtdt[:,:,gw]).T)
+            # plt.colorbar(cf, ax=ax2)
+            # for ax in [ax0, ax1, ax2]:
+            #     ax.set_aspect('equal')
+            # plt.show()
 
         return
 

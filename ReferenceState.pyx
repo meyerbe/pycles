@@ -8,7 +8,7 @@ cimport Grid
 cimport Restart
 cimport numpy as np
 import numpy as np
-import pylab as plt
+# import pylab as plt
 
 from NetCDFIO cimport NetCDFIO_Stats
 cimport ParallelMPI
@@ -50,7 +50,6 @@ cdef class ReferenceState:
         '''
 
         print(Pa.root_print('Reference state initialization'))
-
 
         self.sg = Thermodynamics.entropy(self.Pg, self.Tg, self.qtg, 0.0, 0.0)
 

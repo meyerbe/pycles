@@ -48,52 +48,74 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         Par.root_print('Surface Factory: ' + casename)
         if casename == 'SullivanPatton':
            return SurfaceSullivanPatton(LH)
-        elif casename == 'ColdPoolDry_single_2D' or casename == 'ColdPoolDry_double_2D':
-            # return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+        elif casename[:8] == 'ColdPool':
             try:
                 Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
                 if namelist['surface']['scheme'] == 'bulk':
-                    return SurfaceColdPools(LH)
+                    Par.root_print('Surface scheme: bulk')
+                    return SurfaceColdPools(LH)     # bulk formula with const. sfc. moisture and temperature
                 elif namelist['surface']['scheme'] == 'const':
-                    return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+                    return SurfaceSoares(LH)        # constant sfc pot temp and pot temp-flux
                 else:
                     return SurfaceNone()
             except:
-                Par.root_print('nml surface scheme not defined')
+                Par.root_print('nml surface scheme not defined (set to none)')
                 return SurfaceNone()
-        elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
-                or casename == 'ColdPoolDry_triple_3D':
-            try:
-                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
-                if namelist['surface']['scheme'] == 'bulk':
-                    return SurfaceColdPools(LH)
-                elif namelist['surface']['scheme'] == 'const':
-                    return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
-                else:
-                    return SurfaceNone()
-            except:
-                Par.root_print('nml surface scheme not defined')
-                return SurfaceNone()
+        # elif casename == 'ColdPoolDry_single_2D' or casename == 'ColdPoolDry_double_2D':
+        #     try:
+        #         Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
+        #         if namelist['surface']['scheme'] == 'bulk':
+        #             return SurfaceColdPools(LH)     # bulk formula with const. sfc. moisture and temperature
+        #         elif namelist['surface']['scheme'] == 'const':
+        #             return SurfaceSoares(LH)        # constant sfc pot temp and pot temp-flux
+        #         else:
+        #             return SurfaceNone()
+        #     except:
+        #         Par.root_print('nml surface scheme not defined')
+        #         return SurfaceNone()
+        # elif casename == 'ColdPoolDry_single_3D' or casename == 'ColdPoolDry_double_3D' \
+        #         or casename == 'ColdPoolDry_triple_3D':
+        #     try:
+        #         Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
+        #         if namelist['surface']['scheme'] == 'bulk':
+        #             return SurfaceColdPools(LH)     # bulk formula with const. sfc. moisture and temperature
+        #         elif namelist['surface']['scheme'] == 'const':
+        #             return SurfaceSoares(LH)        # constant sfc pot temp and pot temp-flux
+        #         else:
+        #             return SurfaceNone()
+        #     except:
+        #         Par.root_print('nml surface scheme not defined')
+        #         return SurfaceNone()
         elif casename == 'ColdPoolMoist_single_3D' or casename == 'ColdPoolMoist_double_3D' \
                 or casename == 'ColdPoolMoist_triple_3D':
             Par.root_print('Surface Factory: Cold Pool Moist')
             try:
                 scheme = namelist['surface']['scheme']
                 Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'] + ' ('+scheme+')')
+                if scheme == 'bulk':
+                    Par.root_print('Surface scheme: bulk')
+                    return SurfaceColdPools(LH)         # bulk formula with const. sfc. moisture and temperature
+                elif scheme == 'cp_moist':
+                    Par.root_print('Surface scheme: const moist')
+                    return SurfaceColdPools_Moist(LH)   # prescribed theta- and qt-flux; prescribed friction velocity
+                elif scheme == 'bomex':
+                    Par.root_print('Surface scheme: BOMEX')
+                    return SurfaceBomex(LH)             # prescribed theta- and qt-flux; prescribed friction velocity
+            except:
+                Par.root_print('nml surface scheme not defined (set to none)')
+                Par.root_print('Surface scheme: none')
+                return SurfaceNone()
+        elif casename == 'ColdPool_single_contforcing':
+            try:
+                Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'])
+                if namelist['surface']['scheme'] == 'bulk':
+                    return SurfaceColdPools(LH)
+                elif namelist['surface']['scheme'] == 'const':
+                    return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
+                else:
+                    return SurfaceNone()
             except:
                 Par.root_print('nml surface scheme not defined')
-                scheme = 'none'
-            Par.root_print('nml surface scheme: ' + scheme)
-            if scheme == 'bulk':
-                Par.root_print('Surface scheme: bulk')
-                return SurfaceColdPools(LH)
-            elif scheme == 'cp_moist':
-                Par.root_print('Surface scheme: const moist')
-                return SurfaceColdPools_Moist(LH)
-            elif scheme == 'bomex':
-                Par.root_print('Surface scheme: BOMEX')
-                return SurfaceBomex(LH)
-            else:
                 Par.root_print('Surface scheme: none')
                 return SurfaceNone()
         elif casename == 'ColdPool_EUREKA':
@@ -190,7 +212,7 @@ cdef class SurfaceBase:
             double dzi = 1.0/Gr.dims.dx[2]
             double tendency_factor = Ref.alpha0_half[gw]/Ref.alpha0[gw-1]*dzi
 
-        Pa.root_print('Surface Base Case: ' + str(self.dry_case))
+        Pa.root_print('Surface Base Case: dry_case=' + str(self.dry_case))
         if self.dry_case:
             # Pa.root_print('>> dry case')
             with nogil:
@@ -325,7 +347,6 @@ cdef class SurfaceColdPools(SurfaceBase):
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
             Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
-            # Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
             Py_ssize_t qt_shift
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
 
@@ -348,7 +369,8 @@ cdef class SurfaceColdPools(SurfaceBase):
         else:
             # qt_flag = False
             # print('---------- qt NOT in PV (qt_flag: ' + str(qt_flag) + ')')
-            self.s_star = sd_c(pd_star, Ref.Tg)
+            self.s_star = sd_c(Ref.Pg, Ref.Tg)
+            # self.s_star = sd_c(pd_star, Ref.Tg)
             self.cq = 0.
 
         with nogil:

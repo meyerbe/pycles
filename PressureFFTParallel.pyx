@@ -41,30 +41,24 @@ cdef class PressureFFTParallel:
 
         #Compute the modified wave number representation of the horizontal derivatives in the divergence operators
         self.compute_modified_wave_numbers(Gr)
-        Pa.root_print('start PressureFFTParallel.initialize 1')
 
         #Compute the off diagonal terms in TDM
         self.compute_off_diagonals(Gr,RS)
-        Pa.root_print('start PressureFFTParallel.initialize 2')
 
         #Instantiate tridiagonal matrix solver
         self.TDMA_Solver = SparseSolvers.TDMA()
-        Pa.root_print('start PressureFFTParallel.initialize 3')
         #Initialize memory in tridiagonal solver
         self.TDMA_Solver.initialize(Gr.dims.nl[2])
-        Pa.root_print('start PressureFFTParallel.initialize 4')
 
         #Instantiate classes used for Pencil communication/transposes
         self.X_Pencil = ParallelMPI.Pencil()
         self.Y_Pencil = ParallelMPI.Pencil()
         self.Z_Pencil = ParallelMPI.Pencil()
-        Pa.root_print('start PressureFFTParallel.initialize 5')
 
         #Initialize classes used for Pencil communication/tranposes (here dim corresponds to the pencil direction)
         self.X_Pencil.initialize(Gr,Pa,dim=0)
         self.Y_Pencil.initialize(Gr,Pa,dim=1)
         self.Z_Pencil.initialize(Gr,Pa,dim=2)
-        Pa.root_print('start PressureFFTParallel.initialize end')
 
         return
 

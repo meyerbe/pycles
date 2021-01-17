@@ -447,7 +447,7 @@ def InitColdPoolDry_single_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
-    Pa.root_print('theta_bg: '+str(theta_bg[:]))
+    Pa.root_print('theta_bg: '+str(np.asarray(theta_bg[:])))
 
     # initialize Cold Pool
     for i in xrange(Gr.dims.nlg[0]):
@@ -869,7 +869,7 @@ def InitColdPoolDry_double_3D(namelist, Grid.Grid Gr,PrognosticVariables.Prognos
     else:
         for k in xrange(Gr.dims.nlg[2]):
             theta_bg[k] = th_g
-    Pa.root_print('theta_bg: '+str(theta_bg))
+    Pa.root_print('theta_bg: '+str(np.asarray(theta_bg[:])))
 
 
     Pa.root_print('initial settings: r='+str(rstar)+', z='+str(zstar)+', k='+str(kstar))

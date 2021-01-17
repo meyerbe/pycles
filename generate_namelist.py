@@ -48,6 +48,10 @@ def main():
         namelist = ColdPoolMoist_3D('double')
     elif case_name == 'ColdPoolMoist_triple_3D':
         namelist = ColdPoolMoist_3D('triple')
+    elif case_name == 'ColdPool_single_contforcing':
+        namelist = ColdPool_3D_contforcing('single')
+    elif case_name == 'ColdPoolCabauw':
+        namelist = ColdPoolCabauw()
     elif case_name == 'ColdPool_EUREKA':
         namelist = ColdPool_EUREKA('single')
     elif case_name == 'SullivanPatton':
@@ -296,10 +300,10 @@ def ColdPoolDry_3D(number):
     namelist['init'] = {}
     rstar = 1000.0
     namelist['init']['dTh'] = 3.0           # temperature anomaly
-    namelist['init']['shape'] = 1           # shape of temperature anomaly: 1 = cos2-shape
-    namelist['init']['h'] = 2000.0          # initial height of temperature anomaly
+    # namelist['init']['shape'] = 1           # shape of temperature anomaly: 1 = cos2-shape
+    namelist['init']['h'] = 1000.0          # initial height of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
-    namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
+    namelist['init']['marg'] = 200.         # width or margin (transition for temeprature anomaly)
     if number == 'single':
         pass
     elif number == 'double':
@@ -398,7 +402,137 @@ def ColdPoolDry_3D(number):
     # 1: same tracer in whole domain; 2: different tracer in initial anomaly vs. environment
     namelist['tracers']['number'] = 1
     namelist['tracers']['kmin'] = 0
-    namelist['tracers']['kmax'] = 10
+    namelist['tracers']['kmax'] = np.int(1000 / namelist['grid']['dz'])
+    # namelist['tracers']['kmax'] = 10
+
+    return namelist
+
+
+def ColdPool_3D_contforcing(number):
+
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 20
+    namelist['grid']['ny'] = 20
+    namelist['grid']['nz'] = 80        # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['gw'] = 5
+    namelist['grid']['dx'] = 100.0
+    namelist['grid']['dy'] = 100.0
+    namelist['grid']['dz'] = 50.0
+
+    namelist['init'] = {}
+    rstar = 1000.0
+    namelist['init']['dTh'] = 0.0           # temperature anomaly at initialization
+    namelist['init']['dqt'] = 0.0           # moisture anomaly at initialization
+    namelist['init']['h'] = 1000.0          # initial height of temperature anomaly
+    namelist['init']['r'] = rstar           # initial radius of temperature anomaly
+    namelist['init']['marg'] = 200.         # width of margin (for initial temperature anomaly)
+    namelist['init']['dTdt'] = 9.0          # cooling [K/h]
+    # namelist['init']['dqtdt'] = 1.0  # moistening [K/h]
+    namelist['init']['tau'] = 600.          # duration of cooling [s]
+    # namelist['init']['evap'] = 0.2          # evaporation rate [-]
+    # namelist['init']['eta'] = .2          # evaporation rate [-]
+    if number == 'single':
+        pass
+    elif number == 'double':
+        d = 10 * rstar
+        # (ic, jc): point of collision; CP coordinates: (ic+-sep/2, jc)
+        namelist['init']['sep'] = d     # separation of CPs
+    elif number == 'triple':
+        d = 10 * rstar
+        namelist['init']['d'] = d       # separation of CPs in equilateral triangle
+        # (ic, jc): point of collision
+    namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
+    namelist['init']['jc'] = np.int(np.double(namelist['grid']['ny']) / 2)
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 3
+    namelist['time_stepping']['cfl_limit'] = 0.3
+    namelist['time_stepping']['dt_initial'] = 10.0
+    namelist['time_stepping']['dt_max'] = 10.0
+    namelist['time_stepping']['t_max'] = 60.0
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'constant'
+
+    namelist['microphysics'] = {}
+    namelist['microphysics']['scheme'] = 'None_SA'
+    namelist['microphysics']['phase_partitioning'] = 'liquid_only'
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+    # namelist['sgs']['scheme'] = 'UniformViscosity'
+    # namelist['sgs']['UniformViscosity'] = {}
+    # namelist['sgs']['UniformViscosity']['viscosity'] = 0.0
+    # namelist['sgs']['UniformViscosity']['diffusivity'] = 0.0
+
+    namelist['diffusion'] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5
+
+    namelist['damping'] = {}
+    namelist['damping']['scheme'] = 'Rayleigh' #'None'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 1000
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+
+    namelist['conditional_stats'] = {}
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = 'stats'
+    namelist['stats_io']['auxiliary'] = ['None']
+    namelist['stats_io']['frequency'] = 100.0
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = 'fields'
+    namelist['fields_io']['frequency'] = 100.0
+    # namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
+    namelist['fields_io']['diagnostic_fields'] = ['temperature', 'thetali', 'alpha']
+
+    namelist['meta'] = {}
+    if number == 'single':
+        namelist['meta']['casename'] = 'ColdPool_single_contforcing'
+        namelist['meta']['simname'] = 'ColdPool_single_contforcing'
+    elif number == 'double':
+        namelist['meta']['casename'] = 'ColdPool_double_contforcing'
+        namelist['meta']['simname'] = 'ColdPool_double_contforcing'
+    elif number == 'triple':
+        namelist['meta']['casename'] = 'ColdPool_triple_contforcing'
+        namelist['meta']['simname'] = 'ColdPool_triple_contforcing'
+
+    namelist['surface'] = {}
+    # schemes: 'none', 'bulk', 'const'
+    namelist['surface']['scheme'] = 'bulk'
+
+    namelist['visualization'] = {}
+    namelist['visualization']['frequency'] = 10000.0
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = 'passive'
+    # 1: same tracer in whole domain; 2: different tracer in initial anomaly vs. environment
+    namelist['tracers']['number'] = 1
+    namelist['tracers']['kmin'] = 0
+    namelist['tracers']['kmax'] = np.int(1000 / namelist['grid']['dz'])
 
     return namelist
 
@@ -497,7 +631,7 @@ def ColdPoolMoist_3D(number):
 
     namelist['fields_io'] = {}
     namelist['fields_io']['fields_dir'] = 'fields'
-    namelist['fields_io']['frequency'] = 100.0
+    namelist['fields_io']['frequency'] = 60.0
     # namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
     namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','theta']
     # namelist['fields_io']['diagnostic_fields'] = ['temperature', 'theta']
@@ -530,6 +664,119 @@ def ColdPoolMoist_3D(number):
 
     return namelist
 
+
+
+def ColdPoolCabauw():
+
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 200
+    namelist['grid']['ny'] = 200
+    namelist['grid']['nz'] = 120        # height of 12km is sufficient (for dTh3K_z1000_r1000)
+    namelist['grid']['gw'] = 5
+    namelist['grid']['dx'] = 100.0
+    namelist['grid']['dy'] = 100.0
+    namelist['grid']['dz'] = 100.0
+
+    namelist['init'] = {}
+    namelist['init']['dTdt'] = 1.0            # cooling [K/h]
+    # namelist['init']['dqtdt'] = 3.0         # evaporation [g/kg 1/h]
+    # namelist['init']['eta'] = .2          # evaporation rate [-]
+    namelist['init']['r'] = 1000.           # radius of cooled area
+    # namelist['init']['marg'] = 500.         # width or margin (transition for temeprature anomaly)
+    namelist['init']['ic'] = np.int(np.double(namelist['grid']['nx']) / 2)
+    namelist['init']['jc'] = np.int(np.double(namelist['grid']['ny']) / 2)
+
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 3
+    namelist['time_stepping']['cfl_limit'] = 0.3
+    namelist['time_stepping']['dt_initial'] = 10.0
+    namelist['time_stepping']['dt_max'] = 10.0
+    namelist['time_stepping']['t_max'] = 100.0
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'constant'
+
+    # from Rico
+    namelist['microphysics'] = {}
+    namelist['microphysics']['phase_partitioning'] = 'liquid_only'
+    namelist['microphysics']['scheme'] = 'None_SA'
+    # namelist['microphysics']['scheme'] = 'SB_Liquid'
+    # namelist['microphysics']['SB_Liquid'] = {}
+    # namelist['microphysics']['cloud_sedimentation'] = False
+    # namelist['microphysics']['ccn'] = 70.0e6
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+    # namelist['sgs']['scheme'] = 'UniformViscosity'
+    # namelist['sgs']['UniformViscosity'] = {}
+    # namelist['sgs']['UniformViscosity']['viscosity'] = 0.0
+    # namelist['sgs']['UniformViscosity']['diffusivity'] = 0.0
+
+    namelist['diffusion'] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5
+    namelist['scalar_transport']['order_sedimentation'] = 1     # from Rico
+
+    namelist['damping'] = {}
+    namelist['damping']['scheme'] = 'Rayleigh' #'None'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 600
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+
+    namelist['conditional_stats'] = {}
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = 'stats'
+    namelist['stats_io']['auxiliary'] = ['Cumulus']
+    namelist['stats_io']['frequency'] = 60.0
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = 'fields'
+    namelist['fields_io']['frequency'] = 100.0
+    # namelist['fields_io']['diagnostic_fields'] = ['ql','temperature','buoyancy_frequency','viscosity']
+    namelist['fields_io']['diagnostic_fields'] = ['temperature', 'thetali']
+
+    namelist['meta'] = {}
+    namelist['meta']['casename'] = 'ColdPoolCabauw'
+    namelist['meta']['simname'] = 'ColdPoolCabauw'
+
+    namelist['surface'] = {}
+    # schemes: 'none', 'bulk', 'const'
+    namelist['surface']['scheme'] = 'none'
+
+    namelist['visualization'] = {}
+    namelist['visualization']['frequency'] = 10000.0
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = 'passive'
+    # 1: same tracer in whole domain; 2: different tracer in initial anomaly vs. environment
+    namelist['tracers']['number'] = 1
+    namelist['tracers']['kmin'] = 0
+    namelist['tracers']['kmax'] = np.int(1000/namelist['grid']['dz'])
+
+    return namelist
 
 
 def ColdPool_EUREKA(number):
@@ -918,6 +1165,10 @@ def Bomex():
 
     namelist['initialization'] = {}
     namelist['initialization']['random_seed_factor'] = 1
+
+    # namelist['tracers'] = {}
+    # namelist['tracers']['use_tracers'] = True
+    # namelist['tracers']['scheme'] = 'PurityTracers'
 
     return namelist
 
@@ -1791,6 +2042,10 @@ def CGILS_S6(is_p2,is_ctl_omega):
 
     namelist['microphysics']['SB_Liquid']['nu_droplet'] = 0
     namelist['microphysics']['SB_Liquid']['mu_rain'] = 1
+
+    namelist['radiation'] = {}
+    namelist['radiation']['RRTM'] = {}
+    namelist['radiation']['RRTM']['frequency'] = 90.0
 
     namelist['sgs'] = {}
     namelist['sgs']['scheme'] = 'Smagorinsky'
