@@ -55,7 +55,7 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
                     Par.root_print('Surface scheme: bulk')
                     return SurfaceColdPools(LH)     # bulk formula with const. sfc. moisture and temperature
                 elif namelist['surface']['scheme'] == 'const':
-                    return SurfaceSoares(LH)        # constant sfc pot temp and pot temp-flux
+                    return SurfaceSoares(LH)    # constant sfc pot temp and pot temp-flux
                 else:
                     return SurfaceNone()
             except:
@@ -92,17 +92,21 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
             try:
                 scheme = namelist['surface']['scheme']
                 Par.root_print('nml surface scheme: ' + namelist['surface']['scheme'] + ' ('+scheme+')')
-                if scheme == 'bulk':
-                    Par.root_print('Surface scheme: bulk')
-                    return SurfaceColdPools(LH)         # bulk formula with const. sfc. moisture and temperature
-                elif scheme == 'cp_moist':
-                    Par.root_print('Surface scheme: const moist')
-                    return SurfaceColdPools_Moist(LH)   # prescribed theta- and qt-flux; prescribed friction velocity
-                elif scheme == 'bomex':
-                    Par.root_print('Surface scheme: BOMEX')
-                    return SurfaceBomex(LH)             # prescribed theta- and qt-flux; prescribed friction velocity
             except:
                 Par.root_print('nml surface scheme not defined (set to none)')
+                scheme = 'none'
+            Par.root_print('nml surface scheme: ' + scheme)
+            if scheme == 'bulk':
+                Par.root_print('Surface scheme: bulk')
+                return SurfaceColdPools(LH)         # bulk formula with const. sfc. moisture and temperature
+            elif scheme == 'cp_moist':
+                Par.root_print('Surface scheme: const moist')
+                return SurfaceColdPools_Moist(LH)   # prescribed theta- and qt-flux; prescribed friction velocity
+            elif scheme == 'bomex':
+                Par.root_print('Surface scheme: BOMEX')
+                return SurfaceBomex(LH)             # prescribed theta- and qt-flux; prescribed friction velocity
+            else:
+                Par.root_print('nml surface scheme not defined')
                 Par.root_print('Surface scheme: none')
                 return SurfaceNone()
         elif casename == 'ColdPool_single_contforcing':
@@ -212,7 +216,7 @@ cdef class SurfaceBase:
             double dzi = 1.0/Gr.dims.dx[2]
             double tendency_factor = Ref.alpha0_half[gw]/Ref.alpha0[gw-1]*dzi
 
-        Pa.root_print('Surface Base Case: dry_case=' + str(self.dry_case))
+        Pa.root_print('Surface Base Case: ' + str(self.dry_case))
         if self.dry_case:
             # Pa.root_print('>> dry case')
             with nogil:
