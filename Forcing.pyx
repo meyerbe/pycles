@@ -2216,7 +2216,7 @@ cdef class ForcingColdPool_continuous:
         cdef:
             Py_ssize_t ic = self.ic
             Py_ssize_t jc = self.jc
-            Py_ssize_t dx = Gr.dims.dx[0]
+            # Py_ssize_t dx = Gr.dims.dx[0]
         # ic = np.int(np.double(Gr.dims.nlg[0])/2)
         # jc = np.int(np.double(Gr.dims.nlg[1])/2)
         xc = np.asarray([Gr.x_half[ic+gw]], dtype=np.double)
