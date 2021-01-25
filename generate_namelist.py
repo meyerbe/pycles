@@ -429,10 +429,10 @@ def ColdPool_3D_contforcing(number):
     namelist['init']['h'] = 1000.0          # initial height of temperature anomaly
     namelist['init']['r'] = rstar           # initial radius of temperature anomaly
     namelist['init']['marg'] = 200.         # width of margin (for initial temperature anomaly)
-    namelist['init']['dTdt'] = 9.0          # cooling [K/h]
-    # namelist['init']['dqtdt'] = 1.0  # moistening [K/h]
-    namelist['init']['tau'] = 600.          # duration of cooling [s]
-    # namelist['init']['evap'] = 0.2          # evaporation rate [-]
+    namelist['init']['dTdt'] = 60.0         # cooling [K/h]
+    # namelist['init']['dqtdt'] = 1.0       # moistening [K/h]
+    namelist['init']['tau'] = 900.          # duration of cooling [s]
+    # namelist['init']['evap'] = 0.2        # evaporation rate [-]
     # namelist['init']['eta'] = .2          # evaporation rate [-]
     if number == 'single':
         pass
