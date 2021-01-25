@@ -2203,6 +2203,9 @@ cdef class ForcingColdPool_continuous:
             double xc, yc
             double r, rstar
             double dTdt = self.dTdt
+            # # ---- only for testing
+            # double dqtdt = 3.6e-3
+            # # ----
             Py_ssize_t gw = Gr.dims.gw
 
         # self.k_BL = np.int(z_BL / Gr.dims.dx[2])
@@ -2237,6 +2240,9 @@ cdef class ForcingColdPool_continuous:
                     # dqtdt_2d[i,j] = -dTdt*cpd/L_fp
                     # dqtdt_2d[i,j] = -dTdt*cpd/L
                     # self.dqdt_2d = dTdt_2d*cpd*dV/L
+                    # # -- test defined tendency
+                    # dqtdt_2d[i,j] = dqtdt
+                    # # ----
                 # elif r <= (rstar + dx):
                 #     dTdt_2d[i,j] = -dTdt*.5
                 # elif r <= (rstar + dx):
@@ -2244,11 +2250,12 @@ cdef class ForcingColdPool_continuous:
                 # elif r <= (rstar + 2*dx):
                 #     dTdt_2d[i,j] = -dTdt*1./3
         self.dTdt_2d = dTdt_2d
-        #self.dqdt_2d = dqtdt_2d
+        self.dqdt_2d = dqtdt_2d
 
         Pa.root_print('')
-        Pa.root_print('-------- Cabauw Forcing: missing correct representation of dqtdt; time dependence of forcing ---------')
+        Pa.root_print('-------- Continuos Forcing ---------')
         Pa.root_print('dTdt_2d'+', '+str(np.amin(dTdt_2d))+', '+str(np.amax(dTdt_2d)))
+        # Pa.root_print('dqtdt_2d'+', '+str(np.amin(dqtdt_2d))+', '+str(np.amax(dqtdt_2d)))
         Pa.root_print('!!!! latent heat taken for boiling temperature, adjust to temperature !!!!! (import LatentHeat Module from Thermodynamics)')
         Pa.root_print('')
 
@@ -2289,13 +2296,16 @@ cdef class ForcingColdPool_continuous:
 
         cdef:
             double [:,:] dTdt = self.dTdt_2d
+            # # -- for testing
+            # double [:,:] dqtdt = self.dqdt_2d
+            # # ----
             double T_tend, qt_tend
             # double [:,:,:] dqtdt = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
             # double [:,:,:] s_aux = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
             # double [:,:,:] s_tend = np.zeros((Gr.dims.nlg[0], Gr.dims.nlg[1], Gr.dims.nlg[2]), dtype=np.double)
             double s_tend
             double cp, L, T
-            double dt = TS.dt
+            # double dt = TS.dt
             double tau = self.tau
 
         # ''' latent heat '''
@@ -2304,12 +2314,14 @@ cdef class ForcingColdPool_continuous:
 
         #Apply cooling/moistening source term
         if TS.t < tau:
-            Pa.root_print('--- Forcing: applying cooling (T='+str(TS.t)+', dt='+ str(dt)+', tau='+str(tau)+')')
-            Pa.root_print('------- dTdt: min='+str(np.amin(dTdt))+', max='+str(np.amax(dTdt)))
-            # min_auxT = 9999.
-            # max_auxT = 0.
-            # min_aux = 9999.
-            # max_aux = 0.
+            Pa.root_print('--- Forcing: applying cooling (t='+str(TS.t)+', tau='+str(tau)+')')
+            Pa.root_print('------- dTdt='+str(np.amin(dTdt))+'K/h, min='+str(np.amin(dTdt)/3600.)+', max='+str(np.amax(dTdt)*1./3600.)+', kmax='+str(kmax))
+            # Pa.root_print('------- dqtdt='+str(np.amax(dqtdt))+'1/h, min='+str(np.amin(dqtdt)*1./3600.)+', max='+str(np.amax(dqtdt)*1./3600.))
+
+            min_auxT = 9999.
+            max_auxT = 0.
+            min_aux = 9999.
+            max_aux = 0.
             # min_cp = 9999.
             # max_cp = 0.
             # min_L = 9999.
@@ -2320,9 +2332,14 @@ cdef class ForcingColdPool_continuous:
                     ishift = i * istride
                     for j in xrange(gw,jmax):
                         jshift = j * jstride
-                        T_tend = dTdt[i,j]/3600.*dt     # [dTdt] = K/h >> dTdt/3600*TS.dt
+                        T_tend = dTdt[i,j]/3600.     # [dTdt] = K/h >> dTdt/3600*TS.dt
                         # min_auxT = np.minimum(min_auxT, T_tend)
                         # max_auxT = np.maximum(max_auxT, T_tend)
+                        # # -- to test
+                        # qt_tend = dqtdt[i,j]/3600.
+                        # min_aux = np.minimum(min_aux, qt_tend)
+                        # max_aux = np.maximum(max_aux, qt_tend)
+                        # # --
                         for k in xrange(gw,kmax):
                             ijk = ishift + jshift + k
                             p0 = Ref.p0_half[k]
@@ -2355,8 +2372,9 @@ cdef class ForcingColdPool_continuous:
                             PV.tendencies[qt_shift + ijk] += qt_tend
             Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
             # Pa.root_print('T_tend min/max: ' + str(min_auxT)+', '+str(max_auxT))
-            Pa.root_print('time.dt: ' + str(dt))
-            #Pa.root_print(str(np.amin(dqtdt))+', '+str(np.amax(dqtdt))+', '+str(np.amin(dTdt))+', '+str(np.amax(dTdt)))
+            Pa.root_print('(dTdt: '+str(np.amin(dTdt))+', '+str(np.amin(dTdt)/3600.)+')')
+            # Pa.root_print('qt_tend min/max: ' + str(min_aux)+', '+str(max_aux))
+            # Pa.root_print('(dqtdt: '+str(np.amin(dqtdt))+', '+str(np.amax(dqtdt))+')')
             # print('L, cp, dqtdt', min_cp, max_cp, min_L, max_L, min_aux, max_aux)
             # print('dTdt', min_auxT, max_auxT)
 
