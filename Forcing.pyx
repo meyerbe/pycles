@@ -24,7 +24,7 @@ from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 # import pylab as plt
 include 'parameters.pxi'
 from Initialization import sat_adjst, qv_unsat
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 # import cPickle
 import pickle
 
@@ -2208,7 +2208,6 @@ cdef class ForcingColdPool_continuous:
             # # ----
             Py_ssize_t gw = Gr.dims.gw
 
-        # self.k_BL = np.int(z_BL / Gr.dims.dx[2])
         # root = nc.Dataset(self.path_data, 'r')
         # self.precip[:,:,:] = root.variables['precipitation'][:,:,:]
         # self.forcing_time = root.variables['time'][:]
@@ -2238,8 +2237,6 @@ cdef class ForcingColdPool_continuous:
                     dTdt_2d[i,j] = -dTdt
                     # convert from cooling to moistening >> depending on height, due to temperature dependence of L
                     # dqtdt_2d[i,j] = -dTdt*cpd/L_fp
-                    # dqtdt_2d[i,j] = -dTdt*cpd/L
-                    # self.dqdt_2d = dTdt_2d*cpd*dV/L
                     # # -- test defined tendency
                     # dqtdt_2d[i,j] = dqtdt
                     # # ----
@@ -2250,12 +2247,11 @@ cdef class ForcingColdPool_continuous:
                 # elif r <= (rstar + 2*dx):
                 #     dTdt_2d[i,j] = -dTdt*1./3
         self.dTdt_2d = dTdt_2d
-        self.dqdt_2d = dqtdt_2d
+        # self.dqdt_2d = dqtdt_2d
 
         Pa.root_print('')
         Pa.root_print('-------- Continuos Forcing ---------')
         Pa.root_print('dTdt_2d'+', '+str(np.amin(dTdt_2d))+', '+str(np.amax(dTdt_2d)))
-        # Pa.root_print('dqtdt_2d'+', '+str(np.amin(dqtdt_2d))+', '+str(np.amax(dqtdt_2d)))
         Pa.root_print('!!!! latent heat taken for boiling temperature, adjust to temperature !!!!! (import LatentHeat Module from Thermodynamics)')
         Pa.root_print('')
 
@@ -2349,17 +2345,16 @@ cdef class ForcingColdPool_continuous:
                             # cp = cpm_c(0.)
                             cp = cpm_c(qt)                                              # [cp] = J/(kg K)
                             L = (2500.8 - .36*T + 0.0016*T**2 - 0.00006*T**3)*1.e3      # [L] = J/kg
+                            qt_tend = -T_tend*cp/L * eps_v/qv
+                            # dqtdt[i,j,k] = -T_tend*cp/L
                             # print('L = '+str(L), 'cp='+str(cp), 'qt='+str(qt))
                             # min_cp = np.minimum(min_cp, cp)
                             # max_cp = np.maximum(max_cp, cp)
                             # min_L = np.minimum(min_L, L)
                             # max_L = np.maximum(max_L, L)
-                            qt_tend = -T_tend*cp/L
-                            # dqtdt[i,j,k] = -T_tend*cp/L
                             # min_aux = np.minimum(min_aux, dqtdt[i,j,k])
                             # max_aux = np.maximum(max_aux, dqtdt[i,j,k])
 
-                            # s_aux[i,j,k] = s_tendency_c(p0, qt, qv, t, dqtdt[i,j], T_tend[i,j])
                             # s_tend[i,j,k] = cp * T_tend / T
                             pv = pv_c(p0, qt, qv)
                             pd = pd_c(p0, qt, qv)
@@ -2368,7 +2363,6 @@ cdef class ForcingColdPool_continuous:
                             PV.tendencies[s_shift + ijk] += s_tend
                             # PV.tendencies[s_shift + ijk] += s_tend[i,j,k]
                             # PV.tendencies[s_shift + ijk] += s_tendency_c(p0, qt, qv, T, dqtdt[i,j], dTdt[i,j])
-                            # PV.tendencies[qt_shift + ijk] += dqtdt[i,j,k]
                             PV.tendencies[qt_shift + ijk] += qt_tend
             Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
             # Pa.root_print('T_tend min/max: ' + str(min_auxT)+', '+str(max_auxT))
