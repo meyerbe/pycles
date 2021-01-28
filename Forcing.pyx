@@ -2339,14 +2339,13 @@ cdef class ForcingColdPool_continuous:
                         for k in xrange(gw,kmax):
                             ijk = ishift + jshift + k
                             p0 = Ref.p0_half[k]
-                            qt = PV.values[qt_shift + ijk]
-                            qv = qt - DV.values[ql_shift + ijk]
+                            qt = PV.values[qt_shift + ijk]          # [qt] = kg/kg
+                            qv = qt - DV.values[ql_shift + ijk]     # [qv] = kg/kg
                             T  = DV.values[t_shift + ijk]
                             # cp = cpm_c(0.)
                             cp = cpm_c(qt)                                              # [cp] = J/(kg K)
                             L = (2500.8 - .36*T + 0.0016*T**2 - 0.00006*T**3)*1.e3      # [L] = J/kg
-                            qt_tend = -T_tend*cp/L * eps_v/qv
-                            # dqtdt[i,j,k] = -T_tend*cp/L
+                            qt_tend = -T_tend*cp/L * 1/(1+(eps_vi-1)*qv)
                             # print('L = '+str(L), 'cp='+str(cp), 'qt='+str(qt))
                             # min_cp = np.minimum(min_cp, cp)
                             # max_cp = np.maximum(max_cp, cp)
@@ -2359,9 +2358,7 @@ cdef class ForcingColdPool_continuous:
                             pv = pv_c(p0, qt, qv)
                             pd = pd_c(p0, qt, qv)
                             s_tend = cp * T_tend / T +  (sv_c(pv,T) - sd_c(pd,T)) * qt_tend
-                            # s_tend[i,j,k] = cp * T_tend / T +  (sv_c(pv,T) - sd_c(pd,T)) * qt_tend
                             PV.tendencies[s_shift + ijk] += s_tend
-                            # PV.tendencies[s_shift + ijk] += s_tend[i,j,k]
                             # PV.tendencies[s_shift + ijk] += s_tendency_c(p0, qt, qv, T, dqtdt[i,j], dTdt[i,j])
                             PV.tendencies[qt_shift + ijk] += qt_tend
             Pa.root_print('s tendency: '+ str(np.amin(s_tend))+', '+str(np.amax(s_tend)))
