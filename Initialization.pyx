@@ -21,7 +21,7 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 
@@ -3808,7 +3808,7 @@ def init_tracer(namelist, Grid.Grid Gr, PrognosticVariables.PrognosticVariables 
         Py_ssize_t var_shift
         Py_ssize_t kmin = kmin_tracer + Gr.dims.gw
         Py_ssize_t kmax = kmax_tracer + Gr.dims.gw
-        Py_ssize_t dk = 50
+        Py_ssize_t dk = 2 #50
 
     if use_tracers == 'passive':
         Pa.root_print('initializing passive tracer phi, smooth profile, kmax: ' + str(kmax_tracer) + ', dk: ' + str(dk))
